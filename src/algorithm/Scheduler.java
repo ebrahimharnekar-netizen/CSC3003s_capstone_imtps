@@ -59,7 +59,7 @@ public class Scheduler {
         double urgency;
         double baseScore;
 
-        if (task.category.equalsIgnoreCase(userPrefs.getCurrentMode())) {   // check if the current tasks category matches the users toggled focus mode
+        if (task.getCategoryID() == userPrefs.getCurrentMode()) {   // check if the current tasks category matches the users toggled focus mode
 
             mFocus = 1.5;
 
