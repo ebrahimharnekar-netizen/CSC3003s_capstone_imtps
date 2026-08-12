@@ -6,14 +6,14 @@ public class Task {
     // will declare task variables here.
 
     public String taskName;
-    public String category;   // same as focus modes (work, health, personal)
+    public int category;   // same as focus modes (work, health, personal)
     public double timeUntilDue;  // hours until the due date
     public int importance;  // out of 5
     public double duration;  // the duration set by the user for how long they think their event will be.
     public LocalDateTime dueDate;   // the due date of a task, it is optional to the user
     public LocalDateTime startTime;   // this tracks whether a user explicitly put a task on the calendar, therefore the algorithm has to work around that task.
 
-    public Task(String taskName, String category, int importance, double duration, LocalDateTime dueDate, LocalDateTime startTime){
+    public Task(String taskName, int category, int importance, double duration, LocalDateTime dueDate, LocalDateTime startTime){
 
         this.category = category;
         this.taskName = taskName;
@@ -39,6 +39,12 @@ public class Task {
     public boolean isPinned(){   // this method is to check if a task is pinned or not by the user.
 
         return this.startTime != null;
+
+    }
+
+    public int getCategoryID() {
+
+        return category;
 
     }
 
