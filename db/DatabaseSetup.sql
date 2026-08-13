@@ -22,7 +22,11 @@ CREATE TABLE tasks (
 );
 
 CREATE TABLE preferences (
-    
+    preference_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT NOT NULL,
+    peak_prodtime  INT CHECK (peak_prodtime BETWEEN 1 AND 3),
+    daily_prod_hours    INT CHECK (daily_prod_hours BETWEEN 1 AND 10),
+    preferred_quick_first BOOLEAN,
 
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
