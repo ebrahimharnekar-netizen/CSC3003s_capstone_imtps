@@ -3,7 +3,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-public class AltScheduler {
+public class AltScheduler implements SchedulingAlg{
     
     // this algorithm will prioritize the earliest deadline tasks first
     // this means that it will completely ignore the users preferences
