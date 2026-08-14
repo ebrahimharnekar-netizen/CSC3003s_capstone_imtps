@@ -11,7 +11,7 @@ public class Questionnaire {
     public static final int EveningPeriod = 3;
 
     private int currentMode;  // this is the current focus mode the user has toggled (work, health, personal)
-    private int peakProdTime;  // the widnow they are most productive (morning, afternoon, evening)
+    private int peakProdTime;  // the widnow they are most productive (morning->1, afternoon->2, evening->3)
     private boolean prefQuickFirst;  // if the user wants to prioritise the shorter tasks first
     private int dailyProdHours; // the number of hours a user want to be productive (1-10 hours)
 
