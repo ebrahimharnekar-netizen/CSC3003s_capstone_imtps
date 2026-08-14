@@ -7,7 +7,7 @@ import java.util.Comparator;  // this allows us to compare task objects in our o
 // the equation we will be using for this scheduling algorithm: priority = focus_multiplier x duration_mult x ((impW x importance) + (urgW x 1/time))
 
 
-public class Scheduler {
+public class Scheduler implements SchedulingAlg{
     
     // this is where the scheduler math will be created.
 
@@ -86,6 +86,34 @@ public class Scheduler {
         baseScore = (impW * task.importance) + (urgW * urgency);  // finalising the equation calculation
 
         return mFocus * mDuration * baseScore;
+
+    }
+
+    private void findTimeSlots(List<Task> floatingTasks, List<Task> pinnedTasks) {
+
+        // the work day window is 7am to 10pm
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDateTime dayStart = today.atTime(7, 0);
+        java.time.LocalDateTime dayEnd = today.atTime(22, 0);
+
+        pinnedTasks.sort(new Comparator<Task>() {
+
+            @Override
+            public int compare(Task t1, Task t2) {
+
+                return t1.startTime.compareTo(t2.startTime);
+
+            }
+
+        });
+
+        for (Task task : floatingTasks) {  // schedule each floating task one by one.
+
+            long taskMinutes = (long) (task.duration * 60);  // converting the duration of the task to minutes
+
+            
+
+        }
 
     }
 
