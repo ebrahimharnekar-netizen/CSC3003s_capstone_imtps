@@ -1,6 +1,4 @@
-import algorithm.Task;
-import algorithm.Scheduler;
-import algorithm.Questionnaire;
+import algorithm.*;
 
 public class IMTPS {
     public static void main(String[] args){
