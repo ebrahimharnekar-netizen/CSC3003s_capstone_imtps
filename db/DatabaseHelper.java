@@ -1,10 +1,9 @@
 import java.sql.*;
 
 /**
- * Centralized database access for the IMTPS capstone project.
- * Handles connections to the SQLite database and provides
- * CRUD methods for users, tasks, and preferences.
+ * Class contains all the CRUD (Create, Read, update, delete) methods for users, tasks, and preferences. 
  */
+
 public class DatabaseHelper {
 
     private static final String URL = "jdbc:sqlite:imtps_db.db";
@@ -15,9 +14,7 @@ public class DatabaseHelper {
         return DriverManager.getConnection(URL);
     }
 
-    // ---------------------------------------------------------
     // USERS
-    // ---------------------------------------------------------
 
     public static int addUser(String username, String email, String passwordHash) {
         String sql = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
@@ -59,9 +56,7 @@ public class DatabaseHelper {
         }
     }
 
-    // ---------------------------------------------------------
     // TASKS
-    // ---------------------------------------------------------
 
     public static void addTask(int userId, String taskName, String category,
                                 int importance, double duration,
@@ -77,9 +72,9 @@ public class DatabaseHelper {
             pstmt.setString(3, category);
             pstmt.setInt(4, importance);
             pstmt.setDouble(5, duration);
-            pstmt.setString(6, dueDate);   // pass null if not set
-            pstmt.setString(7, startTime); // pass null if not set
-            pstmt.executeUpdate();
+            pstmt.setString(6, dueDate);   //pass null if not set
+            pstmt.setString(7, startTime); //pass null if not set
+            pstmt.executeUpdate();         //executes the insert statement
 
             System.out.println("Task added: " + taskName);
 
@@ -140,9 +135,8 @@ public class DatabaseHelper {
         }
     }
 
-    // ---------------------------------------------------------
+
     // PREFERENCES
-    // ---------------------------------------------------------
 
     public static void setPreferences(int userId, int peakProdTime, int dailyProdHours,
                                        boolean preferQuickFirst) {
@@ -199,9 +193,9 @@ public class DatabaseHelper {
         }
     }
 
-    // ---------------------------------------------------------
-    // Simple manual test
-    // ---------------------------------------------------------
+
+    //Simple test of the DatabaseHelper methods
+   
 
     public static void main(String[] args) {
         int userId = addUser("nadim", "nadim@example.com", "hashed_password_here");
