@@ -61,7 +61,7 @@ public class DatabaseHelper {
 
     // TASKS
 
-    public static void addTask(int userId, String taskName, String category,
+    public static void addTask(int userId, String taskName, int category,
                                 int importance, double duration,
                                 String dueDate, String startTime) {
         String sql = "INSERT INTO tasks (user_id, task_name, category, importance, " +
@@ -72,7 +72,7 @@ public class DatabaseHelper {
 
             pstmt.setInt(1, userId);
             pstmt.setString(2, taskName);
-            pstmt.setString(3, category);
+            pstmt.setInt(3, category);
             pstmt.setInt(4, importance);
             pstmt.setDouble(5, duration);
             pstmt.setString(6, dueDate);   //pass null if not set
@@ -139,13 +139,13 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskCategory(int taskId, String newCategory) {
+    public static void updateTaskCategory(int taskId, int newCategory) {
         String sql = "UPDATE tasks SET category = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, newCategory);
+            pstmt.setInt(1, newCategory);
             pstmt.setInt(2, taskId);
             pstmt.executeUpdate();
 
@@ -293,8 +293,8 @@ public class DatabaseHelper {
         int userId = addUser("nadim","nadim@example.com", "password_here");
         System.out.println("Created user with id: " + userId);
 
-        addTask(userId, "Finish capstone report", "Work", 5, 3.5, "2026-08-20 17:00:00", null);
-        addTask(userId, "Gym session", "Health", 2, 1.0, null, "2026-08-14 07:00:00");
+        addTask(userId, "Finish capstone report", 1, 5, 3.5, "2026-08-20 17:00:00", null);
+        addTask(userId, "Gym session", 2, 2, 1.0, null, "2026-08-14 07:00:00");
 
         System.out.println("\nTasks for user " + userId + ":");
         printTasksForUser(userId);

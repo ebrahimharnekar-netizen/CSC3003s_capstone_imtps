@@ -20,7 +20,7 @@ public class DatabaseSetup {
              Statement stmt = conn.createStatement()) {
 
             stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
-                         "user_id  PRIMARY KEY AUTOINCREMENT, " +
+                         "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                          "email VARCHAR(100) NOT NULL, " +
                          "username VARCHAR(100) NOT NULL, " +
                          "password VARCHAR(255) NOT NULL" +
@@ -30,7 +30,7 @@ public class DatabaseSetup {
                          "task_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                          "user_id INTEGER NOT NULL, " +
                          "task_name VARCHAR(255) NOT NULL, " +
-                         "category VARCHAR(100), " +
+                         "category INTEGER CHECK (category BETWEEN 1 AND 3), " +
                          "importance INTEGER CHECK (importance BETWEEN 1 AND 5), " +
                          "duration DECIMAL(5,2), " +
                          "due_date DATETIME NULL, " +
