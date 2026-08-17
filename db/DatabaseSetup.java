@@ -20,7 +20,8 @@ public class DatabaseSetup {
              Statement stmt = conn.createStatement()) {
 
             stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
-                         "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                         "user_id  PRIMARY KEY AUTOINCREMENT, " +
+                         "email VARCHAR(100) NOT NULL, " +
                          "username VARCHAR(100) NOT NULL, " +
                          "password VARCHAR(255) NOT NULL" +
                          ");");

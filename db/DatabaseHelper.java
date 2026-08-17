@@ -20,14 +20,15 @@ public class DatabaseHelper {
     // PreparedStatement. This helps prevent SQL injection attacks and allows for dynamic query building. 
     // i applied this method for all the other methods that update the database
 
-    public static int addUser(String username, String password) {
-        String sql = "INSERT INTO users (username, password) VALUES (?, ?)"; 
+    public static int addUser(String username, String email, String password) {
+        String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"; 
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, username); // The first ? will be replaced with the username
-            pstmt.setString(2, password);
+            pstmt.setString(2, email);   // The second ? will be replaced with the email
+            pstmt.setString(3, password); // The third ? will be replaced with the password
             pstmt.executeUpdate();
 
             ResultSet keys = pstmt.getGeneratedKeys();
@@ -289,7 +290,7 @@ public class DatabaseHelper {
    
 
     public static void main(String[] args) {
-        int userId = addUser("nadim", "password_here");
+        int userId = addUser("nadim","nadim@example.com", "password_here");
         System.out.println("Created user with id: " + userId);
 
         addTask(userId, "Finish capstone report", "Work", 5, 3.5, "2026-08-20 17:00:00", null);
