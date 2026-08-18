@@ -3,24 +3,34 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.sql.SQLException;
 
+/**
+ * This class sets up the SQLite database and creates the necessary tables for our IMTPS application.
+ * It creates a database file named "imtps_db.db" in the current working directory if it doesn't already exist.
+ * The tables created are:
+ * users: to store user information
+ * tasks: to store tasks associated with users
+ * preferences: to store user preferences after answering the questionnaire
+ */
+
 public class DatabaseSetup {
     public static void main(String[] args) {
-        String url = "jdbc:sqlite:imtps_db.db";  // creates the file if it doesn't exist
+        String url = "jdbc:sqlite:imtps_db.db";  //creates the file if it doesn't exist using the SQLite JDBC driver located in the directory.
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt = conn.createStatement()) {
 
             stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
                          "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                         "email VARCHAR(100) NOT NULL, " +
                          "username VARCHAR(100) NOT NULL, " +
-                         "password_hash VARCHAR(255) NOT NULL" +
+                         "password VARCHAR(255) NOT NULL" +
                          ");");
 
             stmt.execute("CREATE TABLE IF NOT EXISTS tasks (" +
                          "task_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                          "user_id INTEGER NOT NULL, " +
                          "task_name VARCHAR(255) NOT NULL, " +
-                         "category VARCHAR(100), " +
+                         "category INTEGER CHECK (category BETWEEN 1 AND 3), " +
                          "importance INTEGER CHECK (importance BETWEEN 1 AND 5), " +
                          "duration DECIMAL(5,2), " +
                          "due_date DATETIME NULL, " +

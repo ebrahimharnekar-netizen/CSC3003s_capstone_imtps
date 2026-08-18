@@ -1,33 +1,34 @@
 import java.sql.*;
 
 /**
- * Centralized database access for the IMTPS capstone project.
- * Handles connections to the SQLite database and provides
- * CRUD methods for users, tasks, and preferences.
+ * Class contains all the CRUD (Create, Read, update, delete) methods for users, tasks, and preferences. 
  */
+
 public class DatabaseHelper {
 
-    private static final String URL = "jdbc:sqlite:imtps_db.db";
+    private static final String URL = "jdbc:sqlite:imtps_db.db"; //Uses the SQLite JDBC driver to connect to the database file in the current working directory. 
 
-    // Get a fresh connection. Caller is responsible for closing it
-    // (use try-with-resources).
+    // Get a fresh connection. Caller is responsible for closing it. 
+
     public static Connection connect() throws SQLException {
         return DriverManager.getConnection(URL);
     }
 
-    // ---------------------------------------------------------
     // USERS
-    // ---------------------------------------------------------
+    
+    //Note: the ? in the SQL statements are placeholders for parameters that will be set later using 
+    // PreparedStatement. This helps prevent SQL injection attacks and allows for dynamic query building. 
+    // i applied this method for all the other methods that update the database
 
-    public static int addUser(String username, String email, String passwordHash) {
-        String sql = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
+    public static int addUser(String username, String email, String password) {
+        String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"; 
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            pstmt.setString(1, username);
-            pstmt.setString(2, email);
-            pstmt.setString(3, passwordHash);
+            pstmt.setString(1, username); // The first ? will be replaced with the username
+            pstmt.setString(2, email);   // The second ? will be replaced with the email
+            pstmt.setString(3, password); // The third ? will be replaced with the password
             pstmt.executeUpdate();
 
             ResultSet keys = pstmt.getGeneratedKeys();
@@ -38,7 +39,7 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1;
+        return -1; // indicates failure to add user, for eg if the username already exists (due to unique constraint)
     }
 
     public static void printAllUsers() {
@@ -50,8 +51,7 @@ public class DatabaseHelper {
 
             while (rs.next()) {
                 System.out.println(rs.getInt("user_id") + " | " +
-                                    rs.getString("username") + " | " +
-                                    rs.getString("email"));
+                                    rs.getString("username"));
             }
 
         } catch (SQLException e) {
@@ -59,11 +59,9 @@ public class DatabaseHelper {
         }
     }
 
-    // ---------------------------------------------------------
     // TASKS
-    // ---------------------------------------------------------
 
-    public static void addTask(int userId, String taskName, String category,
+    public static void addTask(int userId, String taskName, int category,
                                 int importance, double duration,
                                 String dueDate, String startTime) {
         String sql = "INSERT INTO tasks (user_id, task_name, category, importance, " +
@@ -74,12 +72,12 @@ public class DatabaseHelper {
 
             pstmt.setInt(1, userId);
             pstmt.setString(2, taskName);
-            pstmt.setString(3, category);
+            pstmt.setInt(3, category);
             pstmt.setInt(4, importance);
             pstmt.setDouble(5, duration);
-            pstmt.setString(6, dueDate);   // pass null if not set
-            pstmt.setString(7, startTime); // pass null if not set
-            pstmt.executeUpdate();
+            pstmt.setString(6, dueDate);   //pass null if not set
+            pstmt.setString(7, startTime); //pass null if not set
+            pstmt.executeUpdate();         //executes the insert statement
 
             System.out.println("Task added: " + taskName);
 
@@ -125,6 +123,96 @@ public class DatabaseHelper {
             e.printStackTrace();
         }
     }
+    
+    public static void updateTaskName(int taskId, String newTaskName) {
+        String sql = "UPDATE tasks SET task_name = ? WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newTaskName);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateTaskCategory(int taskId, int newCategory) {
+        String sql = "UPDATE tasks SET category = ? WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, newCategory);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateTaskDuration(int taskId, double newDuration) {
+        String sql = "UPDATE tasks SET duration = ? WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setDouble(1, newDuration);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateTaskDueDate(int taskId, String newDueDate) {
+        String sql = "UPDATE tasks SET due_date = ? WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newDueDate);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateTaskStartTime(int taskId, String newStartTime) {
+        String sql = "UPDATE tasks SET start_time = ? WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newStartTime);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateTaskEndTime(int taskId, String newEndTime) {
+        String sql = "UPDATE tasks SET end_time = ? WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newEndTime);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void deleteTask(int taskId) {
         String sql = "DELETE FROM tasks WHERE task_id = ?";
@@ -140,13 +228,11 @@ public class DatabaseHelper {
         }
     }
 
-    // ---------------------------------------------------------
     // PREFERENCES
-    // ---------------------------------------------------------
 
     public static void setPreferences(int userId, int peakProdTime, int dailyProdHours,
                                        boolean preferQuickFirst) {
-        // Try update first; if no row exists yet, insert one.
+        //Tries to update first. if no row exists yet, inserts one.
         String updateSql = "UPDATE preferences SET peak_prodtime = ?, daily_prod_hours = ?, " +
                             "preferred_quick_first = ? WHERE user_id = ?";
         String insertSql = "INSERT INTO preferences (user_id, peak_prodtime, daily_prod_hours, " +
@@ -199,16 +285,16 @@ public class DatabaseHelper {
         }
     }
 
-    // ---------------------------------------------------------
-    // Simple manual test
-    // ---------------------------------------------------------
+
+    //Simple test of the DatabaseHelper methods
+   
 
     public static void main(String[] args) {
-        int userId = addUser("nadim", "nadim@example.com", "hashed_password_here");
+        int userId = addUser("nadim","nadim@example.com", "password_here");
         System.out.println("Created user with id: " + userId);
 
-        addTask(userId, "Finish capstone report", "Work", 5, 3.5, "2026-08-20 17:00:00", null);
-        addTask(userId, "Gym session", "Health", 2, 1.0, null, "2026-08-14 07:00:00");
+        addTask(userId, "Finish capstone report", 1, 5, 3.5, "2026-08-20 17:00:00", null);
+        addTask(userId, "Gym session", 2, 2, 1.0, null, "2026-08-14 07:00:00");
 
         System.out.println("\nTasks for user " + userId + ":");
         printTasksForUser(userId);
