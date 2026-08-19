@@ -7,6 +7,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "DatabaseSetup",
+            "request": "launch",
+            "mainClass": "db.DatabaseSetup",
+            "projectName": "csc3003s_capstone_imtps_668299e5"
+        },
+        {
+            "type": "java",
+            "name": "DatabaseHelper",
+            "request": "launch",
+            "mainClass": "db.DatabaseHelper",
+            "projectName": "csc3003s_capstone_imtps_668299e5"
+        },
+        {
+            "type": "java",
             "name": "Launcher",
             "request": "launch",
             "mainClass": "frontend.Launcher",

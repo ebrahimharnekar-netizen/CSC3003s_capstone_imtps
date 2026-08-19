@@ -15,7 +15,7 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("menu.fxml"));
         
         // 2. Attach it to a Scene (you can also set the width/height here)
-        Scene scene = new Scene(root, 800, 600); 
+        Scene scene = new Scene(root, 600, 400); 
         
         // 3. Set up the window (Stage) and show it
         primaryStage.setTitle("My Menu App"); // The text at the top of the window
