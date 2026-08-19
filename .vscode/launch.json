@@ -1,0 +1,23 @@
+{
+    "type": "java",
+    "name": "Launch Main",
+    "request": "launch",
+    "mainClass": "frontend.Main",
+    "vmArgs": "--module-path \"${workspaceFolder}/External librararies\" --add-modules javafx.controls,javafx.fxml",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launcher",
+            "request": "launch",
+            "mainClass": "frontend.Launcher",
+            "projectName": "csc3003s_capstone_imtps_668299e5"
+        },
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "frontend.Main",
+            "projectName": "csc3003s_capstone_imtps_668299e5"
+        }
+    ]
+}

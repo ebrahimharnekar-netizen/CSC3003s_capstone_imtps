@@ -1,0 +1,16 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "External libraries/javafx.base.jar",
+        "External libraries/javafx.controls.jar",
+        "External libraries/javafx.fxml.jar",
+        "External libraries/javafx.graphics.jar",
+        "External libraries/javafx.media.jar",
+        "External libraries/javafx.swing.jar",
+        "External libraries/javafx.web.jar",
+        "External libraries/javafx-swt.jar",
+        "External libraries/jdk.jsobject.jar",
+        "External libraries/jfx.incubator.input.jar",
+        "External libraries/jfx.incubator.richtext.jar"
+    ]
+}
