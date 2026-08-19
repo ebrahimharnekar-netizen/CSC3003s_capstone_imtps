@@ -1,4 +1,6 @@
 package frontend;
+import db.DatabaseHelper;
+import algorithm.*;
 
 import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
@@ -11,8 +13,7 @@ public class Controller {
     // This method name must match the onAction="#onClickbtnExitMain" in your FXML
     @FXML
     public void onClickbtnExitMain(ActionEvent event) {
-        System.out.println("Exit button was clicked!");
-        // You can add your exit logic here later, e.g., System.exit(0);
+        System.exit(0);
     }
 
     // This method name must match the onAction="#onClickbtnHelpMain" in your FXML
@@ -20,5 +21,10 @@ public class Controller {
     public void onClickbtnHelpMain(ActionEvent event) {
         System.out.println("Help button was clicked!");
         // You can add your help logic here later
+    }
+
+    public void onClickbtnSignUpMain(ActionEvent event) {
+        System.out.println("Settings button was clicked!");
+        // You can add your settings logic here later
     }
 }

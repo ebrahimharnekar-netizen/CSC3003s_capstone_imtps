@@ -14,7 +14,7 @@
          </font>
       </Label>
       <Button fx:id="btnHelpMain" layoutX="113.0" layoutY="348.0" mnemonicParsing="false" onAction="#onClickbtnHelpMain" prefHeight="36.0" prefWidth="89.0" text="Help❓" />
-      <Button fx:id="btnExitMain1" layoutX="189.0" layoutY="182.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="225.0" text="Sign up" />
+      <Button fx:id="btnSignUpMain" layoutX="189.0" layoutY="182.0" mnemonicParsing="false" onAction="#onClickbtnSignUpMain" prefHeight="36.0" prefWidth="225.0" text="Sign up" />
       <Button fx:id="btnExitMain11" layoutX="264.0" layoutY="260.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="15.0" prefWidth="75.0" style="-fx-background-color: white;" text="Login">
          <font>
             <Font size="10.0" />

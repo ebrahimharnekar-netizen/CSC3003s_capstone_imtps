@@ -1,0 +1,1 @@
+java -cp ".:sqlite-jdbc-3.53.2.1.jar" DatabaseSetup
