@@ -3,7 +3,7 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class imtps {
+public class IMTPS {
 
     public static void main(String[] args){
 
