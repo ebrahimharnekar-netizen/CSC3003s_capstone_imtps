@@ -1,3 +1,11 @@
+/* This class serves as the main entry point for the JavaFX application. It extends the Application class, 
+which is a requirement for any JavaFX application. The start method is overridden to set up the primary stage (window)
+ of the application, load the initial FXML layout, and display it to the user. The main method is also provided to launch the 
+ application. This class is launched through the Launcher class, which provides a simple way to start the application without needing to 
+ set up the JavaFX environment manually.
+ */
+
+
 package frontend;
 
 
@@ -11,14 +19,15 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // 1. Load the FXML file
-        Parent root = FXMLLoader.load(getClass().getResource("menu.fxml"));
+        //Load the FXML file
+        Parent root = FXMLLoader.load(getClass().getResource("menu.fxml")); //Menu is the first page 
+                                                                                    // that will be displayed when the application starts
         
-        // 2. Attach it to a Scene (you can also set the width/height here)
+        //Attach it to a Scene
         Scene scene = new Scene(root, 600, 400); 
         
-        // 3. Set up the window (Stage) and show it
-        primaryStage.setTitle("My Menu App"); // The text at the top of the window
+        //Set up the window (Stage) and show it
+        primaryStage.setTitle("IMTPS Application"); // The text at the top of the window
         primaryStage.setScene(scene);
         primaryStage.show();
     }

@@ -43,6 +43,25 @@ public class DatabaseHelper {
         return -1; // indicates failure to add user, for eg if the username already exists (due to unique constraint)
     }
 
+    public static boolean userExists(String username) {
+        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // returns true if count > 0
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // indicates user does not exist
+    }
+
     public static void printAllUsers() {
         String sql = "SELECT * FROM users";
 
