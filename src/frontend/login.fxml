@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.LoginController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.LoginController">
    <children>
-      <Label layoutX="230.0" layoutY="180.0" text="Login Screen">
-         <font>
-            <Font size="24.0" />
-         </font>
-      </Label>
+      <Label layoutX="103.0" layoutY="147.0" text="Username:" />
+      <Label layoutX="104.0" layoutY="201.0" text="Password:" />
+      <TextField fx:id="txtUsernameLogin" layoutX="179.0" layoutY="143.0" prefHeight="25.0" prefWidth="206.0" />
+      <CheckBox fx:id="chbShowPasswordL" layoutX="409.0" layoutY="201.0" mnemonicParsing="false" onAction="#onCheckchbShowPasswordL" text="Show Password" />
+      <Button fx:id="btnSignIn" layoutX="96.0" layoutY="249.0" mnemonicParsing="false" onAction="#onClickbtnSignIn" prefHeight="43.0" prefWidth="408.0" text="Sign in" />
+      <PasswordField fx:id="txtPasswordLogin" layoutX="179.0" layoutY="197.0" prefHeight="25.0" prefWidth="206.0" />
+      <Button fx:id="btnBack" layoutX="27.0" layoutY="342.0" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="104.0" text="Back" />
    </children>
 </AnchorPane>

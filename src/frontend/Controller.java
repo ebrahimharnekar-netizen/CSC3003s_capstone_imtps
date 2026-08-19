@@ -30,12 +30,6 @@ public class Controller {
         System.exit(0);
     }
 
-    // This method name must match the onAction="#onClickbtnHelpMain" in your FXML
-    @FXML
-    public void onClickbtnHelpMain(ActionEvent event) {
-        System.out.println("Help button was clicked!");
-        // You can add your help logic here later
-    }
 
     @FXML
     public void onClickbtnSignUpMain(ActionEvent event) {
@@ -50,5 +44,20 @@ public class Controller {
             System.out.println("Error loading screen: " + e.getMessage());
             e.printStackTrace();
     }
-}
+
+    }
+
+    public void onClickbtnLogin(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("login.fxml"));
+            Scene newScene = new Scene(root);
+        
+            Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            window.setScene(newScene);
+            window.show();
+        } catch (Exception e) {
+            System.out.println("Error loading screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
