@@ -3,11 +3,18 @@ import db.DatabaseHelper;
 import algorithm.*;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.event.ActionEvent;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.CheckBox;
+import javafx.stage.Stage;
 
+import javafx.scene.Node;
 public class LoginController {
     public void onCheckchbShowPasswordL(ActionEvent event) {
         
@@ -20,9 +27,14 @@ public class LoginController {
     }
 
     public void onClickbtnBack(ActionEvent event) {
-        // Handle back button logic here
-        // You can navigate back to the previous screen or perform any other necessary actions
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("menu.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-
-    
 }

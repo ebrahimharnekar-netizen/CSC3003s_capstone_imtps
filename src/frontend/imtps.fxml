@@ -4,18 +4,20 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="523.0" prefWidth="767.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.IMTPSController">
    <children>
-      <DatePicker layoutX="70.0" layoutY="154.0" prefHeight="46.0" prefWidth="612.0" />
+      <DatePicker layoutX="78.0" layoutY="155.0" prefHeight="46.0" prefWidth="612.0" />
       <RadioButton fx:id="rdbtnWork" layoutX="435.0" layoutY="127.0" mnemonicParsing="false" text="Work" />
       <RadioButton fx:id="rdbtnHealth" layoutX="357.0" layoutY="127.0" mnemonicParsing="false" text="Health" />
       <RadioButton fx:id="rdbtnPersonal" layoutX="272.0" layoutY="127.0" mnemonicParsing="false" text="Personal" />
-      <Button fx:id="btnUddate" layoutX="64.0" layoutY="470.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="643.0" text="Update task" />
+      <Button fx:id="btnUddate" layoutX="65.0" layoutY="477.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="643.0" text="Update task" />
       <Pane prefHeight="107.0" prefWidth="767.0" style="-fx-background-color: grey;">
          <children>
             <Pane layoutX="498.0" layoutY="21.0" prefHeight="65.0" prefWidth="255.0" style="-fx-background-color: lightgrey;">
@@ -32,5 +34,10 @@
          </children>
       </Pane>
       <ImageView fitHeight="81.0" fitWidth="98.0" layoutX="14.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
+      <ScrollPane layoutX="80.0" layoutY="215.0" prefHeight="255.0" prefWidth="612.0">
+         <content>
+            <VBox prefHeight="261.0" prefWidth="617.0" />
+         </content>
+      </ScrollPane>
    </children>
 </AnchorPane>

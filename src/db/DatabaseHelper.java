@@ -129,6 +129,30 @@ public class DatabaseHelper {
         }
     }
 
+    public static void getTasksForTheDay(int userId, String date) {
+        String sql = "SELECT * FROM tasks WHERE user_id = ? AND due_date = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, userId);
+            pstmt.setString(2, date);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                System.out.println(rs.getInt("task_id") + " | " +
+                                    rs.getString("task_name") + " | " +
+                                    rs.getString("category") + " | " +
+                                    "importance=" + rs.getInt("importance") + " | " +
+                                    "duration=" + rs.getDouble("duration") + "h | " +
+                                    "due=" + rs.getString("due_date"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void updateTaskImportance(int taskId, int newImportance) {
         String sql = "UPDATE tasks SET importance = ? WHERE task_id = ?";
 
