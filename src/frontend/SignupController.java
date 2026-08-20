@@ -12,6 +12,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
@@ -40,8 +41,11 @@ public class SignupController {
         // 3. Check if the user already exists in the database
         if (DatabaseHelper.userExists(username)) {
             // 4. If the user exists, display an error message
-            Label lblError = (Label) scene.lookup("#lblErrorSignup");
-            lblError.setText("User already exists!");
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Signup Failed");
+            alert.setHeaderText(null); // Set to null to remove the header space
+            alert.setContentText("A user with that username already exists!");
+            alert.showAndWait();
         } else {
             // 5. If the user does not exist, create a new user in the database
             DatabaseHelper.addUser(username, email, password);
