@@ -1,16 +1,17 @@
 {
     "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "External libraries/javafx.base.jar",
-        "External libraries/javafx.controls.jar",
-        "External libraries/javafx.fxml.jar",
-        "External libraries/javafx.graphics.jar",
-        "External libraries/javafx.media.jar",
-        "External libraries/javafx.swing.jar",
-        "External libraries/javafx.web.jar",
-        "External libraries/javafx-swt.jar",
-        "External libraries/jdk.jsobject.jar",
-        "External libraries/jfx.incubator.input.jar",
-        "External libraries/jfx.incubator.richtext.jar"
+        "src/External libraries/javafx.base.jar",
+        "src/External libraries/javafx.controls.jar",
+        "src/External libraries/javafx.fxml.jar",
+        "src/External libraries/javafx.graphics.jar",
+        "src/External libraries/javafx.media.jar",
+        "src/External libraries/javafx.swing.jar",
+        "src/External libraries/javafx.web.jar",
+        "src/External libraries/javafx-swt.jar",
+        "src/External libraries/jdk.jsobject.jar",
+        "src/External libraries/jfx.incubator.input.jar",
+        "src/External libraries/jfx.incubator.richtext.jar",
+        "src/db/sqlite-jdbc-3.53.2.1.jar"
     ]
 }

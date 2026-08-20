@@ -7,6 +7,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launcher",
+            "request": "launch",
+            "mainClass": "frontend.Launcher",
+            "projectName": "csc3003s_capstone_imtps_e8e437a0"
+        },
+        {
+            "type": "java",
             "name": "DatabaseSetup",
             "request": "launch",
             "mainClass": "db.DatabaseSetup",
