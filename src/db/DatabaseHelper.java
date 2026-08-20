@@ -32,6 +32,8 @@ public class DatabaseHelper {
             pstmt.setString(3, password); // The third ? will be replaced with the password
             pstmt.executeUpdate();
 
+            System.out.println("User added: " + username);
+
             ResultSet keys = pstmt.getGeneratedKeys();
             if (keys.next()) {
                 return keys.getInt(1); // newly created user_id

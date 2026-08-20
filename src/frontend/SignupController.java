@@ -37,10 +37,6 @@ public class SignupController {
         password = ((PasswordField) scene.lookup("#txtPasswordSignup")).getText();
         email = ((TextField) scene.lookup("#txtEmailSignup")).getText();
 
-        System.out.println("Username: " + username);
-        System.out.println("Password: " + password);
-        System.out.println("Email: " + email);
-
         // 3. Check if the user already exists in the database
         if (DatabaseHelper.userExists(username)) {
             // 4. If the user exists, display an error message
