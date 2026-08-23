@@ -64,6 +64,26 @@ public class DatabaseHelper {
         return false; // indicates user does not exist
     }
 
+    public static boolean validateUser(String username, String password) {
+        String sql = "SELECT COUNT(*) FROM users WHERE username = ? AND password = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // returns true if count > 0
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // indicates invalid username/password combination
+    }
+
     public static void printAllUsers() {
         String sql = "SELECT * FROM users";
 
@@ -80,6 +100,8 @@ public class DatabaseHelper {
             e.printStackTrace();
         }
     }
+
+
 
     // TASKS
 
