@@ -20,8 +20,8 @@
       <Label layoutX="105.0" layoutY="149.0" text="E-mail:" />
       <Label layoutX="105.0" layoutY="182.0" text="Username:" />
       <Label layoutX="106.0" layoutY="219.0" text="Password:" />
-      <TextField fx:id="txtEmailSignup" layoutX="179.0" layoutY="145.0" prefHeight="25.0" prefWidth="206.0" />
-      <TextField fx:id="txtUsernameSignup" layoutX="179.0" layoutY="178.0" prefHeight="25.0" prefWidth="206.0" />
+      <TextField fx:id="txtEmailSignup" layoutX="179.0" layoutY="145.0" prefHeight="25.0" prefWidth="206.0" promptText="example@gmail.com" />
+      <TextField fx:id="txtUsernameSignup" layoutX="179.0" layoutY="178.0" prefHeight="25.0" prefWidth="206.0" promptText="njakza" />
       <CheckBox fx:id="chbShowPassword" layoutX="406.0" layoutY="219.0" mnemonicParsing="false" onAction="#onCheckchbShowPassword" text="Show Password" />
       <Button fx:id="btnCreateAccount" layoutX="97.0" layoutY="262.0" mnemonicParsing="false" onAction="#onClickbtnCreateAccount" prefHeight="43.0" prefWidth="408.0" style="-fx-background-color: navy;" text="Sign up" textFill="WHITE" />
       <PasswordField fx:id="txtPasswordSignup" layoutX="179.0" layoutY="215.0" prefHeight="25.0" prefWidth="206.0" />

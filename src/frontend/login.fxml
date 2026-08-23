@@ -14,7 +14,7 @@
    <children>
       <Label layoutX="106.0" layoutY="168.0" text="Username:" />
       <Label layoutX="106.0" layoutY="210.0" text="Password:" />
-      <TextField fx:id="txtUsernameLogin" layoutX="179.0" layoutY="164.0" prefHeight="25.0" prefWidth="206.0" />
+      <TextField fx:id="txtUsernameLogin" layoutX="179.0" layoutY="164.0" prefHeight="25.0" prefWidth="206.0" promptText="yourusername " />
       <CheckBox fx:id="chbShowPasswordL" layoutX="406.0" layoutY="210.0" mnemonicParsing="false" onAction="#onCheckchbShowPasswordL" text="Show Password" />
       <Button fx:id="btnSignIn" layoutX="97.0" layoutY="262.0" mnemonicParsing="false" onAction="#onClickbtnSignIn" prefHeight="43.0" prefWidth="408.0" style="-fx-background-color: navy;" text="Sign in" textFill="WHITE" />
       <PasswordField fx:id="txtPasswordLogin" layoutX="179.0" layoutY="206.0" prefHeight="25.0" prefWidth="206.0" />
