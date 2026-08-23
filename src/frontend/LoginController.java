@@ -40,11 +40,15 @@ public class LoginController {
         // Check if the user exists in the database
         if (DatabaseHelper.validateUser(username, password)) {
 
+            // Track who is logged in so later screens know whose data to save
+            Session.currentUserId = DatabaseHelper.getUserId(username);
+            Session.currentUsername = username;
+
             //Loads the questionnaire page if the user exists in the database
         try {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Login Successful");
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("questions.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("Questions.fxml"));
                 Parent root = loader.load();
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));

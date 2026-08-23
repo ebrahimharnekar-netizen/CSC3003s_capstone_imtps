@@ -84,6 +84,27 @@ public class DatabaseHelper {
         return false; // indicates invalid username/password combination
     }
 
+    // Looks up a user's id by username. Returns -1 if no user exists.
+    // Used after validateUser() succeeds so the session can track who is logged in.
+    public static int getUserId(String username) {
+        String sql = "SELECT user_id FROM users WHERE username = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("user_id");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1; // indicates user does not exist
+    }
+
     public static void printAllUsers() {
         String sql = "SELECT * FROM users";
 
@@ -329,6 +350,42 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    // Simple read-only holder for a user's saved preferences, used to pre-fill the questionnaire.
+    public static class Preferences {
+        public final int peakProdTime;
+        public final int dailyProdHours;
+        public final boolean preferQuickFirst;
+
+        public Preferences(int peakProdTime, int dailyProdHours, boolean preferQuickFirst) {
+            this.peakProdTime = peakProdTime;
+            this.dailyProdHours = dailyProdHours;
+            this.preferQuickFirst = preferQuickFirst;
+        }
+    }
+
+    // Returns the user's saved preferences, or null if they haven't answered the questionnaire yet.
+    public static Preferences getPreferences(int userId) {
+        String sql = "SELECT peak_prodtime, daily_prod_hours, preferred_quick_first " +
+                     "FROM preferences WHERE user_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new Preferences(rs.getInt("peak_prodtime"),
+                                        rs.getInt("daily_prod_hours"),
+                                        rs.getBoolean("preferred_quick_first"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // no preferences saved yet - caller should fall back to defaults
     }
 
     public static void printPreferences(int userId) {
