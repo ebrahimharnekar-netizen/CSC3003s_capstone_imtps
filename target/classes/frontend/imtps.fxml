@@ -5,19 +5,15 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.VBox?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="523.0" prefWidth="767.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.IMTPSController">
    <children>
-      <DatePicker layoutX="78.0" layoutY="155.0" prefHeight="46.0" prefWidth="612.0" />
-      <RadioButton fx:id="rdbtnWork" layoutX="435.0" layoutY="127.0" mnemonicParsing="false" text="Work" />
-      <RadioButton fx:id="rdbtnHealth" layoutX="357.0" layoutY="127.0" mnemonicParsing="false" text="Health" />
-      <RadioButton fx:id="rdbtnPersonal" layoutX="272.0" layoutY="127.0" mnemonicParsing="false" text="Personal" />
-      <Button fx:id="btnUddate" layoutX="65.0" layoutY="477.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="643.0" text="Update task" />
       <Pane prefHeight="107.0" prefWidth="767.0" style="-fx-background-color: grey;">
          <children>
             <Pane layoutX="498.0" layoutY="21.0" prefHeight="65.0" prefWidth="255.0" style="-fx-background-color: lightgrey;">
@@ -31,13 +27,40 @@
                   <Label fx:id="lblUsernameIMTPS" layoutX="140.0" layoutY="24.0" text="User" />
                </children>
             </Pane>
+            <ImageView fitHeight="122.0" fitWidth="216.0" layoutX="-12.0" layoutY="-7.0" pickOnBounds="true">
+               <image>
+                  <Image url="@../Images/NEN.png" />
+               </image>
+            </ImageView>
          </children>
       </Pane>
       <ImageView fitHeight="81.0" fitWidth="98.0" layoutX="14.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
-      <ScrollPane layoutX="80.0" layoutY="215.0" prefHeight="255.0" prefWidth="612.0">
-         <content>
-            <VBox prefHeight="261.0" prefWidth="617.0" />
-         </content>
-      </ScrollPane>
+      <TabPane layoutY="107.0" prefHeight="418.0" prefWidth="767.0" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+          <Tab text="Add tasks">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+          <Tab text="View tasks">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <RadioButton fx:id="rdbtnPersonal" layoutX="599.0" layoutY="51.0" mnemonicParsing="false" text="Personal" />
+                        <RadioButton fx:id="rdbtnHealth" layoutX="478.0" layoutY="52.0" mnemonicParsing="false" text="Health" />
+                        <RadioButton fx:id="rdbtnWork" layoutX="359.0" layoutY="51.0" mnemonicParsing="false" text="Work" />
+                        <DatePicker layoutX="34.0" layoutY="41.0" prefHeight="38.0" prefWidth="265.0" />
+                        <ScrollPane layoutX="18.0" layoutY="99.0" prefHeight="241.0" prefWidth="738.0" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+            <Tab text="Edit task">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+        </tabs>
+      </TabPane>
    </children>
 </AnchorPane>
