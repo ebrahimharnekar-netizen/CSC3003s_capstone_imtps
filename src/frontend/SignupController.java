@@ -19,6 +19,10 @@ import javafx.scene.Node;
 
 public class SignupController {
 
+    @FXML private TextField txtUsernameSignup;
+    @FXML private PasswordField txtPasswordSignup;
+    @FXML private TextField txtEmailSignup;
+
     public static String username;
     public static String password;
     public static String email;
@@ -30,15 +34,12 @@ public class SignupController {
     }
 
     public void onClickbtnCreateAccount(ActionEvent event) {
-        // 1. Safely get the Scene from the button (Node) that was clicked
-        Scene scene = ((Node) event.getSource()).getScene();
 
-        // 2. Search the scene, and cast the RESULT to a TextField/PasswordField
-        username = ((TextField) scene.lookup("#txtUsernameSignup")).getText();
-        password = ((PasswordField) scene.lookup("#txtPasswordSignup")).getText();
-        email = ((TextField) scene.lookup("#txtEmailSignup")).getText();
+        username = txtUsernameSignup.getText();
+        password = txtPasswordSignup.getText();
+        email = txtEmailSignup.getText();
 
-        // 3. Check if the user already exists in the database
+        //Check if the user already exists in the database
         if (DatabaseHelper.userExists(username)) {
             // 4. If the user exists, display an error message
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -47,10 +48,10 @@ public class SignupController {
             alert.setContentText("A user with that username already exists!");
             alert.showAndWait();
         } else {
-            // 5. If the user does not exist, create a new user in the database
+            //If the user does not exist, create a new user in the database
             DatabaseHelper.addUser(username, email, password);
 
-            // 6. Load the login page
+            //Load the login page
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("Login.fxml"));
                 Parent root = loader.load();

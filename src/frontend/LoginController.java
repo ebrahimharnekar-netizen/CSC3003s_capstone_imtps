@@ -20,8 +20,11 @@ import javafx.scene.Node;
 
 public class LoginController {
 
-    public static String username;
-    public static String password;
+    @FXML private TextField txtUsernameLogin;
+    @FXML private PasswordField txtPasswordLogin;
+    
+    @FXML private CheckBox chbShowPasswordLogin;
+
 
 
     public void onCheckchbShowPasswordL(ActionEvent event) {
@@ -30,16 +33,13 @@ public class LoginController {
     }
 
     public void onClickbtnSignIn(ActionEvent event) {
-        // Handle login logic here
-        // You can access the UI elements using @FXML annotations and perform necessary actions
-        Scene scene = ((Node) event.getSource()).getScene();
-        String username = ((TextField) scene.lookup("#txtUsernameLogin")).getText();
-        String password = ((PasswordField) scene.lookup("#txtPasswordLogin")).getText();
+
+        String username = txtUsernameLogin.getText();
+        String password = txtPasswordLogin.getText();
 
         // Check if the user exists in the database
         if (DatabaseHelper.validateUser(username, password)) {
-            // User exists, proceed to the next screen or perform desired actions
-            
+
             //Loads the questionnaire page if the user exists in the database
         try {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
