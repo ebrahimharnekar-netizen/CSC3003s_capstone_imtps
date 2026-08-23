@@ -35,6 +35,8 @@
                   <Image url="@../Images/NEN.png" />
                </image>
             </ImageView>
+            <Button layoutX="184.0" layoutY="55.0" mnemonicParsing="false" style="-fx-background-color: none;" text="Preferences" textFill="WHITE" underline="true" />
+            <Button layoutX="274.0" layoutY="55.0" mnemonicParsing="false" style="-fx-background-color: none;" text="Help" textFill="WHITE" underline="true" />
          </children>
       </Pane>
       <ImageView fitHeight="81.0" fitWidth="98.0" layoutX="14.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
@@ -44,18 +46,19 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <DatePicker layoutX="175.0" layoutY="255.0" prefHeight="17.0" prefWidth="265.0" promptText="Start Date" />
-                        <DatePicker layoutX="175.0" layoutY="299.0" prefHeight="11.0" prefWidth="265.0" promptText="Due Date" />
-                        <TextField layoutX="173.0" layoutY="79.0" prefHeight="25.0" prefWidth="268.0" promptText="eg. Study for CSC3003S" />
-                        <Label layoutX="75.0" layoutY="83.0" text="*Task Name:" />
-                        <Label layoutX="70.0" layoutY="259.0" text="*Start Date :" />
-                        <Label layoutX="75.0" layoutY="303.0" text="Due Date:" />
-                        <ComboBox layoutX="174.0" layoutY="127.0" prefHeight="25.0" prefWidth="267.0" promptText="Catagory 1. Work, 2. Health 3. Personal" />
-                        <Label layoutX="75.0" layoutY="131.0" text="*Category" />
-                        <Label layoutX="71.0" layoutY="170.0" text="*Importance (1-5)" />
-                        <Spinner layoutX="173.0" layoutY="166.0" prefHeight="25.0" prefWidth="271.0" />
-                        <Label layoutX="71.0" layoutY="215.0" text="*Duration (Hours)" />
-                        <Spinner layoutX="173.0" layoutY="211.0" prefHeight="25.0" prefWidth="271.0" />
+                        <DatePicker layoutX="302.0" layoutY="243.0" prefHeight="17.0" prefWidth="265.0" promptText="Start Date" />
+                        <DatePicker layoutX="302.0" layoutY="287.0" prefHeight="11.0" prefWidth="265.0" promptText="Due Date" />
+                        <TextField layoutX="303.0" layoutY="59.0" prefHeight="25.0" prefWidth="268.0" promptText="eg. Study for CSC3003S" />
+                        <Label layoutX="160.0" layoutY="63.0" text="*Task Name:" />
+                        <Label layoutX="161.0" layoutY="247.0" text="*Start Date :" />
+                        <Label layoutX="167.0" layoutY="291.0" text="Due Date:" />
+                        <ComboBox layoutX="304.0" layoutY="106.0" prefHeight="25.0" prefWidth="267.0" promptText="Catagory 1. Work, 2. Health 3. Personal" />
+                        <Label layoutX="160.0" layoutY="110.0" text="*Category" />
+                        <Label layoutX="160.0" layoutY="158.0" text="*Importance (1-5)" />
+                        <Spinner layoutX="302.0" layoutY="154.0" prefHeight="25.0" prefWidth="271.0" />
+                        <Label layoutX="160.0" layoutY="203.0" text="*Duration (Hours)" />
+                        <Spinner layoutX="302.0" layoutY="199.0" prefHeight="25.0" prefWidth="271.0" />
+                        <Button layoutX="162.0" layoutY="332.0" mnemonicParsing="false" prefHeight="33.0" prefWidth="404.0" text="Add task" />
                      </children></AnchorPane>
             </content>
           </Tab>
