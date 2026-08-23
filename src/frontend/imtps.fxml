@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -21,7 +24,7 @@
                   <Button fx:id="btnSignOut" layoutX="7.0" layoutY="37.0" mnemonicParsing="false" style="-fx-background-color: lightgrey;" text="Sign Out" underline="true" />
                   <ImageView fitHeight="46.0" fitWidth="50.0" layoutX="195.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
                      <image>
-                        <Image url="@../../Images/User.png" />
+                        <Image url="@../Images/User.png" />
                      </image>
                   </ImageView>
                   <Label fx:id="lblUsernameIMTPS" layoutX="140.0" layoutY="24.0" text="User" />
@@ -39,7 +42,21 @@
         <tabs>
           <Tab text="Add tasks">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <DatePicker layoutX="175.0" layoutY="255.0" prefHeight="17.0" prefWidth="265.0" promptText="Start Date" />
+                        <DatePicker layoutX="175.0" layoutY="299.0" prefHeight="11.0" prefWidth="265.0" promptText="Due Date" />
+                        <TextField layoutX="173.0" layoutY="79.0" prefHeight="25.0" prefWidth="268.0" promptText="eg. Study for CSC3003S" />
+                        <Label layoutX="75.0" layoutY="83.0" text="*Task Name:" />
+                        <Label layoutX="70.0" layoutY="259.0" text="*Start Date :" />
+                        <Label layoutX="75.0" layoutY="303.0" text="Due Date:" />
+                        <ComboBox layoutX="174.0" layoutY="127.0" prefHeight="25.0" prefWidth="267.0" promptText="Catagory 1. Work, 2. Health 3. Personal" />
+                        <Label layoutX="75.0" layoutY="131.0" text="*Category" />
+                        <Label layoutX="71.0" layoutY="170.0" text="*Importance (1-5)" />
+                        <Spinner layoutX="173.0" layoutY="166.0" prefHeight="25.0" prefWidth="271.0" />
+                        <Label layoutX="71.0" layoutY="215.0" text="*Duration (Hours)" />
+                        <Spinner layoutX="173.0" layoutY="211.0" prefHeight="25.0" prefWidth="271.0" />
+                     </children></AnchorPane>
             </content>
           </Tab>
           <Tab text="View tasks">
