@@ -25,4 +25,5 @@ clean:
 	rm -f *.class
 	rm -f algorithm/*.class
 	rm -f frontend/*.class
+	rm -f db/*.class
 	@echo "Workspace cleaned: All .class files have been removed."

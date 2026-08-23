@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.SignupController">
+   <children>
+      <ImageView fitHeight="204.0" fitWidth="332.0" layoutX="292.0" layoutY="-15.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../Images/NEN.png" />
+         </image>
+      </ImageView>
+      <Label layoutX="105.0" layoutY="149.0" text="E-mail:" />
+      <Label layoutX="105.0" layoutY="182.0" text="Username:" />
+      <Label layoutX="106.0" layoutY="219.0" text="Password:" />
+      <TextField fx:id="txtEmailSignup" layoutX="179.0" layoutY="145.0" prefHeight="25.0" prefWidth="206.0" promptText="example@gmail.com" />
+      <TextField fx:id="txtUsernameSignup" layoutX="179.0" layoutY="178.0" prefHeight="25.0" prefWidth="206.0" promptText="njakza" />
+      <CheckBox fx:id="chbShowPassword" layoutX="406.0" layoutY="219.0" mnemonicParsing="false" onAction="#onCheckchbShowPassword" text="Show Password" />
+      <Button fx:id="btnCreateAccount" layoutX="97.0" layoutY="262.0" mnemonicParsing="false" onAction="#onClickbtnCreateAccount" prefHeight="43.0" prefWidth="408.0" style="-fx-background-color: navy;" text="Sign up" textFill="WHITE" />
+      <PasswordField fx:id="txtPasswordSignup" layoutX="179.0" layoutY="215.0" prefHeight="25.0" prefWidth="206.0" />
+      <Button fx:id="btnBack" layoutX="37.0" layoutY="343.0" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="104.0" text="Back" />
+      <Button fx:id="btnLogInSignup" layoutX="264.0" layoutY="313.0" mnemonicParsing="false" onAction="#onClickbtnLogInSignup" prefHeight="15.0" prefWidth="75.0" style="-fx-background-color: none;" text="Login" underline="true">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Button>
+   </children>
+</AnchorPane>
