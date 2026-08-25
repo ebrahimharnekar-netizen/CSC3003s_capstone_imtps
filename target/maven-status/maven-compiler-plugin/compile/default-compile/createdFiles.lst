@@ -3,6 +3,7 @@ algorithm/SchedulingAlg.class
 frontend/SignupController.class
 frontend/IMTPSController.class
 frontend/HelpController.class
+frontend/Session.class
 algorithm/AltScheduler$1.class
 algorithm/AltScheduler.class
 IMTPS.class
@@ -21,4 +22,5 @@ algorithm/AltScheduler$2.class
 algorithm/Scheduler$3.class
 frontend/Main.class
 algorithm/Scheduler.class
+db/DatabaseHelper$Preferences.class
 frontend/Launcher.class

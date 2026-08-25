@@ -15,6 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
+import javafx.scene.control.SpinnerValueFactory;
 
 public class IMTPSController {
 
@@ -24,6 +25,20 @@ public class IMTPSController {
     @FXML private Spinner<Double> btnDuration;
     @FXML private DatePicker btnStartDate; 
     @FXML private DatePicker btnDueDate;
+
+    @FXML
+    public void initialize() {
+        // 1. Give the ComboBox its dropdown options
+        btnCategory.getItems().addAll("1. Work", "2. Health", "3. Personal");
+
+        // 2. Set Spinner rules: (Minimum, Maximum, Starting Default)
+        SpinnerValueFactory<Integer> importanceFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5, 1);
+        btnImportance.setValueFactory(importanceFactory);
+
+        // 3. Set Duration rules: (Min 0.0, Max 24.0, Default 1.0, Step by 0.5)
+        SpinnerValueFactory<Double> durationFactory = new SpinnerValueFactory.DoubleSpinnerValueFactory(0.0, 24.0, 1.0, 0.25);
+        btnDuration.setValueFactory(durationFactory);
+    }
     
     public void onClickBtnAddTask(ActionEvent event) {
 
@@ -69,11 +84,6 @@ public class IMTPSController {
             // Attach 23:59 (11:59 PM) to the chosen deadline day
             dueDate = dueVal.atTime(23, 59);
         }
-
-        // --- TEST PRINT ---
-        System.out.println("Task: " + addName + " | Cat: " + categoryInt + " | Imp: " + importance + " | Dur: " + duration);
-        System.out.println("StartTime: " + startTime);
-        System.out.println("DueDate: " + dueDate);
         
         // At this exact spot, you have all 6 pieces of data needed to create a new Task object!
         // Task newTask = new Task(addName, categoryInt, importance, duration, dueDate, startTime);
