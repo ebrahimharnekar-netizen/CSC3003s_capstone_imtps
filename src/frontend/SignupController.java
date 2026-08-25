@@ -49,11 +49,13 @@ public class SignupController {
             alert.showAndWait();
         } else {
             //If the user does not exist, create a new user in the database
-            DatabaseHelper.addUser(username, email, password);
-
-            //Load the login page
+            int newUserID = DatabaseHelper.addUser(username, email, password);
+            // Track who just signed up so the questionnaire knows whose preferences to save
+            Session.currentUserId = newUserID;
+            Session.currentUsername = username;
+            //Load the questionnaire page with the user new logged in
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("Login.fxml"));
+                 FXMLLoader loader = new FXMLLoader(getClass().getResource("Questions.fxml"));
                 Parent root = loader.load();
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
