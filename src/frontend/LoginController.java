@@ -44,11 +44,11 @@ public class LoginController {
             Session.currentUserId = DatabaseHelper.getUserId(username);
             Session.currentUsername = username;
 
-            //Loads the questionnaire page if the user exists in the database
+            //Loads the imtps page if the user exists in the database
         try {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Login Successful");
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("Questions.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("imtps.fxml"));
                 Parent root = loader.load();
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
