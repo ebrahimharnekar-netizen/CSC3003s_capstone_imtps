@@ -270,7 +270,6 @@ public class IMTPSController {
                             DatabaseHelper.updateTaskImportance(id, newImp);
                             DatabaseHelper.updateTaskDuration(id, newDur);
                             
-                            // USING YOUR NEW LOCALDATETIME DB METHODS
                             DatabaseHelper.updateTaskStartTime(id, newStart);
                             DatabaseHelper.updateTaskDueDate(id, newDue);
                             
@@ -291,7 +290,7 @@ public class IMTPSController {
         }
     }
 
-    // --- NAVIGATION & VIEW TASKS ---
+    // --- NAVIGATION ---
     public void onClickbtnPref(ActionEvent event) { switchScene(event, "preferences.fxml"); }
     public void onClickbtnSignOut(ActionEvent event) { switchScene(event, "login.fxml"); }
     public void onClickbtnHelp(ActionEvent event) { switchScene(event, "help.fxml"); }
@@ -309,8 +308,21 @@ public class IMTPSController {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Decide which scheduler to use for a given mode.
+    // You can change the mapping later – just edit this method.
+    // -------------------------------------------------------------------------
+    private SchedulingAlg getSchedulerForMode(int mode) {
+        // Currently uses Scheduler (priority‑based) for all modes so that
+        // the focus‑mode multiplier is applied.
+        // To use AltScheduler (deadline‑based) for a specific mode, change the return.
+        return new Scheduler();
+    }
+
+    // --- VIEW TASKS WITH SCHEDULING ALGORITHMS ---
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
+        // 1. Delete checked tasks
         for (Node node : taskContainer.getChildren()) {
             if (node instanceof HBox) {
                 HBox card = (HBox) node;
@@ -322,8 +334,10 @@ public class IMTPSController {
             }
         }
 
+        // 2. Clear UI
         taskContainer.getChildren().clear();
 
+        // 3. Fetch all tasks 
         int userID = Session.currentUserId;
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
         List<Task> allTasks = new ArrayList<>();
@@ -361,21 +375,39 @@ public class IMTPSController {
             return;
         }
 
-        int currentMode = Questionnaire.PersonalMode; 
-        if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
-        if (rdbtnHealth.isSelected()) currentMode = Questionnaire.HealthMode;
+        // 4. IMPORTANT FIX: Reset startTime for ALL tasks so they are treated as floating
+        //    This forces the scheduler to recompute the entire schedule each time.
+        for (Task t : allTasks) {
+            t.startTime = null;
+        }
 
-        Questionnaire prefs = new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8); 
-        Scheduler scheduler = new Scheduler();
+        // 5. Determine the mode from the selected RadioButton
+        int currentMode = Questionnaire.PersonalMode; // Default
+        if (rdbtnWork.isSelected()) {
+            currentMode = Questionnaire.WorkMode;
+        } else if (rdbtnHealth.isSelected()) {
+            currentMode = Questionnaire.HealthMode;
+        } else if (rdbtnPersonal.isSelected()) {
+            currentMode = Questionnaire.PersonalMode;
+        }
+
+        // 6. Create Questionnaire with the selected mode
+        Questionnaire prefs = new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
+        
+        // 7. Choose the scheduler based on the mode (you can modify getSchedulerForMode)
+        SchedulingAlg scheduler = getSchedulerForMode(currentMode);
+        
+        // 8. Generate the schedule
         scheduler.genSchedule(allTasks, prefs);
 
+        // 9. Update task start times in database
         for (Task t : allTasks) {
             if (t.startTime != null) {
-                // USING YOUR NEW LOCALDATETIME DB METHOD
-                DatabaseHelper.updateTaskStartTime(t.taskId, t.startTime); 
+                DatabaseHelper.updateTaskStartTime(t.taskId, t.startTime);
             }
         }
 
+        // 10. Display tasks for the selected date
         LocalDate viewDate = dpViewDate.getValue();
         if (viewDate == null) viewDate = LocalDate.now();
 
