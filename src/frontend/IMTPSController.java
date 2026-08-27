@@ -43,15 +43,21 @@ public class IMTPSController {
     @FXML private Spinner<Integer> btnImportance;
     @FXML private Spinner<Double> btnDuration;
     @FXML private DatePicker btnStartDate; 
-    @FXML private TextField txtStartTime; // NEW: Time input field
+    @FXML private TextField txtStartTime; 
     @FXML private DatePicker btnDueDate;
+    @FXML private Label lblAddStatus;
 
     // View Tasks Tab Elements
     @FXML private VBox taskContainer;
-    @FXML private DatePicker dpViewDate; // NEW: Controls which date we look at
+    @FXML private DatePicker dpViewDate; 
     @FXML private RadioButton rdbtnWork;
     @FXML private RadioButton rdbtnHealth;
     @FXML private RadioButton rdbtnPersonal;
+
+    // Edit Tasks Tab Elements
+    @FXML private TextField txtSearchTask;
+    @FXML private VBox editTaskContainer;
+    @FXML private Label lblEditStatus;
 
     @FXML
     public void initialize() {
@@ -69,12 +75,18 @@ public class IMTPSController {
         rdbtnPersonal.setToggleGroup(modeGroup);
         rdbtnPersonal.setSelected(true); 
         
-        // Default the view date to today
         dpViewDate.setValue(LocalDate.now()); 
     }
     
+    // --- ADD TASK LOGIC WITH VALIDATION ---
     public void onClickBtnAddTask(ActionEvent event) {
         String addName = btnAddName.getText();
+
+        if (addName == null || addName.trim().isEmpty()) {
+            lblAddStatus.setText("Error: Task Name cannot be empty.");
+            lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+            return;
+        }
 
         String categoryString = btnCategory.getValue(); 
         int categoryInt = 3; 
@@ -85,19 +97,28 @@ public class IMTPSController {
             else if (categoryString.contains("Personal")) categoryInt = 3;
         }
 
-        int importance = (btnImportance.getValue() != null) ? btnImportance.getValue() : 0;
-        double duration = (btnDuration.getValue() != null) ? btnDuration.getValue() : 0.0;
+        int importance = (btnImportance.getValue() != null) ? btnImportance.getValue() : 1;
+        double duration = (btnDuration.getValue() != null) ? btnDuration.getValue() : 1.0;
 
-        // NEW TIME LOGIC: Only pin the task if they provide BOTH a date and a valid time!
         LocalDate startVal = btnStartDate.getValue();
         LocalDateTime startTime = null; 
         
         if (startVal != null && txtStartTime.getText() != null && !txtStartTime.getText().isEmpty()) {
             try {
-                LocalTime parsedTime = LocalTime.parse(txtStartTime.getText()); // Parses "14:30"
+                LocalTime parsedTime = LocalTime.parse(txtStartTime.getText()); 
                 startTime = startVal.atTime(parsedTime); 
             } catch (Exception e) {
-                System.out.println("Invalid time format entered. Task will remain floating.");
+                lblAddStatus.setText("Error: Invalid time format. Use HH:mm (e.g., 14:30)");
+                lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                return;
+            }
+        }
+
+        if (startTime != null) {
+            if (checkTimeOverlap(Session.currentUserId, startTime, duration)) {
+                lblAddStatus.setText("Error: You already have a task scheduled during this time!");
+                lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                return;
             }
         }
 
@@ -107,21 +128,173 @@ public class IMTPSController {
         int userID = Session.currentUserId; 
         DatabaseHelper.addTask(userID, addName, categoryInt, importance, duration, dueDate, startTime);
         
+        lblAddStatus.setText("Success: '" + addName + "' added successfully!");
+        lblAddStatus.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+        
         btnAddName.clear();
         txtStartTime.clear();
     }
 
-    public void onClickbtnPref(ActionEvent event) {
-        switchScene(event, "preferences.fxml");
+    private boolean checkTimeOverlap(int userId, LocalDateTime newStart, double newDuration) {
+        LocalDateTime newEnd = newStart.plusMinutes((long)(newDuration * 60));
+        String sql = "SELECT start_time, duration FROM tasks WHERE user_id = ?";
+        
+        try (Connection conn = DatabaseHelper.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, userId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                Object startObj = rs.getObject("start_time");
+                if (startObj != null) {
+                    LocalDateTime existingStart = (startObj instanceof LocalDateTime) 
+                        ? (LocalDateTime) startObj 
+                        : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
+                    
+                    double existingDur = rs.getDouble("duration");
+                    LocalDateTime existingEnd = existingStart.plusMinutes((long)(existingDur * 60));
+                    
+                    if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
+                        return true; 
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Overlap check error: " + e.getMessage());
+        }
+        return false;
     }
 
-    public void onClickbtnSignOut(ActionEvent event) {
-        switchScene(event, "login.fxml");
+    // --- EDIT TASK LOGIC (SEARCH & INLINE EDITING) ---
+    @FXML
+    public void onClickSearchTasks(ActionEvent event) {
+        editTaskContainer.getChildren().clear();
+        lblEditStatus.setText("");
+        
+        String searchQuery = txtSearchTask.getText().toLowerCase().trim();
+        int userID = Session.currentUserId;
+        String sql = "SELECT * FROM tasks WHERE user_id = ?";
+
+        try (Connection conn = DatabaseHelper.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, userID);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String name = rs.getString("task_name");
+                
+                if (searchQuery.isEmpty() || name.toLowerCase().contains(searchQuery)) {
+                    int id = rs.getInt("task_id");
+                    int cat = rs.getInt("category");
+                    int imp = rs.getInt("importance");
+                    double dur = rs.getDouble("duration");
+                    
+                    Object startObj = rs.getObject("start_time");
+                    LocalDateTime start = null;
+                    if (startObj != null) {
+                        start = (startObj instanceof LocalDateTime) ? (LocalDateTime) startObj : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
+                    }
+                    
+                    Object dueObj = rs.getObject("due_date");
+                    LocalDateTime due = null;
+                    if (dueObj != null) {
+                        due = (dueObj instanceof LocalDateTime) ? (LocalDateTime) dueObj : LocalDateTime.parse(dueObj.toString().replace(" ", "T"));
+                    }
+
+                    HBox editCard = new HBox(15);
+                    editCard.setAlignment(Pos.CENTER_LEFT);
+                    editCard.setStyle("-fx-padding: 10; -fx-border-color: gray; -fx-border-radius: 5;");
+
+                    VBox inputsBox = new VBox(10);
+                    
+                    HBox row1 = new HBox(10);
+                    TextField editName = new TextField(name);
+                    editName.setPrefWidth(200);
+                    
+                    ComboBox<String> editCat = new ComboBox<>();
+                    editCat.getItems().addAll("1. Work", "2. Health", "3. Personal");
+                    editCat.getSelectionModel().select(cat - 1); 
+                    row1.getChildren().addAll(new Label("Name:"), editName, new Label("Cat:"), editCat);
+
+                    HBox row2 = new HBox(10);
+                    Spinner<Integer> editImp = new Spinner<>(1, 5, imp);
+                    editImp.setPrefWidth(70);
+                    Spinner<Double> editDur = new Spinner<>(0.0, 24.0, dur, 0.25);
+                    editDur.setPrefWidth(70);
+                    row2.getChildren().addAll(new Label("Imp:"), editImp, new Label("Dur (hrs):"), editDur);
+
+                    HBox row3 = new HBox(10);
+                    DatePicker editStartDate = new DatePicker();
+                    if (start != null) editStartDate.setValue(start.toLocalDate());
+                    editStartDate.setPrefWidth(120);
+                    
+                    TextField editStartTime = new TextField();
+                    if (start != null) editStartTime.setText(start.toLocalTime().toString());
+                    editStartTime.setPromptText("HH:mm");
+                    editStartTime.setPrefWidth(80);
+                    row3.getChildren().addAll(new Label("Start Date:"), editStartDate, new Label("Time:"), editStartTime);
+
+                    HBox row4 = new HBox(10);
+                    DatePicker editDueDate = new DatePicker();
+                    if (due != null) editDueDate.setValue(due.toLocalDate());
+                    editDueDate.setPrefWidth(120);
+                    row4.getChildren().addAll(new Label("Due Date:"), editDueDate);
+
+                    inputsBox.getChildren().addAll(row1, row2, row3, row4);
+
+                    Button btnSave = new Button("Save Changes");
+                    btnSave.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
+                    
+                    btnSave.setOnAction(e -> {
+                        try {
+                            String newName = editName.getText();
+                            int newCat = editCat.getSelectionModel().getSelectedIndex() + 1;
+                            int newImp = editImp.getValue();
+                            double newDur = editDur.getValue();
+
+                            LocalDate newStartVal = editStartDate.getValue();
+                            LocalDateTime newStart = null;
+                            if (newStartVal != null && !editStartTime.getText().trim().isEmpty()) {
+                                LocalTime pt = LocalTime.parse(editStartTime.getText().trim());
+                                newStart = newStartVal.atTime(pt);
+                            } else if (newStartVal != null) {
+                                newStart = newStartVal.atTime(8, 0); 
+                            }
+
+                            LocalDate newDueVal = editDueDate.getValue();
+                            LocalDateTime newDue = (newDueVal != null) ? newDueVal.atTime(23, 59) : null;
+
+                            DatabaseHelper.updateTaskName(id, newName);
+                            DatabaseHelper.updateTaskCategory(id, newCat);
+                            DatabaseHelper.updateTaskImportance(id, newImp);
+                            DatabaseHelper.updateTaskDuration(id, newDur);
+                            
+                            // USING YOUR NEW LOCALDATETIME DB METHODS
+                            DatabaseHelper.updateTaskStartTime(id, newStart);
+                            DatabaseHelper.updateTaskDueDate(id, newDue);
+                            
+                            lblEditStatus.setText("Task Updated Successfully!");
+                            lblEditStatus.setStyle("-fx-text-fill: green;");
+                        } catch (Exception ex) {
+                            lblEditStatus.setText("Error: Invalid time format (Use HH:mm).");
+                            lblEditStatus.setStyle("-fx-text-fill: red;");
+                        }
+                    });
+
+                    editCard.getChildren().addAll(inputsBox, btnSave);
+                    editTaskContainer.getChildren().add(editCard);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error searching tasks: " + e.getMessage());
+        }
     }
 
-    public void onClickbtnHelp(ActionEvent event) {
-        switchScene(event, "help.fxml");
-    }
+    // --- NAVIGATION & VIEW TASKS ---
+    public void onClickbtnPref(ActionEvent event) { switchScene(event, "preferences.fxml"); }
+    public void onClickbtnSignOut(ActionEvent event) { switchScene(event, "login.fxml"); }
+    public void onClickbtnHelp(ActionEvent event) { switchScene(event, "help.fxml"); }
 
     private void switchScene(ActionEvent event, String fxmlFile) {
         try {
@@ -138,7 +311,6 @@ public class IMTPSController {
 
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
-        // 1. Delete checked tasks
         for (Node node : taskContainer.getChildren()) {
             if (node instanceof HBox) {
                 HBox card = (HBox) node;
@@ -150,10 +322,8 @@ public class IMTPSController {
             }
         }
 
-        // 2. Clear UI
         taskContainer.getChildren().clear();
 
-        // 3. Fetch all tasks 
         int userID = Session.currentUserId;
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
         List<Task> allTasks = new ArrayList<>();
@@ -171,12 +341,17 @@ public class IMTPSController {
                 int imp = rs.getInt("importance");
                 double dur = rs.getDouble("duration");
                 
-                // Assuming DatabaseHelper saves Dates/Times appropriately
                 Object dueObj = rs.getObject("due_date");
-                LocalDateTime due = (dueObj instanceof LocalDateTime) ? (LocalDateTime) dueObj : null;
+                LocalDateTime due = null;
+                if (dueObj != null) {
+                    due = (dueObj instanceof LocalDateTime) ? (LocalDateTime) dueObj : LocalDateTime.parse(dueObj.toString().replace(" ", "T"));
+                }
                 
                 Object startObj = rs.getObject("start_time");
-                LocalDateTime start = (startObj instanceof LocalDateTime) ? (LocalDateTime) startObj : null;
+                LocalDateTime start = null;
+                if (startObj != null) {
+                    start = (startObj instanceof LocalDateTime) ? (LocalDateTime) startObj : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
+                }
 
                 Task task = new Task(id, name, cat, imp, dur, due, start);
                 allTasks.add(task);
@@ -186,7 +361,6 @@ public class IMTPSController {
             return;
         }
 
-        // 4. Run your algorithm to schedule floating tasks!
         int currentMode = Questionnaire.PersonalMode; 
         if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
         if (rdbtnHealth.isSelected()) currentMode = Questionnaire.HealthMode;
@@ -195,14 +369,13 @@ public class IMTPSController {
         Scheduler scheduler = new Scheduler();
         scheduler.genSchedule(allTasks, prefs);
 
-        // 5. UPDATE THE DATABASE WITH THE NEW TIMES!
         for (Task t : allTasks) {
             if (t.startTime != null) {
+                // USING YOUR NEW LOCALDATETIME DB METHOD
                 DatabaseHelper.updateTaskStartTime(t.taskId, t.startTime); 
             }
         }
 
-        // 6. Filter tasks to ONLY show the ones for the selected DatePicker date!
         LocalDate viewDate = dpViewDate.getValue();
         if (viewDate == null) viewDate = LocalDate.now();
 
@@ -215,7 +388,6 @@ public class IMTPSController {
 
         tasksForToday.sort(Comparator.comparing(t -> t.startTime));
 
-        // 7. Build UI Cards
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
         for (Task t : tasksForToday) {
@@ -239,7 +411,6 @@ public class IMTPSController {
             CheckBox taskCheckbox = new CheckBox();
             taskCheckbox.setUserData(t.taskId); 
 
-            // Calculate exact End Time based on duration
             LocalDateTime endTime = t.startTime.plusMinutes((long)(t.duration * 60));
             String timeString = t.startTime.format(timeFormatter) + " - " + endTime.format(timeFormatter);
 
