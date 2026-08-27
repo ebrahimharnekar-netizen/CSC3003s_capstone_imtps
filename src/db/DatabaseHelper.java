@@ -1,5 +1,6 @@
 package db;
 import java.sql.*;
+import java.time.LocalDateTime;
 
 /**
  * Class contains all the CRUD (Create, Read, update, delete) methods for users, tasks, and preferences. 
@@ -128,7 +129,7 @@ public class DatabaseHelper {
 
     public static void addTask(int userId, String taskName, int category,
                                 int importance, double duration,
-                                String dueDate, String startTime) {
+                             LocalDateTime dueDate, LocalDateTime startTime) {
         String sql = "INSERT INTO tasks (user_id, task_name, category, importance, " +
                      "duration, due_date, start_time) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -140,8 +141,8 @@ public class DatabaseHelper {
             pstmt.setInt(3, category);
             pstmt.setInt(4, importance);
             pstmt.setDouble(5, duration);
-            pstmt.setString(6, dueDate);   //pass null if not set
-            pstmt.setString(7, startTime); //pass null if not set
+            pstmt.setObject(6, dueDate);   //pass null if not set
+            pstmt.setObject(7, startTime); //pass null if not set
             pstmt.executeUpdate();         //executes the insert statement
 
             System.out.println("Task added: " + taskName);
@@ -258,13 +259,13 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskDueDate(int taskId, String newDueDate) {
+    public static void updateTaskDueDate(int taskId, LocalDateTime newDueDate) {
         String sql = "UPDATE tasks SET due_date = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, newDueDate);
+            pstmt.setObject(1, newDueDate);
             pstmt.setInt(2, taskId);
             pstmt.executeUpdate();
 
@@ -273,13 +274,13 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskStartTime(int taskId, String newStartTime) {
+    public static void updateTaskStartTime(int taskId, LocalDateTime newStartTime) {
         String sql = "UPDATE tasks SET start_time = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, newStartTime);
+            pstmt.setObject(1, newStartTime);
             pstmt.setInt(2, taskId);
             pstmt.executeUpdate();
 
@@ -288,13 +289,13 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskEndTime(int taskId, String newEndTime) {
+    public static void updateTaskEndTime(int taskId, LocalDateTime newEndTime) {
         String sql = "UPDATE tasks SET end_time = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, newEndTime);
+            pstmt.setObject(1, newEndTime);
             pstmt.setInt(2, taskId);
             pstmt.executeUpdate();
 
@@ -418,8 +419,8 @@ public class DatabaseHelper {
         int userId = addUser("nadim","nadim@example.com", "password_here");
         System.out.println("Created user with id: " + userId);
 
-        addTask(userId, "Finish capstone report", 1, 5, 3.5, "2026-08-20 17:00:00", null);
-        addTask(userId, "Gym session", 2, 2, 1.0, null, "2026-08-14 07:00:00");
+        addTask(userId, "Finish capstone report", 1, 5, 3.5, LocalDateTime.of(2026, 8, 20, 17, 0), null);
+        addTask(userId, "Gym session", 2, 2, 1.0, null, LocalDateTime.of(2026, 8, 14, 7, 0));
 
         System.out.println("\nTasks for user " + userId + ":");
         printTasksForUser(userId);

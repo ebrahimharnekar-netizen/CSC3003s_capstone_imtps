@@ -27,6 +27,14 @@ public class SignupController {
     public static String password;
     public static String email;
 
+    public void initialize() {
+        // This method is called after the FXML file has been loaded
+
+        txtPasswordSignup.setText(null);
+        txtUsernameSignup.setText(null);
+        txtEmailSignup.setText(null);
+    }
+
     @FXML
     public void onCheckchbShowPassword(ActionEvent event) {
         

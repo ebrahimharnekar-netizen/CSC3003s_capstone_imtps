@@ -2,30 +2,90 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.Controller">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.Controller">
    <children>
-      <Button fx:id="btnExitMain" layoutX="14.0" layoutY="350.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="89.0" text="Exit➜]" />
-      <Label layoutX="115.0" layoutY="140.0" prefHeight="15.0" prefWidth="376.0" text="Welcome to your personal priority task scheduler">
-         <font>
-            <Font size="17.0" />
-         </font>
-      </Label>
-      <Button fx:id="btnSignUpMain" layoutX="144.0" layoutY="255.0" mnemonicParsing="false" onAction="#onClickbtnSignUpMain" prefHeight="36.0" prefWidth="332.0" style="-fx-background-color: black;" text="Sign up" textFill="WHITE" />
-      <Button fx:id="btnLogIn" layoutX="272.0" layoutY="319.0" mnemonicParsing="false" onAction="#onClickbtnLogin" prefHeight="15.0" prefWidth="75.0" style="-fx-background-color: none;" text="Login" underline="true">
-         <font>
-            <Font size="10.0" />
-         </font>
-      </Button>
-      <Label layoutX="242.0" layoutY="302.0" text="Already have an account?" />
-      <ImageView fitHeight="204.0" fitWidth="339.0" layoutX="285.0" layoutY="-15.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@../Images/NEN.png" />
-         </image>
-      </ImageView>
+      <!-- Full-Window ScrollPane -->
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: transparent; -fx-background: #f4f4f4;" vbarPolicy="ALWAYS" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <content>
+            <!-- Taller Content Pane (750px) to allow scrolling -->
+            <AnchorPane prefHeight="750.0" prefWidth="580.0" style="-fx-background-color: white;">
+               <children>
+                  
+                  <!-- Original Top Section Elements -->
+                  <Label layoutX="115.0" layoutY="140.0" prefHeight="15.0" prefWidth="376.0" text="Welcome to your personal priority task scheduler">
+                     <font>
+                        <Font size="17.0" />
+                     </font>
+                  </Label>
+                  
+                  <Button fx:id="btnSignUpMain" layoutX="144.0" layoutY="255.0" mnemonicParsing="false" onAction="#onClickbtnSignUpMain" prefHeight="36.0" prefWidth="332.0" style="-fx-background-color: black;" text="Sign up" textFill="WHITE" />
+                  
+                  <Label layoutX="242.0" layoutY="302.0" text="Already have an account?" />
+                  
+                  <Button fx:id="btnLogIn" layoutX="272.0" layoutY="319.0" mnemonicParsing="false" onAction="#onClickbtnLogin" prefHeight="15.0" prefWidth="75.0" style="-fx-background-color: none;" text="Login" underline="true">
+                     <font>
+                        <Font size="10.0" />
+                     </font>
+                  </Button>
+                  
+                  <ImageView fitHeight="204.0" fitWidth="339.0" layoutX="285.0" layoutY="-15.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Images/NEN.png" />
+                     </image>
+                  </ImageView>
+
+                  <!-- NEW SECTION: Large Information Blocks Below the Fold -->
+                  <Label layoutX="50.0" layoutY="390.0" text="Why use this scheduler?">
+                     <font>
+                        <Font name="System Bold" size="20.0" />
+                     </font>
+                  </Label>
+
+                  <!-- Block 1 -->
+                  <VBox layoutX="50.0" layoutY="430.0" prefHeight="90.0" prefWidth="480.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
+                     <children>
+                        <Label text="Organize Your Day" textFill="#222222">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                        <Label prefHeight="40.0" text="Easily map out your entire day by creating and managing detailed tasks. Never lose track of what needs to get done." textFill="#555555" wrapText="true">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+
+                  <!-- Block 2 -->
+                  <VBox layoutX="50.0" layoutY="540.0" prefHeight="90.0" prefWidth="480.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
+                     <children>
+                        <Label text="Priority Focused" textFill="#222222">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Label>
+                        <Label prefHeight="40.0" text="Assign priority levels to your tasks. Ensure your most important deadlines are always front and center." textFill="#555555" wrapText="true">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </VBox>
+
+                  <!-- Shifted Exit Button -->
+                  <Button fx:id="btnExitMain" layoutX="14.0" layoutY="690.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="89.0" text="Exit➜]" />
+
+               </children>
+            </AnchorPane>
+         </content>
+      </ScrollPane>
    </children>
 </AnchorPane>
