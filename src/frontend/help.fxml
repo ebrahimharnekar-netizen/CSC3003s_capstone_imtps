@@ -16,8 +16,13 @@
          <content>
             <VBox prefWidth="635.0" spacing="15" style="-fx-padding: 20; -fx-background-color: white;">
                <children>
+                  <ImageView fitHeight="117.0" fitWidth="192.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../Images/NEN.png" />
+                     </image>
+                  </ImageView>
                   <!-- Quick overview -->
-                  <Label style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #37474f;" text="Welcome to NEN">Welcome to IMTPS</Label>
+                  <Label prefHeight="26.0" prefWidth="190.0" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #37474f;" text="Welcome to NEN">Welcome to IMTPS</Label>
                   <Label maxWidth="600" prefHeight="40.0" prefWidth="503.0" style="-fx-font-size: 14px; -fx-text-fill: #546e7a;" wrapText="true">
                      This app automatically schedules your tasks, respecting fixed appointments you set. 
                      Use the tabs below to add, view, or edit tasks.
@@ -74,11 +79,6 @@
             </VBox>
          </content>
       </ScrollPane>
-      <ImageView fitHeight="72.0" fitWidth="139.0" layoutX="488.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@../Images/NEN.png" />
-         </image>
-      </ImageView>
       
       <!-- Bottom Bar with Back Button -->
       <AnchorPane layoutY="450.0" prefHeight="50.0" prefWidth="650.0" style="-fx-background-color: lightgrey;">
