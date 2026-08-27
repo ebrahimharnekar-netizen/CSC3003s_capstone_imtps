@@ -309,20 +309,18 @@ public class IMTPSController {
     }
 
     // -------------------------------------------------------------------------
-    // Decide which scheduler to use for a given mode.
-    // You can change the mapping later – just edit this method.
+    // Decide which scheduler to use for a given mode (you can change this later)
     // -------------------------------------------------------------------------
     private SchedulingAlg getSchedulerForMode(int mode) {
-        // Currently uses Scheduler (priority‑based) for all modes so that
-        // the focus‑mode multiplier is applied.
-        // To use AltScheduler (deadline‑based) for a specific mode, change the return.
+        // Currently always uses Scheduler (priority‑based)
+        // You can switch to AltScheduler for specific modes by changing this method.
         return new Scheduler();
     }
 
-    // --- VIEW TASKS WITH SCHEDULING ALGORITHMS ---
+    // --- VIEW TASKS WITH SCHEDULING ALGORITHMS (FIXED) ---
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
-        // 1. Delete checked tasks
+        // 1. Delete checked tasks (from the UI)
         for (Node node : taskContainer.getChildren()) {
             if (node instanceof HBox) {
                 HBox card = (HBox) node;
@@ -334,10 +332,10 @@ public class IMTPSController {
             }
         }
 
-        // 2. Clear UI
+        // 2. Clear the UI container
         taskContainer.getChildren().clear();
 
-        // 3. Fetch all tasks 
+        // 3. Fetch all tasks from the database
         int userID = Session.currentUserId;
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
         List<Task> allTasks = new ArrayList<>();
@@ -375,13 +373,17 @@ public class IMTPSController {
             return;
         }
 
-        // 4. IMPORTANT FIX: Reset startTime for ALL tasks so they are treated as floating
-        //    This forces the scheduler to recompute the entire schedule each time.
+        // 4. Separate tasks into pinned (have startTime) and floating (no startTime)
+        //    Floating tasks will be rescheduled; pinned tasks remain fixed.
+        List<Task> floatingTasks = new ArrayList<>();
         for (Task t : allTasks) {
-            t.startTime = null;
+            if (!t.isPinned()) { // startTime == null
+                floatingTasks.add(t);
+            }
         }
+        // Floating tasks already have startTime = null, no reset needed.
 
-        // 5. Determine the mode from the selected RadioButton
+        // 5. Determine the focus mode from the selected RadioButton
         int currentMode = Questionnaire.PersonalMode; // Default
         if (rdbtnWork.isSelected()) {
             currentMode = Questionnaire.WorkMode;
@@ -393,21 +395,20 @@ public class IMTPSController {
 
         // 6. Create Questionnaire with the selected mode
         Questionnaire prefs = new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
-        
-        // 7. Choose the scheduler based on the mode (you can modify getSchedulerForMode)
+
+        // 7. Choose the scheduler (you can change mapping later)
         SchedulingAlg scheduler = getSchedulerForMode(currentMode);
-        
-        // 8. Generate the schedule
+
+        // 8. Generate the schedule – this will assign startTime to floating tasks only
         scheduler.genSchedule(allTasks, prefs);
 
-        // 9. Update task start times in database
-        for (Task t : allTasks) {
-            if (t.startTime != null) {
-                DatabaseHelper.updateTaskStartTime(t.taskId, t.startTime);
-            }
-        }
+        // 9. IMPORTANT: Do NOT update the database for floating tasks.
+        //    Only pinned tasks have their startTime persisted.
+        //    Floating tasks stay floating (startTime = null in DB).
+        //    So we skip the database update loop entirely.
 
-        // 10. Display tasks for the selected date
+        // 10. Display tasks for the selected date.
+        //     We use the updated in‑memory startTimes for floating tasks.
         LocalDate viewDate = dpViewDate.getValue();
         if (viewDate == null) viewDate = LocalDate.now();
 
