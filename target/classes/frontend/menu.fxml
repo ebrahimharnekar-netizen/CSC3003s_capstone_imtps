@@ -11,14 +11,13 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.Controller">
    <children>
-      <!-- Full-Window ScrollPane -->
-      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: transparent; -fx-background: #f4f4f4;" vbarPolicy="ALWAYS" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <!-- ScrollPane fills the area above the footer -->
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background-color: transparent; -fx-background: #f4f4f4;" vbarPolicy="ALWAYS" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <content>
-            <!-- Taller Content Pane (750px) to allow scrolling -->
+            <!-- Taller Content Pane to allow scrolling -->
             <AnchorPane prefHeight="750.0" prefWidth="580.0" style="-fx-background-color: white;">
                <children>
-                  
-                  <!-- Original Top Section Elements -->
+                  <!-- Existing content (all the labels, buttons, VBoxes) -->
                   <Label layoutX="115.0" layoutY="140.0" prefHeight="15.0" prefWidth="376.0" text="Welcome to your personal priority task scheduler">
                      <font>
                         <Font size="17.0" />
@@ -41,14 +40,13 @@
                      </image>
                   </ImageView>
 
-                  <!-- NEW SECTION: Large Information Blocks Below the Fold -->
+                  <!-- Information Blocks -->
                   <Label layoutX="50.0" layoutY="390.0" text="Why use this scheduler?">
                      <font>
                         <Font name="System Bold" size="20.0" />
                      </font>
                   </Label>
 
-                  <!-- Block 1 -->
                   <VBox layoutX="50.0" layoutY="430.0" prefHeight="90.0" prefWidth="480.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
                      <children>
                         <Label text="Organize Your Day" textFill="#222222">
@@ -64,7 +62,6 @@
                      </children>
                   </VBox>
 
-                  <!-- Block 2 -->
                   <VBox layoutX="50.0" layoutY="540.0" prefHeight="90.0" prefWidth="480.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
                      <children>
                         <Label text="Priority Focused" textFill="#222222">
@@ -79,17 +76,16 @@
                         </Label>
                      </children>
                   </VBox>
-                  <AnchorPane layoutX="6.0" layoutY="344.0" prefHeight="50.0" prefWidth="594.0" style="-fx-background-color: lightgrey;">
-                     <children>
-      
-                                    <!-- Shifted Exit Button -->
-                        <Button fx:id="btnExitMain" layoutX="14.0" layoutY="7.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="89.0" text="Exit➜]" />
-                     </children>
-                  </AnchorPane>
-
                </children>
             </AnchorPane>
          </content>
       </ScrollPane>
+      
+      <!-- Fixed Footer AnchorPane -->
+      <AnchorPane layoutY="350.0" prefHeight="50.0" prefWidth="600.0" style="-fx-background-color: lightgrey;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+         <children>
+            <Button fx:id="btnExitMain" layoutX="7.0" layoutY="7.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="72.0" text="Exit➜]" />
+         </children>
+      </AnchorPane>
    </children>
 </AnchorPane>

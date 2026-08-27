@@ -9,7 +9,7 @@ import javafx.stage.Stage;
 
 public class HelpController {
 
-    public void onClicbtnkBack(ActionEvent event) {
+    public void onClickbtnBack(ActionEvent event) {
         try {
             // Navigate back to the main IMTPS screen (imtps.fxml)
             Parent root = FXMLLoader.load(getClass().getResource("imtps.fxml"));
