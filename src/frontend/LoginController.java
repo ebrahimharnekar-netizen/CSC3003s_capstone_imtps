@@ -25,6 +25,11 @@ public class LoginController {
     
     @FXML private CheckBox chbShowPasswordLogin;
 
+    public void initialize() {
+        // This method is called after the FXML file has been loaded
+        txtPasswordLogin.setText(null);
+        txtUsernameLogin.setText(null);
+    }
 
 
     public void onCheckchbShowPasswordL(ActionEvent event) {

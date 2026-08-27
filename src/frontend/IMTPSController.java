@@ -16,6 +16,11 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import javafx.scene.Node;
 
 public class IMTPSController {
 
@@ -84,10 +89,57 @@ public class IMTPSController {
             // Attach 23:59 (11:59 PM) to the chosen deadline day
             dueDate = dueVal.atTime(23, 59);
         }
+
         
         // At this exact spot, you have all 6 pieces of data needed to create a new Task object!
         // Task newTask = new Task(addName, categoryInt, importance, duration, dueDate, startTime);
+        
+        int userID = Session.currentUserId; // Get the current logged-in user's ID
+        DatabaseHelper.addTask(userID, addName, categoryInt, importance, duration, dueDate, startTime);
+    }
+
+    public void onClickbtnPref(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("preferences.fxml"));
+            Scene newScene = new Scene(root);
+        
+            Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            window.setScene(newScene);
+            window.show();
+        } catch (Exception e) {
+            System.out.println("Error loading screen: " + e.getMessage());
+            e.printStackTrace();
+        }
 
     }
+
+    public void onClickbtnSignOut(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("login.fxml"));
+            Scene newScene = new Scene(root);
+        
+            Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            window.setScene(newScene);
+            window.show();
+        } catch (Exception e) {
+            System.out.println("Error loading screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void onClickbtnHelp(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("help.fxml"));
+            Scene newScene = new Scene(root);
+        
+            Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            window.setScene(newScene);
+            window.show();
+        } catch (Exception e) {
+            System.out.println("Error loading screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
 }
