@@ -82,9 +82,9 @@
       </ScrollPane>
       
       <!-- Fixed Footer AnchorPane -->
-      <AnchorPane layoutY="350.0" prefHeight="50.0" prefWidth="600.0" style="-fx-background-color: lightgrey;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+      <AnchorPane layoutX="-5.0" layoutY="348.0" prefHeight="51.0" prefWidth="594.0" style="-fx-background-color: lightgrey;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
          <children>
-            <Button fx:id="btnExitMain" layoutX="7.0" layoutY="7.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="72.0" text="Exit➜]" />
+            <Button fx:id="btnExitMain" layoutX="14.0" layoutY="8.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="104.0" text="Exit➜]" />
          </children>
       </AnchorPane>
    </children>
