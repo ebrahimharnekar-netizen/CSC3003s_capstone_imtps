@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.SignupController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.SignupController">
    <children>
       <ImageView fitHeight="204.0" fitWidth="332.0" layoutX="292.0" layoutY="-15.0" pickOnBounds="true" preserveRatio="true">
          <image>
@@ -25,11 +25,15 @@
       <CheckBox fx:id="chbShowPassword" layoutX="406.0" layoutY="219.0" mnemonicParsing="false" onAction="#onCheckchbShowPassword" text="Show Password" />
       <Button fx:id="btnCreateAccount" layoutX="97.0" layoutY="262.0" mnemonicParsing="false" onAction="#onClickbtnCreateAccount" prefHeight="43.0" prefWidth="408.0" style="-fx-background-color: navy;" text="Sign up" textFill="WHITE" />
       <PasswordField fx:id="txtPasswordSignup" layoutX="179.0" layoutY="215.0" prefHeight="25.0" prefWidth="206.0" />
-      <Button fx:id="btnBack" layoutX="37.0" layoutY="343.0" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="104.0" text="Back" />
       <Button fx:id="btnLogInSignup" layoutX="264.0" layoutY="313.0" mnemonicParsing="false" onAction="#onClickbtnLogInSignup" prefHeight="15.0" prefWidth="75.0" style="-fx-background-color: none;" text="Login" underline="true">
          <font>
             <Font size="10.0" />
          </font>
       </Button>
+      <AnchorPane layoutX="-5.0" layoutY="348.0" prefHeight="51.0" prefWidth="594.0" style="-fx-background-color: lightgrey;">
+         <children>
+            <Button fx:id="btnBack" layoutX="14.0" layoutY="8.0" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="104.0" text="Back" />
+         </children>
+      </AnchorPane>
    </children>
 </AnchorPane>
