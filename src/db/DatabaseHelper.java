@@ -304,6 +304,7 @@ public class DatabaseHelper {
         }
     }
 
+
     public static void deleteTask(int taskId) {
         String sql = "DELETE FROM tasks WHERE task_id = ?";
 
@@ -316,6 +317,60 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    // ======================= OVERLAP CHECK =======================
+
+    /**
+     * Checks if the given time slot overlaps with any existing pinned task for the user.
+     * Optionally excludes one task (for editing).
+     *
+     * @param userId         the ID of the user
+     * @param newStart       the proposed start time (must not be null)
+     * @param newDuration    the duration in hours
+     * @param excludeTaskId  the ID of a task to ignore; pass -1 or 0 to ignore none
+     * @return true if there is an overlap with any other task, false otherwise
+     */
+    public static boolean hasTimeOverlap(int userId, LocalDateTime newStart, double newDuration, int excludeTaskId) {
+        if (newStart == null) return false;
+        LocalDateTime newEnd = newStart.plusMinutes((long) (newDuration * 60));
+
+        String sql = "SELECT start_time, duration FROM tasks WHERE user_id = ? AND start_time IS NOT NULL";
+        if (excludeTaskId > 0) {
+            sql += " AND task_id != ?";
+        }
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, userId);
+            if (excludeTaskId > 0) {
+                pstmt.setInt(2, excludeTaskId);
+            }
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Object startObj = rs.getObject("start_time");
+                    if (startObj == null) continue;
+
+                    LocalDateTime existingStart = (startObj instanceof LocalDateTime)
+                            ? (LocalDateTime) startObj
+                            : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
+
+                    double existingDur = rs.getDouble("duration");
+                    LocalDateTime existingEnd = existingStart.plusMinutes((long) (existingDur * 60));
+
+                    // Overlap condition
+                    if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error checking overlap: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
     }
 
     // PREFERENCES

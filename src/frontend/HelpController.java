@@ -1,13 +1,24 @@
 package frontend;
-import db.DatabaseHelper;
-import algorithm.*;
 
-import javafx.fxml.FXML;
 import javafx.event.ActionEvent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.CheckBox;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
 public class HelpController {
-    
+
+    public void onClicbtnkBack(ActionEvent event) {
+        try {
+            // Navigate back to the main IMTPS screen (imtps.fxml)
+            Parent root = FXMLLoader.load(getClass().getResource("imtps.fxml"));
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            System.out.println("Error returning to main screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

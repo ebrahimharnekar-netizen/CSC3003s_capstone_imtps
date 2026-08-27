@@ -79,9 +79,13 @@
                         </Label>
                      </children>
                   </VBox>
-
-                  <!-- Shifted Exit Button -->
-                  <Button fx:id="btnExitMain" layoutX="14.0" layoutY="690.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="89.0" text="Exit➜]" />
+                  <AnchorPane layoutX="6.0" layoutY="344.0" prefHeight="50.0" prefWidth="594.0" style="-fx-background-color: lightgrey;">
+                     <children>
+      
+                                    <!-- Shifted Exit Button -->
+                        <Button fx:id="btnExitMain" layoutX="14.0" layoutY="7.0" mnemonicParsing="false" onAction="#onClickbtnExitMain" prefHeight="36.0" prefWidth="89.0" text="Exit➜]" />
+                     </children>
+                  </AnchorPane>
 
                </children>
             </AnchorPane>

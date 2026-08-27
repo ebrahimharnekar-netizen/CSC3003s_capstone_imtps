@@ -36,7 +36,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class IMTPSController {
-
+    @FXML private Label lblUsernameIMTPS;
     // Add Task Tab Elements
     @FXML private TextField btnAddName;
     @FXML private ComboBox<String> btnCategory;
@@ -60,7 +60,11 @@ public class IMTPSController {
     @FXML private Label lblEditStatus;
 
     @FXML
+    // region Initialization
     public void initialize() {
+        lblUsernameIMTPS.setText("Welcome, " + Session.currentUsername + "!");
+
+
         btnCategory.getItems().addAll("1. Work", "2. Health", "3. Personal");
 
         SpinnerValueFactory<Integer> importanceFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 5, 1);
@@ -77,8 +81,9 @@ public class IMTPSController {
         
         dpViewDate.setValue(LocalDate.now()); 
     }
+    // endregion
     
-    // --- ADD TASK LOGIC WITH VALIDATION ---
+    // region Add Task Logic
     public void onClickBtnAddTask(ActionEvent event) {
         String addName = btnAddName.getText();
 
@@ -114,8 +119,9 @@ public class IMTPSController {
             }
         }
 
+        // Overlap check – exclude nothing (pass -1)
         if (startTime != null) {
-            if (checkTimeOverlap(Session.currentUserId, startTime, duration)) {
+            if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, startTime, duration, -1)) {
                 lblAddStatus.setText("Error: You already have a task scheduled during this time!");
                 lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                 return;
@@ -134,38 +140,10 @@ public class IMTPSController {
         btnAddName.clear();
         txtStartTime.clear();
     }
+    // endregion
 
-    private boolean checkTimeOverlap(int userId, LocalDateTime newStart, double newDuration) {
-        LocalDateTime newEnd = newStart.plusMinutes((long)(newDuration * 60));
-        String sql = "SELECT start_time, duration FROM tasks WHERE user_id = ?";
-        
-        try (Connection conn = DatabaseHelper.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, userId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            while (rs.next()) {
-                Object startObj = rs.getObject("start_time");
-                if (startObj != null) {
-                    LocalDateTime existingStart = (startObj instanceof LocalDateTime) 
-                        ? (LocalDateTime) startObj 
-                        : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
-                    
-                    double existingDur = rs.getDouble("duration");
-                    LocalDateTime existingEnd = existingStart.plusMinutes((long)(existingDur * 60));
-                    
-                    if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
-                        return true; 
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Overlap check error: " + e.getMessage());
-        }
-        return false;
-    }
 
-    // --- EDIT TASK LOGIC (SEARCH & INLINE EDITING) ---
+    // region Edit Task Logic
     @FXML
     public void onClickSearchTasks(ActionEvent event) {
         editTaskContainer.getChildren().clear();
@@ -262,6 +240,15 @@ public class IMTPSController {
                                 newStart = newStartVal.atTime(8, 0); 
                             }
 
+                            // Overlap check – exclude the task being edited (id)
+                            if (newStart != null) {
+                                if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, newStart, newDur, id)) {
+                                    lblEditStatus.setText("Error: This time overlaps with an existing task!");
+                                    lblEditStatus.setStyle("-fx-text-fill: red;");
+                                    return; // stop save
+                                }
+                            }
+
                             LocalDate newDueVal = editDueDate.getValue();
                             LocalDateTime newDue = (newDueVal != null) ? newDueVal.atTime(23, 59) : null;
 
@@ -289,11 +276,14 @@ public class IMTPSController {
             System.out.println("Error searching tasks: " + e.getMessage());
         }
     }
+    // endregion
 
-    // --- NAVIGATION ---
-    public void onClickbtnPref(ActionEvent event) { switchScene(event, "preferences.fxml"); }
+
+    // region Navigation Buttons
+    public void onClickbtnPref(ActionEvent event) { switchScene(event, "Questions.fxml"); }
     public void onClickbtnSignOut(ActionEvent event) { switchScene(event, "login.fxml"); }
     public void onClickbtnHelp(ActionEvent event) { switchScene(event, "help.fxml"); }
+    
 
     private void switchScene(ActionEvent event, String fxmlFile) {
         try {
@@ -307,20 +297,23 @@ public class IMTPSController {
             e.printStackTrace();
         }
     }
+    // endregion
 
-    // -------------------------------------------------------------------------
-    // Decide which scheduler to use for a given mode (you can change this later)
-    // -------------------------------------------------------------------------
+
+
+    
+    // region Scheduling Algorithm Selection and View task logic
+    
     private SchedulingAlg getSchedulerForMode(int mode) {
         // Currently always uses Scheduler (priority‑based)
-        // You can switch to AltScheduler for specific modes by changing this method.
+        // To use AltScheduler for a mode, change the return.
         return new Scheduler();
     }
 
-    // --- VIEW TASKS WITH SCHEDULING ALGORITHMS (FIXED) ---
+    
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
-        // 1. Delete checked tasks (from the UI)
+        // 1. Delete checked tasks
         for (Node node : taskContainer.getChildren()) {
             if (node instanceof HBox) {
                 HBox card = (HBox) node;
@@ -332,10 +325,10 @@ public class IMTPSController {
             }
         }
 
-        // 2. Clear the UI container
+        // 2. Clear UI
         taskContainer.getChildren().clear();
 
-        // 3. Fetch all tasks from the database
+        // 3. Fetch all tasks 
         int userID = Session.currentUserId;
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
         List<Task> allTasks = new ArrayList<>();
@@ -373,17 +366,10 @@ public class IMTPSController {
             return;
         }
 
-        // 4. Separate tasks into pinned (have startTime) and floating (no startTime)
-        //    Floating tasks will be rescheduled; pinned tasks remain fixed.
-        List<Task> floatingTasks = new ArrayList<>();
-        for (Task t : allTasks) {
-            if (!t.isPinned()) { // startTime == null
-                floatingTasks.add(t);
-            }
-        }
-        // Floating tasks already have startTime = null, no reset needed.
+        // 4. Floating tasks already have startTime == null; we keep them that way.
+        //    Pinned tasks keep their startTime. No reset is needed.
 
-        // 5. Determine the focus mode from the selected RadioButton
+        // 5. Determine focus mode from the selected RadioButton
         int currentMode = Questionnaire.PersonalMode; // Default
         if (rdbtnWork.isSelected()) {
             currentMode = Questionnaire.WorkMode;
@@ -395,20 +381,17 @@ public class IMTPSController {
 
         // 6. Create Questionnaire with the selected mode
         Questionnaire prefs = new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
-
+        
         // 7. Choose the scheduler (you can change mapping later)
         SchedulingAlg scheduler = getSchedulerForMode(currentMode);
-
-        // 8. Generate the schedule – this will assign startTime to floating tasks only
+        
+        // 8. Generate the schedule – assigns startTime to floating tasks in memory
         scheduler.genSchedule(allTasks, prefs);
 
-        // 9. IMPORTANT: Do NOT update the database for floating tasks.
-        //    Only pinned tasks have their startTime persisted.
-        //    Floating tasks stay floating (startTime = null in DB).
-        //    So we skip the database update loop entirely.
+        // 9. Do NOT update the database for floating tasks – they stay null in DB.
+        //    Only pinned tasks (which were already set) remain.
 
-        // 10. Display tasks for the selected date.
-        //     We use the updated in‑memory startTimes for floating tasks.
+        // 10. Display tasks for the selected date
         LocalDate viewDate = dpViewDate.getValue();
         if (viewDate == null) viewDate = LocalDate.now();
 
@@ -461,4 +444,6 @@ public class IMTPSController {
             taskContainer.getChildren().add(taskCard);
         }
     }
+
+    // endregion
 }

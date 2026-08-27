@@ -28,7 +28,7 @@
                         <Image url="@../Images/User.png" />
                      </image>
                   </ImageView>
-                  <Label fx:id="lblUsernameIMTPS" layoutX="140.0" layoutY="24.0" text="User" />
+                  <Label fx:id="lblUsernameIMTPS" layoutX="104.0" layoutY="25.0" text="User" />
                </children>
             </Pane>
             <ImageView fitHeight="122.0" fitWidth="216.0" layoutX="-12.0" layoutY="-7.0" pickOnBounds="true">
