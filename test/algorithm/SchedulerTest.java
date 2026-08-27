@@ -14,8 +14,8 @@ public class SchedulerTest {
     @Test
     public void testAlgorithmPrioritizesHighStressTasks() {
         // create tasks
-        Task lowPriority = new Task("Read Chapter 4", 1, 2, 2.0, LocalDateTime.now().plusDays(2), null); 
-        Task highPriority = new Task("Finish Capstone Code", 1, 5, 5.0, LocalDateTime.now().plusHours(2), null);
+        Task lowPriority = new Task(1111111,"Read Chapter 4", 1, 2, 2.0, LocalDateTime.now().plusDays(2), null); 
+        Task highPriority = new Task(2222222,"Finish Capstone Code", 1, 5, 5.0, LocalDateTime.now().plusHours(2), null);
         
         List<Task> rawList = new ArrayList<>();
         rawList.add(lowPriority);
@@ -48,10 +48,10 @@ public class SchedulerTest {
         java.time.LocalDateTime today7AM = today.atTime(7, 0);
 
         // Create a pinned task that blocks 7:00 AM to 9:00 AM
-        Task pinnedTask = new Task("Morning Meeting", 1, 5, 2.0, null, today7AM); 
+        Task pinnedTask = new Task(1234567,"Morning Meeting", 1, 5, 2.0, null, today7AM); 
 
         // Create a floating task that needs 1 hour of time
-        Task floatingTask = new Task("Do Homework", 1, 3, 1.0, java.time.LocalDateTime.now().plusDays(1), null); 
+        Task floatingTask = new Task(1234568,"Do Homework", 1, 3, 1.0, java.time.LocalDateTime.now().plusDays(1), null); 
         
         List<Task> rawList = new ArrayList<>();
         rawList.add(pinnedTask);

@@ -57,35 +57,35 @@ public class IMTPS {
 
         // --- PINNED TASKS (The Obstacles) ---
         // 08:30 AM to 10:00 AM (1.5 hours)
-        tasks.add(new Task("Morning Team Standup", 1, 5, 1.5, null, today.atTime(8, 30)));
+        tasks.add(new Task(999999,"Morning Team Standup", 1, 5, 1.5, null, today.atTime(8, 30)));
         
         // 13:00 PM to 14:00 PM (1.0 hour)
-        tasks.add(new Task("Lunch with Nadim", 3, 5, 1.0, null, today.atTime(13, 0)));
+        tasks.add(new Task(888888,"Lunch with Nadim", 3, 5, 1.0, null, today.atTime(13, 0)));
         
         // 16:00 PM to 18:00 PM (2.0 hours)
-        tasks.add(new Task("Computer Networks Lecture", 1, 5, 2.0, null, today.atTime(16, 0)));
+        tasks.add(new Task(777777,"Computer Networks Lecture", 1, 5, 2.0, null, today.atTime(16, 0)));
 
         // --- FLOATING TASKS (The Puzzle Pieces) ---
         // A. Urgent but low importance (Due in 2 hours)
-        tasks.add(new Task("Buy Groceries", 3, 2, 0.5, now.plusHours(2), null));
+        tasks.add(new Task(66666,"Buy Groceries", 3, 2, 0.5, now.plusHours(2), null));
 
         // B. Extremely high priority, matches Work focus (Due in 5 hours)
-        tasks.add(new Task("Fix Critical Server Bug", 1, 5, 1.5, now.plusHours(5), null));
+        tasks.add(new Task(55555,"Fix Critical Server Bug", 1, 5, 1.5, now.plusHours(5), null));
 
         // C. Quick win, high importance (Due in 4 hours)
-        tasks.add(new Task("Reply to Capstone Supervisor", 1, 4, 0.5, now.plusHours(4), null));
+        tasks.add(new Task(44444,"Reply to Capstone Supervisor", 1, 4, 0.5, now.plusHours(4), null));
 
         // D. Mid-priority, standard length (Due in 8 hours)
-        tasks.add(new Task("Review Database SQL Code", 1, 3, 1.0, now.plusHours(8), null));
+        tasks.add(new Task(33333,"Review Database SQL Code", 1, 3, 1.0, now.plusHours(8), null));
 
         // E. Health category, solid importance (Due in 12 hours)
-        tasks.add(new Task("10km Training Run", 2, 4, 1.0, now.plusHours(12), null));
+        tasks.add(new Task(22222,"10km Training Run", 2, 4, 1.0, now.plusHours(12), null));
 
         // F. Big project, low urgency (Due in 48 hours)
-        tasks.add(new Task("Write Algorithm Documentation", 1, 4, 2.0, now.plusHours(48), null));
+        tasks.add(new Task(11111,"Write Algorithm Documentation", 1, 4, 2.0, now.plusHours(48), null));
 
         // G. The massive chore to trigger the Overflow Alert (Duration = 6 hours)
-        tasks.add(new Task("Deep clean entire apartment", 3, 1, 6.0, null, null));
+        tasks.add(new Task(12222,"Deep clean entire apartment", 3, 1, 6.0, null, null));
 
         return tasks;
     }

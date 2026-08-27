@@ -22,7 +22,7 @@
          <children>
             <Pane layoutX="498.0" layoutY="21.0" prefHeight="65.0" prefWidth="255.0" style="-fx-background-color: lightgrey;">
                <children>
-                  <Button fx:id="btnSignOut" layoutX="7.0" layoutY="37.0" mnemonicParsing="false" style="-fx-background-color: lightgrey;" text="Sign Out" underline="true" />
+                  <Button fx:id="btnSignOut" layoutX="7.0" layoutY="37.0" mnemonicParsing="false" onAction="#onClickbtnSignOut" style="-fx-background-color: lightgrey;" text="Sign Out" underline="true" />
                   <ImageView fitHeight="46.0" fitWidth="50.0" layoutX="195.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
                      <image>
                         <Image url="@../Images/User.png" />
@@ -36,8 +36,8 @@
                   <Image url="@../Images/NEN.png" />
                </image>
             </ImageView>
-            <Button layoutX="184.0" layoutY="55.0" mnemonicParsing="false" style="-fx-background-color: none;" text="Preferences" textFill="WHITE" underline="true" />
-            <Button layoutX="274.0" layoutY="55.0" mnemonicParsing="false" style="-fx-background-color: none;" text="Help" textFill="WHITE" underline="true" />
+            <Button layoutX="184.0" layoutY="55.0" mnemonicParsing="false" onAction="#onClickbtnPref" style="-fx-background-color: none;" text="Preferences" textFill="WHITE" underline="true" />
+            <Button layoutX="274.0" layoutY="55.0" mnemonicParsing="false" onAction="#onClickbtnHelp" style="-fx-background-color: none;" text="Help" textFill="WHITE" underline="true" />
          </children>
       </Pane>
       <ImageView fitHeight="81.0" fitWidth="98.0" layoutX="14.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" />
@@ -47,33 +47,45 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <DatePicker fx:id="btnStartDate" layoutX="302.0" layoutY="243.0" prefHeight="17.0" prefWidth="265.0" promptText="Start Date" />
-                        <DatePicker fx:id="btnDueDate" layoutX="302.0" layoutY="287.0" prefHeight="11.0" prefWidth="265.0" promptText="Due Date" />
-                        <TextField fx:id="btnAddName" layoutX="303.0" layoutY="59.0" prefHeight="25.0" prefWidth="268.0" promptText="eg. Study for CSC3003S" />
                         <Label layoutX="160.0" layoutY="63.0" text="*Task Name:" />
-                        <Label layoutX="161.0" layoutY="247.0" text="*Start Date :" />
-                        <Label layoutX="167.0" layoutY="291.0" text="Due Date:" />
-                        <ComboBox fx:id="btnCategory" layoutX="304.0" layoutY="106.0" prefHeight="25.0" prefWidth="267.0" promptText="Catagory 1. Work, 2. Health 3. Personal" />
+                        <TextField fx:id="btnAddName" layoutX="303.0" layoutY="59.0" prefHeight="25.0" prefWidth="268.0" promptText="eg. Study for CSC3003S" />
+                        
                         <Label layoutX="160.0" layoutY="110.0" text="*Category" />
+                        <ComboBox fx:id="btnCategory" layoutX="304.0" layoutY="106.0" prefHeight="25.0" prefWidth="267.0" promptText="Catagory 1. Work, 2. Health 3. Personal" />
+                        
                         <Label layoutX="160.0" layoutY="158.0" text="*Importance (1-5)" />
                         <Spinner fx:id="btnImportance" layoutX="302.0" layoutY="154.0" prefHeight="25.0" prefWidth="271.0" />
+                        
                         <Label layoutX="160.0" layoutY="203.0" text="*Duration (Hours)" />
                         <Spinner fx:id="btnDuration" layoutX="302.0" layoutY="199.0" prefHeight="25.0" prefWidth="271.0" />
+                        
+                        <Label layoutX="161.0" layoutY="247.0" text="Start Date/Time:" />
+                        <DatePicker fx:id="btnStartDate" layoutX="302.0" layoutY="243.0" prefHeight="25.0" prefWidth="140.0" promptText="Start Date (Opt)" />
+                        <TextField fx:id="txtStartTime" layoutX="450.0" layoutY="243.0" prefHeight="25.0" prefWidth="120.0" promptText="Time (HH:mm)" />
+                        
+                        <Label layoutX="167.0" layoutY="291.0" text="Due Date:" />
+                        <DatePicker fx:id="btnDueDate" layoutX="302.0" layoutY="287.0" prefHeight="25.0" prefWidth="271.0" promptText="Due Date" />
+                        
                         <Button fx:id="btnAddtask" layoutX="162.0" layoutY="332.0" mnemonicParsing="false" onAction="#onClickBtnAddTask" prefHeight="33.0" prefWidth="404.0" text="Add task" />
-                     </children></AnchorPane>
+                     </children>
+              </AnchorPane>
             </content>
           </Tab>
           <Tab text="View tasks">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <RadioButton fx:id="rdbtnPersonal" layoutX="599.0" layoutY="51.0" mnemonicParsing="false" text="Personal" />
-                        <RadioButton fx:id="rdbtnHealth" layoutX="478.0" layoutY="52.0" mnemonicParsing="false" text="Health" />
+                        <DatePicker fx:id="dpViewDate" layoutX="34.0" layoutY="41.0" prefHeight="38.0" prefWidth="265.0" promptText="Select Date to View" />
+                        
                         <RadioButton fx:id="rdbtnWork" layoutX="359.0" layoutY="51.0" mnemonicParsing="false" text="Work" />
-                        <DatePicker layoutX="34.0" layoutY="41.0" prefHeight="38.0" prefWidth="265.0" />
+                        <RadioButton fx:id="rdbtnHealth" layoutX="478.0" layoutY="52.0" mnemonicParsing="false" text="Health" />
+                        <RadioButton fx:id="rdbtnPersonal" layoutX="599.0" layoutY="51.0" mnemonicParsing="false" text="Personal" />
+                        
+                        <Button layoutX="670.0" layoutY="47.0" mnemonicParsing="false" onAction="#onClickRefreshTasks" text="Refresh" />
+                        
                         <ScrollPane layoutX="18.0" layoutY="99.0" prefHeight="241.0" prefWidth="738.0">
                            <content>
-                              <VBox prefHeight="241.0" prefWidth="726.0" />
+                              <VBox fx:id="taskContainer" prefHeight="241.0" prefWidth="726.0" spacing="10.0" style="-fx-padding: 10;" />
                            </content></ScrollPane>
                      </children>
                   </AnchorPane>
