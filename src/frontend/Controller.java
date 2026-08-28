@@ -33,7 +33,7 @@ public class Controller {
         // Use Platform.runLater to ensure the stage is fully available
         Platform.runLater(() -> {
             Stage stage = (Stage) btnExitMain.getScene().getWindow();
-            stage.setWidth(600);
+            stage.setWidth(620);
             stage.setHeight(500);
             // Optional: center the window on screen
             stage.centerOnScreen();
