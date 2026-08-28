@@ -21,10 +21,24 @@ import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import javafx.scene.control.CheckBox;
 import javafx.scene.Node;
+import javafx.application.Platform;
 
 public class Controller {
+    @FXML private Button btnSignUpMain;
+    @FXML private Button btnLogin;
+    @FXML private Button btnExitMain;
     
     // This method name must match the onAction="#onClickbtnExitMain" in your FXML
+    public void initialize() {
+        // Use Platform.runLater to ensure the stage is fully available
+        Platform.runLater(() -> {
+            Stage stage = (Stage) btnExitMain.getScene().getWindow();
+            stage.setWidth(600);
+            stage.setHeight(500);
+            // Optional: center the window on screen
+            stage.centerOnScreen();
+        });
+    }
     @FXML
     public void onClickbtnExitMain(ActionEvent event) {
         System.exit(0);

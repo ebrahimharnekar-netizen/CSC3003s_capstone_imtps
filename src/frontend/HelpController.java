@@ -1,13 +1,32 @@
 package frontend;
 
 import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.stage.Stage;
+import javafx.application.Platform;
 
 public class HelpController {
+
+    @FXML
+    private Button btnBack;  // injected from the FXML
+
+    public void initialize() {
+        // Use Platform.runLater to ensure the stage is fully available
+        Platform.runLater(() -> {
+            if (btnBack != null && btnBack.getScene() != null) {
+                Stage stage = (Stage) btnBack.getScene().getWindow();
+                stage.setWidth(665);
+                stage.setHeight(535);
+                // Optional: center the window on screen
+                stage.centerOnScreen();
+            }
+        });
+    }
 
     public void onClickbtnBack(ActionEvent event) {
         try {

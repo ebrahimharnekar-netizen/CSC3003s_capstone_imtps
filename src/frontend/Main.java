@@ -24,7 +24,7 @@ public class Main extends Application {
                                                                                     // that will be displayed when the application starts
         
         //Attach it to a Scene
-        Scene scene = new Scene(root, 600, 400); 
+        Scene scene = new Scene(root, 600, 500); 
         
         //Set up the window (Stage) and show it
         primaryStage.setTitle("IMTPS Application"); // The text at the top of the window

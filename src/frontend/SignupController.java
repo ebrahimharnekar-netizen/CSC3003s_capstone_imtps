@@ -16,6 +16,7 @@ import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
+import javafx.application.Platform;
 
 public class SignupController {
 
@@ -33,6 +34,14 @@ public class SignupController {
         txtPasswordSignup.setText(null);
         txtUsernameSignup.setText(null);
         txtEmailSignup.setText(null);
+
+        Platform.runLater(() -> {
+            Stage stage = (Stage) txtUsernameSignup.getScene().getWindow();
+            stage.setWidth(600);
+            stage.setHeight(435);
+            // Optional: center the window on screen
+            stage.centerOnScreen();
+        });
     }
 
     @FXML

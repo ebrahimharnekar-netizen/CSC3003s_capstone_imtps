@@ -13,7 +13,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
-
+import javafx.application.Platform;
 /**
  * QuestionsController
  * Backs the onboarding questionnaire. Answers are saved to
@@ -76,6 +76,13 @@ public class QuestionsController {
             }
 
         }
+
+        Platform.runLater(() -> {
+            Stage stage = (Stage) btnSaveQuestionnaire.getScene().getWindow();
+            stage.setWidth(600);
+            stage.setHeight(550);
+            stage.centerOnScreen();
+        });
 
     }
 

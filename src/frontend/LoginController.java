@@ -16,7 +16,7 @@ import javafx.scene.control.CheckBox;
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
-
+import javafx.application.Platform;
 
 public class LoginController {
 
@@ -29,6 +29,13 @@ public class LoginController {
         // This method is called after the FXML file has been loaded
         txtPasswordLogin.setText(null);
         txtUsernameLogin.setText(null);
+
+        Platform.runLater(() -> {
+            Stage stage = (Stage) txtUsernameLogin.getScene().getWindow();
+            stage.setWidth(600);
+            stage.setHeight(435);
+            stage.centerOnScreen();
+        });
     }
 
 

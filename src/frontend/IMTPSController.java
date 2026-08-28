@@ -34,6 +34,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.application.Platform;
 
 public class IMTPSController {
     @FXML private Label lblUsernameIMTPS;
@@ -80,6 +81,13 @@ public class IMTPSController {
         rdbtnPersonal.setSelected(true); 
         
         dpViewDate.setValue(LocalDate.now()); 
+
+        Platform.runLater(() -> {
+            Stage stage = (Stage) lblUsernameIMTPS.getScene().getWindow();
+            stage.setWidth(780);
+            stage.setHeight(570);
+            stage.centerOnScreen();
+        });
     }
     // endregion
     
