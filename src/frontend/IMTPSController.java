@@ -353,7 +353,20 @@ public class IMTPSController {
     // endregion
 
     // region Refresh Tasks
-@FXML
+
+    /**
+     * This method refreshes the task list displayed in the "View Tasks" tab. It performs the following steps:
+     * 1. Deletes any tasks that have been checked off by the user.
+     * 2. Fetches all tasks from the database for the current user.
+     * 3. Determines the current focus mode based on the selected radio button.
+     * 4. Separates tasks into pinned and floating categories.
+     * 5. Clones floating tasks for scheduling, preserving their original start and due dates.
+     * 6. Runs the scheduler to generate a schedule for floating tasks.
+     * 7. Filters tasks to display only those relevant to the selected view date.
+     * 8. Sorts the tasks chronologically and builds the UI elements to display them.
+     * Coding logic ensures that pinned tasks are displayed on their scheduled date and times and floating tasks are asigned a time using ur schedulers
+    */
+    @FXML
     public void onClickRefreshTasks(ActionEvent event) {
         // Delete checked tasks
         for (Node node : taskContainer.getChildren()) {

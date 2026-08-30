@@ -19,31 +19,8 @@ public class Task {
     // Original start time (used to distinguish user‑pinned tasks)
     public LocalDateTime originalStartTime;
 
-    public Task(int taskId, String taskName, int category, int importance, double duration, 
-                LocalDateTime dueDate, LocalDateTime startTime) {
-        this.taskId = taskId;
-        this.category = category;
-        this.taskName = taskName;
-        this.importance = importance;
-        this.duration = duration;
-        this.dueDate = dueDate;
-        this.startTime = startTime;
-        this.startDate = null;
-        this.originalStartDate = null;
-        this.originalDueDate = dueDate;
-        this.originalStartTime = startTime;   // added
-
-        if (this.dueDate == null) {
-            this.timeUntilDue = 87600.0;
-        } else {
-            LocalDateTime now = LocalDateTime.now();
-            Duration timeDiff = Duration.between(now, this.dueDate);
-            this.timeUntilDue = timeDiff.toMinutes() / 60.0;
-        }
-    }
-
-    public Task(int taskId, String taskName, int category, int importance, double duration, 
-                LocalDateTime dueDate, LocalDateTime startTime, LocalDate startDate) {
+        public Task(int taskId, String taskName, int category, int importance, double duration, 
+                LocalDateTime dueDate, LocalDateTime startTime, LocalDate startDate) { // main constructor
         this.taskId = taskId;
         this.category = category;
         this.taskName = taskName;
@@ -54,7 +31,7 @@ public class Task {
         this.startDate = startDate;
         this.originalStartDate = startDate;
         this.originalDueDate = dueDate;
-        this.originalStartTime = startTime;   // added
+        this.originalStartTime = startTime;   
 
         if (this.dueDate == null) {
             this.timeUntilDue = 87600.0;
@@ -65,8 +42,33 @@ public class Task {
         }
     }
 
+    public Task(int taskId, String taskName, int category, int importance, double duration, 
+                LocalDateTime dueDate, LocalDateTime startTime) { // Constructor for tasks without start date (USED FOR TESTING)
+        this.taskId = taskId;
+        this.category = category;
+        this.taskName = taskName;
+        this.importance = importance;
+        this.duration = duration;
+        this.dueDate = dueDate;
+        this.startTime = startTime;
+        this.startDate = null;
+        this.originalStartDate = null;
+        this.originalDueDate = dueDate;
+        this.originalStartTime = startTime;   
+
+        if (this.dueDate == null) {
+            this.timeUntilDue = 87600.0;
+        } else {
+            LocalDateTime now = LocalDateTime.now();
+            Duration timeDiff = Duration.between(now, this.dueDate);
+            this.timeUntilDue = timeDiff.toMinutes() / 60.0;
+        }
+    }
+
+
+
     public Task(String taskName, int category, int importance, double duration, 
-                LocalDateTime startTime, LocalDateTime dueDate) {
+                LocalDateTime startTime, LocalDateTime dueDate) { // Constructor for tasks without taskId (used in testing)
         this.taskId = 0;
         this.category = category;
         this.taskName = taskName;
@@ -77,7 +79,7 @@ public class Task {
         this.startDate = null;
         this.originalStartDate = null;
         this.originalDueDate = dueDate;
-        this.originalStartTime = startTime;   // added
+        this.originalStartTime = startTime;   
 
         if (this.dueDate == null) {
             this.timeUntilDue = 87600.0;
