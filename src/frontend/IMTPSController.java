@@ -60,11 +60,13 @@ public class IMTPSController {
     @FXML private VBox editTaskContainer;
     @FXML private Label lblEditStatus;
 
+    // Constants
+    private static final LocalTime START_OF_DAY = LocalTime.of(0, 0);
+
     @FXML
     // region Initialization
     public void initialize() {
         lblUsernameIMTPS.setText("Welcome, " + Session.currentUsername + "!");
-
 
         btnCategory.getItems().addAll("1. Work", "2. Health", "3. Personal");
 
@@ -114,42 +116,56 @@ public class IMTPSController {
         double duration = (btnDuration.getValue() != null) ? btnDuration.getValue() : 1.0;
 
         LocalDate startVal = btnStartDate.getValue();
-        LocalDateTime startTime = null; 
+        LocalDateTime startTime = null;
+        LocalDate startDate = null;
+        LocalDate dueVal = btnDueDate.getValue();
+        LocalDateTime dueDate = (dueVal != null) ? dueVal.atTime(23, 59) : null;
         
-        if (startVal != null && txtStartTime.getText() != null && !txtStartTime.getText().isEmpty()) {
+        // Check if user provided a time
+        boolean hasTime = txtStartTime.getText() != null && !txtStartTime.getText().isEmpty();
+        
+        if (startVal != null && hasTime) {
             try {
                 LocalTime parsedTime = LocalTime.parse(txtStartTime.getText()); 
-                startTime = startVal.atTime(parsedTime); 
+                startTime = startVal.atTime(parsedTime);
+                
+                // Check if this is a PINNED task (has time AND start date matches due date)
+                if (dueDate != null && startTime.toLocalDate().equals(dueDate.toLocalDate())) {
+                    // Only check overlap for pinned tasks
+                    if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, startTime, duration, -1)) {
+                        lblAddStatus.setText("Error: You already have a task scheduled during this time!");
+                        lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                        return;
+                    }
+                } else {
+                    // Start date doesn't match due date - this is a floating task with start date
+                    // Store the start date separately
+                    startDate = startVal;
+                    startTime = null; // Clear start time
+                }
             } catch (Exception e) {
                 lblAddStatus.setText("Error: Invalid time format. Use HH:mm (e.g., 14:30)");
                 lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                 return;
             }
+        } else if (startVal != null) {
+            // Start date with no time - floating task
+            startDate = startVal;
+            startTime = null;
         }
-
-        // Overlap check – exclude nothing (pass -1)
-        if (startTime != null) {
-            if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, startTime, duration, -1)) {
-                lblAddStatus.setText("Error: You already have a task scheduled during this time!");
-                lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                return;
-            }
-        }
-
-        LocalDate dueVal = btnDueDate.getValue();
-        LocalDateTime dueDate = (dueVal != null) ? dueVal.atTime(23, 59) : null;
 
         int userID = Session.currentUserId; 
-        DatabaseHelper.addTask(userID, addName, categoryInt, importance, duration, dueDate, startTime);
+        DatabaseHelper.addTask(userID, addName, categoryInt, importance, duration, dueDate, startTime, startDate);
         
-        lblAddStatus.setText("Success: '" + addName + "' added successfully!");
+        String taskType = (startTime != null && dueDate != null && startTime.toLocalDate().equals(dueDate.toLocalDate()) && hasTime) 
+                         ? "pinned" : "floating";
+        lblAddStatus.setText("Success: '" + addName + "' added as " + taskType + " task!");
         lblAddStatus.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
         
         btnAddName.clear();
         txtStartTime.clear();
     }
     // endregion
-
 
     // region Edit Task Logic
     @FXML
@@ -187,6 +203,36 @@ public class IMTPSController {
                     if (dueObj != null) {
                         due = (dueObj instanceof LocalDateTime) ? (LocalDateTime) dueObj : LocalDateTime.parse(dueObj.toString().replace(" ", "T"));
                     }
+                    
+                    Object startDateObj = rs.getObject("start_date");
+                    LocalDate startDate = null;
+                    if (startDateObj != null) {
+                        startDate = (startDateObj instanceof LocalDate) ? (LocalDate) startDateObj : LocalDate.parse(startDateObj.toString());
+                    }
+
+                    // Determine if this is a pinned task
+                    boolean isPinned = false;
+                    LocalDateTime displayStart = null;
+                    LocalDate displayStartDate = startDate;
+                    String displayTime = "";
+                    
+                    if (start != null) {
+                        // Check if it's a pinned task (has time and start date matches due date)
+                        if (due != null && start.toLocalDate().equals(due.toLocalDate())) {
+                            // Check if the time is not 00:00 (which would indicate floating with start date)
+                            if (!start.toLocalTime().equals(START_OF_DAY)) {
+                                isPinned = true;
+                                displayStart = start;
+                                displayTime = start.toLocalTime().toString();
+                            } else {
+                                // This is a floating task with start date (00:00 time)
+                                displayStartDate = start.toLocalDate();
+                            }
+                        } else {
+                            // Floating task with start date
+                            displayStartDate = start.toLocalDate();
+                        }
+                    }
 
                     HBox editCard = new HBox(15);
                     editCard.setAlignment(Pos.CENTER_LEFT);
@@ -212,13 +258,22 @@ public class IMTPSController {
 
                     HBox row3 = new HBox(10);
                     DatePicker editStartDate = new DatePicker();
-                    if (start != null) editStartDate.setValue(start.toLocalDate());
+                    if (displayStart != null) {
+                        editStartDate.setValue(displayStart.toLocalDate());
+                    } else if (displayStartDate != null) {
+                        editStartDate.setValue(displayStartDate);
+                    }
                     editStartDate.setPrefWidth(120);
                     
                     TextField editStartTime = new TextField();
-                    if (start != null) editStartTime.setText(start.toLocalTime().toString());
-                    editStartTime.setPromptText("HH:mm");
-                    editStartTime.setPrefWidth(80);
+                    if (isPinned && displayStart != null) {
+                        editStartTime.setText(displayStart.toLocalTime().toString());
+                    } else if (start != null && start.toLocalTime().equals(START_OF_DAY)) {
+                        // Floating task with start date - leave time field empty
+                        editStartTime.setText("");
+                    }
+                    editStartTime.setPromptText("HH:mm (for pinned)");
+                    editStartTime.setPrefWidth(120);
                     row3.getChildren().addAll(new Label("Start Date:"), editStartDate, new Label("Time:"), editStartTime);
 
                     HBox row4 = new HBox(10);
@@ -227,7 +282,16 @@ public class IMTPSController {
                     editDueDate.setPrefWidth(120);
                     row4.getChildren().addAll(new Label("Due Date:"), editDueDate);
 
-                    inputsBox.getChildren().addAll(row1, row2, row3, row4);
+                    // Show task type indicator
+                    Label taskTypeLabel = new Label("Type: " + (isPinned ? "📌 Pinned" : "📋 Floating"));
+                    taskTypeLabel.setStyle("-fx-font-weight: bold;");
+                    if (isPinned) {
+                        taskTypeLabel.setStyle("-fx-text-fill: #2196F3; -fx-font-weight: bold;");
+                    } else {
+                        taskTypeLabel.setStyle("-fx-text-fill: #FF9800; -fx-font-weight: bold;");
+                    }
+
+                    inputsBox.getChildren().addAll(row1, row2, row3, row4, taskTypeLabel);
 
                     Button btnSave = new Button("Save Changes");
                     btnSave.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
@@ -241,24 +305,48 @@ public class IMTPSController {
 
                             LocalDate newStartVal = editStartDate.getValue();
                             LocalDateTime newStart = null;
-                            if (newStartVal != null && !editStartTime.getText().trim().isEmpty()) {
-                                LocalTime pt = LocalTime.parse(editStartTime.getText().trim());
-                                newStart = newStartVal.atTime(pt);
-                            } else if (newStartVal != null) {
-                                newStart = newStartVal.atTime(8, 0); 
+                            LocalDateTime newDue = null;
+                            LocalDate newStartDate = null;
+                            
+                            LocalDate newDueVal = editDueDate.getValue();
+                            if (newDueVal != null) {
+                                newDue = newDueVal.atTime(23, 59);
                             }
 
-                            // Overlap check – exclude the task being edited (id)
-                            if (newStart != null) {
-                                if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, newStart, newDur, id)) {
-                                    lblEditStatus.setText("Error: This time overlaps with an existing task!");
-                                    lblEditStatus.setStyle("-fx-text-fill: red;");
-                                    return; // stop save
+                            boolean hasTime = !editStartTime.getText().trim().isEmpty();
+                            
+                            if (newStartVal != null) {
+                                if (hasTime) {
+                                    try {
+                                        LocalTime pt = LocalTime.parse(editStartTime.getText().trim());
+                                        newStart = newStartVal.atTime(pt);
+                                        
+                                        // Only check overlap if this is a valid PINNED task
+                                        if (newDue != null && newStart.toLocalDate().equals(newDue.toLocalDate())) {
+                                            // Check if it's a real time (not 00:00)
+                                            if (!pt.equals(START_OF_DAY)) {
+                                                if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, newStart, newDur, id)) {
+                                                    lblEditStatus.setText("Error: This time overlaps with an existing task!");
+                                                    lblEditStatus.setStyle("-fx-text-fill: red;");
+                                                    return;
+                                                }
+                                            }
+                                        } else {
+                                            // Start date doesn't match due date - floating task, store start date separately
+                                            newStartDate = newStartVal;
+                                            newStart = null;
+                                        }
+                                    } catch (Exception ex) {
+                                        lblEditStatus.setText("Error: Invalid time format (Use HH:mm).");
+                                        lblEditStatus.setStyle("-fx-text-fill: red;");
+                                        return;
+                                    }
+                                } else {
+                                    // Start date with no time - floating task
+                                    newStartDate = newStartVal;
+                                    newStart = null;
                                 }
                             }
-
-                            LocalDate newDueVal = editDueDate.getValue();
-                            LocalDateTime newDue = (newDueVal != null) ? newDueVal.atTime(23, 59) : null;
 
                             DatabaseHelper.updateTaskName(id, newName);
                             DatabaseHelper.updateTaskCategory(id, newCat);
@@ -267,11 +355,12 @@ public class IMTPSController {
                             
                             DatabaseHelper.updateTaskStartTime(id, newStart);
                             DatabaseHelper.updateTaskDueDate(id, newDue);
+                            DatabaseHelper.updateTaskStartDate(id, newStartDate);
                             
                             lblEditStatus.setText("Task Updated Successfully!");
                             lblEditStatus.setStyle("-fx-text-fill: green;");
                         } catch (Exception ex) {
-                            lblEditStatus.setText("Error: Invalid time format (Use HH:mm).");
+                            lblEditStatus.setText("Error: " + ex.getMessage());
                             lblEditStatus.setStyle("-fx-text-fill: red;");
                         }
                     });
@@ -285,7 +374,6 @@ public class IMTPSController {
         }
     }
     // endregion
-
 
     // region Navigation Buttons
     public void onClickbtnPref(ActionEvent event) { switchScene(event, "Questions.fxml"); }
@@ -307,18 +395,8 @@ public class IMTPSController {
     }
     // endregion
 
+    // region Refresh Tasks Logic
 
-
-    
-    // region Scheduling Algorithm Selection and View task logic
-    
-    private SchedulingAlg getSchedulerForMode(int mode) {
-        // Currently always uses Scheduler (priority‑based)
-        // To use AltScheduler for a mode, change the return.
-        return new Scheduler();
-    }
-
-    
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
         // 1. Delete checked tasks
@@ -336,13 +414,13 @@ public class IMTPSController {
         // 2. Clear UI
         taskContainer.getChildren().clear();
 
-        // 3. Fetch all tasks 
+        // 3. Fetch all tasks from database
         int userID = Session.currentUserId;
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
         List<Task> allTasks = new ArrayList<>();
 
         try (Connection conn = DatabaseHelper.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userID);
             ResultSet rs = pstmt.executeQuery();
@@ -365,8 +443,47 @@ public class IMTPSController {
                 if (startObj != null) {
                     start = (startObj instanceof LocalDateTime) ? (LocalDateTime) startObj : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
                 }
+                
+                Object startDateObj = rs.getObject("start_date");
+                LocalDate startDate = null;
+                if (startDateObj != null) {
+                    startDate = (startDateObj instanceof LocalDate) ? (LocalDate) startDateObj : LocalDate.parse(startDateObj.toString());
+                }
 
-                Task task = new Task(id, name, cat, imp, dur, due, start);
+                // Determine if this is a PINNED task (has start_time in database)
+                // A task is pinned if it has a start_time AND start_date matches due_date
+                // AND the time is NOT 00:00
+                LocalDateTime taskStart = start;
+                LocalDate taskStartDate = startDate;
+                
+                if (start != null && due != null) {
+                    if (start.toLocalDate().equals(due.toLocalDate())) {
+                        // Check if the time is not 00:00 (floating with start date)
+                        if (start.toLocalTime().equals(START_OF_DAY)) {
+                            // This is a floating task with start date (00:00 time)
+                            // Keep the startDate but clear startTime
+                            taskStart = null;
+                            taskStartDate = start.toLocalDate();
+                        }
+                        // If time is not 00:00, it's a pinned task - keep startTime
+                    } else {
+                        // Start date and due date don't match - floating task
+                        // Use startDate if available, otherwise use the date from startTime
+                        taskStart = null;
+                        if (startDate == null) {
+                            taskStartDate = start.toLocalDate();
+                        }
+                    }
+                } else if (start != null) {
+                    // Has start but no due date - floating task
+                    taskStart = null;
+                    if (startDate == null) {
+                        taskStartDate = start.toLocalDate();
+                    }
+                }
+
+                // Create task with the correct startTime and startDate from database
+                Task task = new Task(id, name, cat, imp, dur, due, taskStart, taskStartDate);
                 allTasks.add(task);
             }
         } catch (Exception e) {
@@ -374,11 +491,8 @@ public class IMTPSController {
             return;
         }
 
-        // 4. Floating tasks already have startTime == null; we keep them that way.
-        //    Pinned tasks keep their startTime. No reset is needed.
-
-        // 5. Determine focus mode from the selected RadioButton
-        int currentMode = Questionnaire.PersonalMode; // Default
+        // 4. Determine focus mode from the selected RadioButton
+        int currentMode = Questionnaire.PersonalMode;
         if (rdbtnWork.isSelected()) {
             currentMode = Questionnaire.WorkMode;
         } else if (rdbtnHealth.isSelected()) {
@@ -387,33 +501,126 @@ public class IMTPSController {
             currentMode = Questionnaire.PersonalMode;
         }
 
-        // 6. Create Questionnaire with the selected mode
+        // 5. Create Questionnaire with the selected mode
         Questionnaire prefs = new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
         
-        // 7. Choose the scheduler (you can change mapping later)
-        SchedulingAlg scheduler = getSchedulerForMode(currentMode);
+        // 6. Instantiate the scheduler
+        Scheduler scheduler = new Scheduler();
         
-        // 8. Generate the schedule – assigns startTime to floating tasks in memory
-        scheduler.genSchedule(allTasks, prefs);
-
-        // 9. Do NOT update the database for floating tasks – they stay null in DB.
-        //    Only pinned tasks (which were already set) remain.
+        // 7. Generate the schedule – assigns startTime to floating tasks IN MEMORY ONLY
+        // The scheduler will assign startTime to tasks that don't have one
+        // This creates a COPY of the task list with scheduled times
+        List<Task> scheduledTasks = scheduler.genSchedule(allTasks, prefs);
+        
+        // 8. IMPORTANT: We need to keep track of which tasks got assigned a time
+        // We'll create a map to remember the scheduled start times
+        java.util.Map<Integer, LocalDateTime> scheduledTimes = new java.util.HashMap<>();
+        for (Task task : scheduledTasks) {
+            // If the task originally had no startTime in the database (was floating)
+            // AND the scheduler assigned one, store it for display
+            if (task.startTime != null) {
+                // Check if this task was actually floating (no startTime in database)
+                // We need to check the original state from the database
+                // We'll use a flag to track this
+                boolean wasFloating = false;
+                
+                // Check if the task's original state was floating
+                // We stored the original startTime in the task object
+                // If the task is pinned in the database, we should keep its original time
+                // If it was floating, the scheduler assigned a new time
+                for (Task originalTask : allTasks) {
+                    if (originalTask.taskId == task.taskId) {
+                        // If the original task had no startTime in the database (was floating)
+                        // AND it has a startDate (or not), then this is a scheduled floating task
+                        if (originalTask.startTime == null) {
+                            wasFloating = true;
+                        }
+                        break;
+                    }
+                }
+                
+                // Store the scheduled time if it was a floating task that got scheduled
+                if (wasFloating) {
+                    scheduledTimes.put(task.taskId, task.startTime);
+                }
+            }
+        }
+        
+        // 9. For the display, we want to show the scheduled times
+        // But we DON'T want to modify the original tasks' startTime (they should remain floating)
+        // We'll create a separate list for display purposes
+        List<Task> tasksForDisplay = new ArrayList<>();
+        for (Task t : allTasks) {
+            // Create a copy of the task for display
+            Task displayTask = new Task(
+                t.taskId, 
+                t.taskName, 
+                t.category, 
+                t.importance, 
+                t.duration, 
+                t.dueDate, 
+                t.startTime,  // Keep the original startTime (null for floating)
+                t.startDate
+            );
+            
+            // If this task got scheduled by the algorithm, use the scheduled time for display
+            if (scheduledTimes.containsKey(t.taskId)) {
+                displayTask.startTime = scheduledTimes.get(t.taskId);
+            }
+            
+            tasksForDisplay.add(displayTask);
+        }
 
         // 10. Display tasks for the selected date
         LocalDate viewDate = dpViewDate.getValue();
         if (viewDate == null) viewDate = LocalDate.now();
 
         List<Task> tasksForToday = new ArrayList<>();
-        for (Task t : allTasks) {
+        for (Task t : tasksForDisplay) {
+            boolean shouldDisplay = false;
+            
+            // Pinned task: has start time and matches view date
             if (t.startTime != null && t.startTime.toLocalDate().equals(viewDate)) {
+                shouldDisplay = true;
+            }
+            // Floating task with start date
+            else if (t.startDate != null && t.startDate.equals(viewDate)) {
+                shouldDisplay = true;
+            }
+            // Floating task with due date
+            else if (t.dueDate != null && t.dueDate.toLocalDate().equals(viewDate)) {
+                shouldDisplay = true;
+            }
+            // Floating task with start date and due date: show if view date is between them
+            else if (t.startDate != null && t.dueDate != null) {
+                LocalDate startDate = t.startDate;
+                LocalDate dueDate = t.dueDate.toLocalDate();
+                if ((viewDate.isEqual(startDate) || viewDate.isAfter(startDate)) && 
+                    (viewDate.isEqual(dueDate) || viewDate.isBefore(dueDate))) {
+                    shouldDisplay = true;
+                }
+            }
+            
+            if (shouldDisplay) {
                 tasksForToday.add(t);
             }
         }
 
-        tasksForToday.sort(Comparator.comparing(t -> t.startTime));
+        tasksForToday.sort(Comparator.comparing(t -> {
+            if (t.startTime != null) {
+                return t.startTime;
+            } else if (t.startDate != null) {
+                return t.startDate.atStartOfDay();
+            } else if (t.dueDate != null) {
+                return t.dueDate;
+            }
+            return LocalDateTime.now();
+        }));
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");
 
+        // 11. Build UI task cards
         for (Task t : tasksForToday) {
             HBox taskCard = new HBox(15); 
             taskCard.setAlignment(Pos.CENTER_LEFT);
@@ -435,14 +642,45 @@ public class IMTPSController {
             CheckBox taskCheckbox = new CheckBox();
             taskCheckbox.setUserData(t.taskId); 
 
-            LocalDateTime endTime = t.startTime.plusMinutes((long)(t.duration * 60));
-            String timeString = t.startTime.format(timeFormatter) + " - " + endTime.format(timeFormatter);
+            String timeString;
+            String taskType;
+            
+            // Determine if this is a pinned task
+            boolean isPinned = t.isPinned();
+            
+            if (isPinned) {
+                // Pinned task with specific time
+                LocalDateTime endTime = t.startTime.plusMinutes((long)(t.duration * 60));
+                timeString = t.startTime.format(timeFormatter) + " - " + endTime.format(timeFormatter);
+                taskType = "📌 Pinned";
+            } else if (t.startTime != null) {
+                // Floating task that got scheduled by the algorithm
+                LocalDateTime endTime = t.startTime.plusMinutes((long)(t.duration * 60));
+                timeString = t.startTime.format(timeFormatter) + " - " + endTime.format(timeFormatter);
+                taskType = "📋 Floating (Scheduled)";
+            } else if (t.startDate != null && t.dueDate != null) {
+                // Floating task with start date and due date
+                timeString = "Starts: " + t.startDate.format(dateFormatter) + " | Due: " + t.dueDate.format(dateFormatter);
+                taskType = "📋 Floating";
+            } else if (t.startDate != null) {
+                // Floating task with start date only
+                timeString = "Starts: " + t.startDate.format(dateFormatter);
+                taskType = "📋 Floating";
+            } else if (t.dueDate != null) {
+                // Floating task with due date only
+                timeString = "Due: " + t.dueDate.format(dateFormatter);
+                taskType = "📋 Floating";
+            } else {
+                timeString = "No time set";
+                taskType = "📋 Floating";
+            }
 
             VBox textBox = new VBox(5); 
             Label nameLabel = new Label(t.taskName);
             nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
 
-            String detailsText = String.format("%s  |  %s  |  Importance: %d", catString, timeString, t.importance);
+            String detailsText = String.format("%s  |  %s  |  %s  |  Importance: %d", 
+                catString, timeString, taskType, t.importance);
             Label detailsLabel = new Label(detailsText);
             detailsLabel.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
 
@@ -452,6 +690,5 @@ public class IMTPSController {
             taskContainer.getChildren().add(taskCard);
         }
     }
-
     // endregion
 }

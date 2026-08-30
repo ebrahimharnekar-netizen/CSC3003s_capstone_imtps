@@ -1,6 +1,8 @@
 package db;
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * Class contains all the CRUD (Create, Read, update, delete) methods and some other useful SQL queries for users, tasks, and preferences. 
@@ -8,42 +10,38 @@ import java.time.LocalDateTime;
 
 public class DatabaseHelper {
 
-    private static final String URL = "jdbc:sqlite:imtps_db.db"; //Uses the SQLite JDBC driver to connect to the database file in the current working directory. 
+    private static final String URL = "jdbc:sqlite:imtps_db.db";
+    private static final LocalTime START_OF_DAY = LocalTime.of(0, 0);
 
     // Get a fresh connection. Caller is responsible for closing it. 
-
     public static Connection connect() throws SQLException {
         return DriverManager.getConnection(URL);
     }
 
     // USERS
     
-    //Note: the ? in the SQL statements are placeholders for parameters that will be set later using 
-    // PreparedStatement. This helps prevent SQL injection attacks and allows for dynamic query building. 
-    // i applied this method for all the other methods that update the database
-
     public static int addUser(String username, String email, String password) {
         String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"; 
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            pstmt.setString(1, username); // The first ? will be replaced with the username
-            pstmt.setString(2, email);   // The second ? will be replaced with the email
-            pstmt.setString(3, password); // The third ? will be replaced with the password
+            pstmt.setString(1, username);
+            pstmt.setString(2, email);
+            pstmt.setString(3, password);
             pstmt.executeUpdate();
 
             System.out.println("User added: " + username);
 
             ResultSet keys = pstmt.getGeneratedKeys();
             if (keys.next()) {
-                return keys.getInt(1); // newly created user_id
+                return keys.getInt(1);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1; // indicates failure to add user, for eg if the username already exists (due to unique constraint)
+        return -1;
     }
 
     public static boolean userExists(String username) {
@@ -56,13 +54,13 @@ public class DatabaseHelper {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getInt(1) > 0; // returns true if count > 0
+                return rs.getInt(1) > 0;
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false; // indicates user does not exist
+        return false;
     }
 
     public static boolean validateUser(String username, String password) {
@@ -76,17 +74,15 @@ public class DatabaseHelper {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getInt(1) > 0; // returns true if count > 0
+                return rs.getInt(1) > 0;
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false; // indicates invalid username/password combination
+        return false;
     }
 
-    // Looks up a user's id by username. Returns -1 if no user exists.
-    // Used after validateUser() succeeds so the session can track who is logged in.
     public static int getUserId(String username) {
         String sql = "SELECT user_id FROM users WHERE username = ?";
 
@@ -103,7 +99,7 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1; // indicates user does not exist
+        return -1;
     }
 
     public static void printAllUsers() {
@@ -123,15 +119,14 @@ public class DatabaseHelper {
         }
     }
 
-
-
     // TASKS
 
     public static void addTask(int userId, String taskName, int category,
                                 int importance, double duration,
-                             LocalDateTime dueDate, LocalDateTime startTime) {
+                                LocalDateTime dueDate, LocalDateTime startTime,
+                                LocalDate startDate) {
         String sql = "INSERT INTO tasks (user_id, task_name, category, importance, " +
-                     "duration, due_date, start_time) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                     "duration, due_date, start_time, start_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -141,9 +136,10 @@ public class DatabaseHelper {
             pstmt.setInt(3, category);
             pstmt.setInt(4, importance);
             pstmt.setDouble(5, duration);
-            pstmt.setObject(6, dueDate);   //pass null if not set
-            pstmt.setObject(7, startTime); //pass null if not set
-            pstmt.executeUpdate();         //executes the insert statement
+            pstmt.setObject(6, dueDate);
+            pstmt.setObject(7, startTime);
+            pstmt.setObject(8, startDate);
+            pstmt.executeUpdate();
 
             System.out.println("Task added: " + taskName);
 
@@ -167,7 +163,9 @@ public class DatabaseHelper {
                                     rs.getString("category") + " | " +
                                     "importance=" + rs.getInt("importance") + " | " +
                                     "duration=" + rs.getDouble("duration") + "h | " +
-                                    "due=" + rs.getString("due_date"));
+                                    "due=" + rs.getString("due_date") + " | " +
+                                    "start_time=" + rs.getString("start_time") + " | " +
+                                    "start_date=" + rs.getString("start_date"));
             }
 
         } catch (SQLException e) {
@@ -289,6 +287,21 @@ public class DatabaseHelper {
         }
     }
 
+    public static void updateTaskStartDate(int taskId, LocalDate newStartDate) {
+        String sql = "UPDATE tasks SET start_date = ? WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setObject(1, newStartDate);
+            pstmt.setInt(2, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void updateTaskEndTime(int taskId, LocalDateTime newEndTime) {
         String sql = "UPDATE tasks SET end_time = ? WHERE task_id = ?";
 
@@ -304,7 +317,6 @@ public class DatabaseHelper {
         }
     }
 
-
     public static void deleteTask(int taskId) {
         String sql = "DELETE FROM tasks WHERE task_id = ?";
 
@@ -319,29 +331,33 @@ public class DatabaseHelper {
         }
     }
 
-    // ======================= OVERLAP CHECK =======================
-
     /**
      * Checks if the given time slot overlaps with any existing pinned task for the user.
      * Optionally excludes one task (for editing).
+     * 
+     * IMPORTANT: Only checks for overlaps if the new task has a specific start time.
+     * Tasks without a start time (floating tasks) don't cause overlaps.
      *
      * @param userId         the ID of the user
-     * @param newStart       the proposed start time (must not be null)
+     * @param newStart       the proposed start time (must not be null to check)
      * @param newDuration    the duration in hours
      * @param excludeTaskId  the ID of a task to ignore; pass -1 or 0 to ignore none
      * @return true if there is an overlap with any other task, false otherwise
      */
     public static boolean hasTimeOverlap(int userId, LocalDateTime newStart, double newDuration, int excludeTaskId) {
+        // Only check for overlaps if there's a specific start time
         if (newStart == null) return false;
+        
         LocalDateTime newEnd = newStart.plusMinutes((long) (newDuration * 60));
-
-        String sql = "SELECT start_time, duration FROM tasks WHERE user_id = ? AND start_time IS NOT NULL";
+        
+        // Get only tasks that have a start_time (pinned tasks)
+        String sql = "SELECT task_id, start_time, duration, due_date, start_date FROM tasks WHERE user_id = ? AND start_time IS NOT NULL";
         if (excludeTaskId > 0) {
             sql += " AND task_id != ?";
         }
 
         try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, userId);
             if (excludeTaskId > 0) {
@@ -356,6 +372,25 @@ public class DatabaseHelper {
                     LocalDateTime existingStart = (startObj instanceof LocalDateTime)
                             ? (LocalDateTime) startObj
                             : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
+
+                    // Check if this is a valid pinned task (has a specific time and start date matches due date)
+                    Object dueObj = rs.getObject("due_date");
+                    LocalDateTime existingDue = null;
+                    if (dueObj != null) {
+                        existingDue = (dueObj instanceof LocalDateTime)
+                                ? (LocalDateTime) dueObj
+                                : LocalDateTime.parse(dueObj.toString().replace(" ", "T"));
+                    }
+
+                    // Only check overlap if:
+                    // 1. The existing task has a start time AND a due date
+                    // 2. The start date matches the due date (it's a pinned task)
+                    // 3. The start time is not 00:00 (floating with start date)
+                    if (existingDue == null || 
+                        !existingStart.toLocalDate().equals(existingDue.toLocalDate()) ||
+                        existingStart.toLocalTime().equals(START_OF_DAY)) {
+                        continue; // Skip floating tasks - they don't block time slots
+                    }
 
                     double existingDur = rs.getDouble("duration");
                     LocalDateTime existingEnd = existingStart.plusMinutes((long) (existingDur * 60));
@@ -377,7 +412,6 @@ public class DatabaseHelper {
 
     public static void setPreferences(int userId, int peakProdTime, int dailyProdHours,
                                        boolean preferQuickFirst) {
-        //Tries to update first. if no row exists yet, inserts one.
         String updateSql = "UPDATE preferences SET peak_prodtime = ?, daily_prod_hours = ?, " +
                             "preferred_quick_first = ? WHERE user_id = ?";
         String insertSql = "INSERT INTO preferences (user_id, peak_prodtime, daily_prod_hours, " +
@@ -408,7 +442,6 @@ public class DatabaseHelper {
         }
     }
 
-    // Simple read-only holder for a user's saved preferences, used to pre-fill the questionnaire.
     public static class Preferences {
         public final int peakProdTime;
         public final int dailyProdHours;
@@ -421,7 +454,6 @@ public class DatabaseHelper {
         }
     }
 
-    // Returns the user's saved preferences, or null if they haven't answered the questionnaire yet.
     public static Preferences getPreferences(int userId) {
         String sql = "SELECT peak_prodtime, daily_prod_hours, preferred_quick_first " +
                      "FROM preferences WHERE user_id = ?";
@@ -441,7 +473,7 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null; // no preferences saved yet - caller should fall back to defaults
+        return null;
     }
 
     public static void printPreferences(int userId) {
@@ -466,15 +498,14 @@ public class DatabaseHelper {
         }
     }
 
-
-    //Simple test of the DatabaseHelper methods
-   
     public static void main(String[] args) {
         int userId = addUser("nadim","nadim@example.com", "password_here");
         System.out.println("Created user with id: " + userId);
 
-        addTask(userId, "Finish capstone report", 1, 5, 3.5, LocalDateTime.of(2026, 8, 20, 17, 0), null);
-        addTask(userId, "Gym session", 2, 2, 1.0, null, LocalDateTime.of(2026, 8, 14, 7, 0));
+        addTask(userId, "Finish capstone report", 1, 5, 3.5, 
+                LocalDateTime.of(2026, 8, 20, 17, 0), null, null);
+        addTask(userId, "Gym session", 2, 2, 1.0, null, 
+                LocalDateTime.of(2026, 8, 14, 7, 0), null);
 
         System.out.println("\nTasks for user " + userId + ":");
         printTasksForUser(userId);

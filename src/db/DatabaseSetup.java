@@ -15,15 +15,16 @@ import java.sql.SQLException;
 
 public class DatabaseSetup {
     public static void main(String[] args) {
-        String url = "jdbc:sqlite:imtps_db.db";  //creates the file if it doesn't exist using the SQLite JDBC driver located in the directory.
+        String url = "jdbc:sqlite:imtps_db.db";
 
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt = conn.createStatement()) {
 
+
             stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
                          "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                         "email VARCHAR(100) NOT NULL, " +
-                         "username VARCHAR(100) NOT NULL, " +
+                         "email VARCHAR(100) NOT NULL UNIQUE, " +
+                         "username VARCHAR(100) NOT NULL UNIQUE, " +
                          "password VARCHAR(255) NOT NULL" +
                          ");");
 
@@ -36,6 +37,7 @@ public class DatabaseSetup {
                          "duration DECIMAL(5,2), " +
                          "due_date DATETIME NULL, " +
                          "start_time DATETIME NULL, " +
+                         "start_date DATE NULL, " +  
                          "FOREIGN KEY (user_id) REFERENCES users(user_id)" +
                          ");");
 
