@@ -521,12 +521,12 @@ public class IMTPSController {
             }
         }
 
-        // Sort chronologically for the UI
+        // Sort strictly by time of day so multi-day tasks don't jump to the top
         tasksForToday.sort(Comparator.comparing(t -> {
-            if (t.startTime != null) return t.startTime;
-            if (t.startDate != null) return t.startDate.atStartOfDay();
-            if (t.dueDate != null) return t.dueDate;
-            return LocalDateTime.now();
+            if (t.startTime != null) return t.startTime.toLocalTime();
+            if (t.startDate != null) return t.startDate.atStartOfDay().toLocalTime();
+            if (t.dueDate != null) return t.dueDate.toLocalTime();
+            return LocalTime.MAX; // Puts tasks with absolutely no time at the very bottom
         }));
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");

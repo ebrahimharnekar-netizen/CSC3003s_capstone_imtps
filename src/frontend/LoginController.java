@@ -33,7 +33,7 @@ public class LoginController {
         Platform.runLater(() -> {
             Stage stage = (Stage) txtUsernameLogin.getScene().getWindow();
             stage.setWidth(620);
-            stage.setHeight(430);
+            stage.setHeight(435);
             stage.centerOnScreen();
         });
     }
