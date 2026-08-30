@@ -63,44 +63,58 @@ public class AltScheduler implements SchedulingAlg{
             }
 
         });
+        
+        List<Task> additionalTasks = new ArrayList<>();
 
         for (Task task : floatingTasks) {  // schedule each floating task one by one.
 
-            // START of added date-range logic 
+            // START of date-range logic 
             LocalDate today = LocalDate.now();
             LocalDate searchStartDate = today;
             LocalDate searchEndDate = today;
 
-            // If the task has a start date, do not schedule before that date.
-            if (task.startDate != null && task.startDate.isAfter(today)) {
-                searchStartDate = task.startDate;
+            // Use original fields for the search window (if available)
+            LocalDate taskStart = (task.originalStartDate != null) ? task.originalStartDate : task.startDate;
+            LocalDate taskDue = (task.originalDueDate != null) ? task.originalDueDate.toLocalDate() : 
+                                (task.dueDate != null ? task.dueDate.toLocalDate() : null);
+
+            if (taskStart != null && taskStart.isAfter(today)) {
+                searchStartDate = taskStart;
             }
 
-            // If the task has a due date, do not schedule after that date.
-            if (task.dueDate != null) {
-                LocalDate dueDate = task.dueDate.toLocalDate();
-                if (dueDate.isBefore(searchStartDate)) {
-                    // If due date is before the start date, start searching today anyway.
+            if (taskDue != null) {
+                if (taskDue.isAfter(today)) {
+                    searchEndDate = taskDue;
+                } else {
+                    searchEndDate = today;
+                }
+                if (taskStart != null && taskStart.isAfter(searchEndDate)) {
                     searchStartDate = today;
+                    if (taskDue.isAfter(today)) {
+                        searchEndDate = taskDue;
+                    } else {
+                        searchEndDate = today;
+                    }
                 }
-                if (dueDate.isBefore(searchEndDate) && dueDate.isAfter(searchStartDate)) {
-                    searchEndDate = dueDate;
-                }
+            } else {
+                searchEndDate = today;
             }
-            //END of added date-range logic
+            //END of date-range logic
 
             long taskMinutes = (long) (task.duration * 60);  // converting the duration of the task to minutes
-            boolean isScheduled = false;
+            boolean isFirstDayScheduled = true;
+            boolean scheduledAtLeastOnce = false;
 
-            //START of multi‑day loop
+            //START of multi‑day loop (Removed early exit to schedule every day in range)
             for (LocalDate currentDate = searchStartDate; 
-                 !currentDate.isAfter(searchEndDate) && !isScheduled; 
+                 !currentDate.isAfter(searchEndDate); 
                  currentDate = currentDate.plusDays(1)) {
 
                 LocalDateTime dayStart = currentDate.atTime(startHour);
                 LocalDateTime dayEnd = currentDate.atTime(endHour);
 
                 LocalDateTime searchTime = dayStart;  // the search starts at 7am on this day
+                boolean scheduledToday = false;
 
                 while (!searchTime.plusMinutes(taskMinutes).isAfter(dayEnd)) {   // continue searching as long as the current search time is not after the end of the working day
 
@@ -110,10 +124,30 @@ public class AltScheduler implements SchedulingAlg{
 
                     for (Task pinned : pinnedTasks) {    // checking the potential time slot to every other pinned task on the calendar.
 
-                        long pinnedMins = (long) (pinned.duration * 60);
-                        LocalDateTime pinnedEnd = pinned.startTime.plusMinutes(pinnedMins);
+                        // Determine date range for this pinned task using its CURRENT fields
+                        LocalDate pinnedStartDate;
+                        LocalDate pinnedEndDate;
 
-                        if (searchTime.isBefore(pinnedEnd) && potEnd.isAfter(pinned.startTime)) {    // does the time slot collide with the current pinned task?
+                        if (pinned.startDate != null && pinned.dueDate != null) {
+                            pinnedStartDate = pinned.startDate;
+                            pinnedEndDate = pinned.dueDate.toLocalDate();
+                        } else if (pinned.isPinned() && pinned.dueDate != null) {
+                            pinnedStartDate = pinned.startTime.toLocalDate();
+                            pinnedEndDate = pinned.dueDate.toLocalDate();
+                        } else {
+                            pinnedStartDate = pinned.startTime.toLocalDate();
+                            pinnedEndDate = pinnedStartDate;
+                        }
+
+                        if (currentDate.isBefore(pinnedStartDate) || currentDate.isAfter(pinnedEndDate)) {
+                            continue;
+                        }
+
+                        LocalDateTime pinnedStartOfDay = currentDate.atTime(pinned.startTime.toLocalTime());
+                        long pinnedMins = (long) (pinned.duration * 60);
+                        LocalDateTime pinnedEnd = pinnedStartOfDay.plusMinutes(pinnedMins);
+
+                        if (searchTime.isBefore(pinnedEnd) && potEnd.isAfter(pinnedStartOfDay)) {    // does the time slot collide with the current pinned task?
 
                             collision = true;
                             nextFreeTime = pinnedEnd;  // gap is too small therefore search again after pinned task ends.
@@ -124,9 +158,24 @@ public class AltScheduler implements SchedulingAlg{
                     }
 
                     if (!collision) {    // a gap was found successfully
-
-                        task.startTime = searchTime;
-                        pinnedTasks.add(task);  // becomes a pinned "obstacle" for upcoming floating task
+                    
+                        if (isFirstDayScheduled) {
+                            task.startTime = searchTime;
+                            // Make scheduled floating tasks single‑day blockers
+                            task.startDate = task.startTime.toLocalDate();
+                            task.dueDate = null;
+                            pinnedTasks.add(task);  // becomes a pinned "obstacle" for upcoming floating task
+                            isFirstDayScheduled = false;
+                        } else {
+                            // Create a new schedule block for the following days
+                            Task clone = new Task(task.taskId, task.taskName, task.category, task.importance, 
+                                                  task.duration, null, searchTime, searchTime.toLocalDate());
+                            clone.originalStartDate = task.originalStartDate;
+                            clone.originalDueDate = task.originalDueDate;
+                            clone.originalStartTime = task.originalStartTime;
+                            pinnedTasks.add(clone);
+                            additionalTasks.add(clone);
+                        }
 
                         pinnedTasks.sort(new Comparator<Task>() {
                             
@@ -139,8 +188,9 @@ public class AltScheduler implements SchedulingAlg{
 
                         });
 
-                        isScheduled = true;
-                        break;
+                        scheduledToday = true;
+                        scheduledAtLeastOnce = true;
+                        break; // Move on to the next date
 
                     } else {
 
@@ -149,15 +199,22 @@ public class AltScheduler implements SchedulingAlg{
                     }
 
                 }
+                
+                if (!scheduledToday) {
+                    System.out.println(task.taskName + " could not fit in the window on " + currentDate);
+                }
+                
             } //END of multi‑day loop
 
-            if (!isScheduled) {
+            if (!scheduledAtLeastOnce) {
 
-                System.out.println(task.taskName + "could not fit in todays window.");
+                System.out.println(task.taskName + " could not fit anywhere in its date range.");
 
             }
 
         }
+        
+        floatingTasks.addAll(additionalTasks);
 
     }
 

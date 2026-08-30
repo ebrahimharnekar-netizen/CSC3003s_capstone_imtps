@@ -13,7 +13,12 @@ public class Task {
     public LocalDateTime startTime;
     public LocalDate startDate; 
 
-    // Constructor with taskId
+    // Original range (preserved for display)
+    public LocalDate originalStartDate;
+    public LocalDateTime originalDueDate;
+    // Original start time (used to distinguish user‑pinned tasks)
+    public LocalDateTime originalStartTime;
+
     public Task(int taskId, String taskName, int category, int importance, double duration, 
                 LocalDateTime dueDate, LocalDateTime startTime) {
         this.taskId = taskId;
@@ -24,6 +29,9 @@ public class Task {
         this.dueDate = dueDate;
         this.startTime = startTime;
         this.startDate = null;
+        this.originalStartDate = null;
+        this.originalDueDate = dueDate;
+        this.originalStartTime = startTime;   // added
 
         if (this.dueDate == null) {
             this.timeUntilDue = 87600.0;
@@ -34,7 +42,6 @@ public class Task {
         }
     }
 
-    // NEW: Constructor with startDate
     public Task(int taskId, String taskName, int category, int importance, double duration, 
                 LocalDateTime dueDate, LocalDateTime startTime, LocalDate startDate) {
         this.taskId = taskId;
@@ -45,6 +52,9 @@ public class Task {
         this.dueDate = dueDate;
         this.startTime = startTime;
         this.startDate = startDate;
+        this.originalStartDate = startDate;
+        this.originalDueDate = dueDate;
+        this.originalStartTime = startTime;   // added
 
         if (this.dueDate == null) {
             this.timeUntilDue = 87600.0;
@@ -55,7 +65,6 @@ public class Task {
         }
     }
 
-    // Overload constructor used by the UI
     public Task(String taskName, int category, int importance, double duration, 
                 LocalDateTime startTime, LocalDateTime dueDate) {
         this.taskId = 0;
@@ -66,6 +75,9 @@ public class Task {
         this.startTime = startTime;
         this.dueDate = dueDate;
         this.startDate = null;
+        this.originalStartDate = null;
+        this.originalDueDate = dueDate;
+        this.originalStartTime = startTime;   // added
 
         if (this.dueDate == null) {
             this.timeUntilDue = 87600.0;
@@ -77,14 +89,8 @@ public class Task {
     }
 
     public boolean isPinned() {
-        // A task is pinned if:
-        // 1. It has a start time
-        // 2. The start time is NOT 00:00 (which indicates floating with start date)
-        // 3. The start date matches the due date
-        if (this.startTime == null) return false;
-        if (this.startTime.toLocalTime().equals(LocalTime.of(0, 0))) return false;
-        if (this.dueDate == null) return false;
-        return this.startTime.toLocalDate().equals(this.dueDate.toLocalDate());
+        // A task is considered pinned if it originally had a non‑midnight start time
+        return this.originalStartTime != null && !this.originalStartTime.toLocalTime().equals(LocalTime.of(0, 0));
     }
 
     public boolean isFloatingWithStartDate() {

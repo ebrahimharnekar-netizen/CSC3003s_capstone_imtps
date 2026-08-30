@@ -331,12 +331,12 @@ public class DatabaseHelper {
         }
     }
 
+    // ... (rest of the class remains the same)
+
     /**
      * Checks if the given time slot overlaps with any existing pinned task for the user.
-     * Optionally excludes one task (for editing).
-     * 
-     * IMPORTANT: Only checks for overlaps if the new task has a specific start time.
-     * Tasks without a start time (floating tasks) don't cause overlaps.
+     * A pinned task with both a startDate and a dueDate will block that time on every day
+     * in that date range. Otherwise, it only blocks the day of its startTime.
      *
      * @param userId         the ID of the user
      * @param newStart       the proposed start time (must not be null to check)
@@ -345,12 +345,10 @@ public class DatabaseHelper {
      * @return true if there is an overlap with any other task, false otherwise
      */
     public static boolean hasTimeOverlap(int userId, LocalDateTime newStart, double newDuration, int excludeTaskId) {
-        // Only check for overlaps if there's a specific start time
         if (newStart == null) return false;
-        
+
         LocalDateTime newEnd = newStart.plusMinutes((long) (newDuration * 60));
-        
-        // Get only tasks that have a start_time (pinned tasks)
+
         String sql = "SELECT task_id, start_time, duration, due_date, start_date FROM tasks WHERE user_id = ? AND start_time IS NOT NULL";
         if (excludeTaskId > 0) {
             sql += " AND task_id != ?";
@@ -373,7 +371,14 @@ public class DatabaseHelper {
                             ? (LocalDateTime) startObj
                             : LocalDateTime.parse(startObj.toString().replace(" ", "T"));
 
-                    // Check if this is a valid pinned task (has a specific time and start date matches due date)
+                    Object startDateObj = rs.getObject("start_date");
+                    LocalDate existingStartDate = null;
+                    if (startDateObj != null) {
+                        existingStartDate = (startDateObj instanceof LocalDate)
+                                ? (LocalDate) startDateObj
+                                : LocalDate.parse(startDateObj.toString());
+                    }
+
                     Object dueObj = rs.getObject("due_date");
                     LocalDateTime existingDue = null;
                     if (dueObj != null) {
@@ -382,21 +387,27 @@ public class DatabaseHelper {
                                 : LocalDateTime.parse(dueObj.toString().replace(" ", "T"));
                     }
 
-                    // Only check overlap if:
-                    // 1. The existing task has a start time AND a due date
-                    // 2. The start date matches the due date (it's a pinned task)
-                    // 3. The start time is not 00:00 (floating with start date)
-                    if (existingDue == null || 
-                        !existingStart.toLocalDate().equals(existingDue.toLocalDate()) ||
-                        existingStart.toLocalTime().equals(START_OF_DAY)) {
-                        continue; // Skip floating tasks - they don't block time slots
+                    LocalDate rangeStart;
+                    LocalDate rangeEnd;
+
+                    if (existingStartDate != null && existingDue != null) {
+                        rangeStart = existingStartDate;
+                        rangeEnd = existingDue.toLocalDate();
+                    } else {
+                        rangeStart = existingStart.toLocalDate();
+                        rangeEnd = rangeStart;
                     }
 
-                    double existingDur = rs.getDouble("duration");
-                    LocalDateTime existingEnd = existingStart.plusMinutes((long) (existingDur * 60));
+                    LocalDate newDate = newStart.toLocalDate();
+                    if (newDate.isBefore(rangeStart) || newDate.isAfter(rangeEnd)) {
+                        continue;
+                    }
 
-                    // Overlap condition
-                    if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
+                    LocalDateTime existingStartOfDay = newDate.atTime(existingStart.toLocalTime());
+                    double existingDur = rs.getDouble("duration");
+                    LocalDateTime existingEnd = existingStartOfDay.plusMinutes((long) (existingDur * 60));
+
+                    if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStartOfDay)) {
                         return true;
                     }
                 }
@@ -407,7 +418,6 @@ public class DatabaseHelper {
         }
         return false;
     }
-
     // PREFERENCES
 
     public static void setPreferences(int userId, int peakProdTime, int dailyProdHours,
