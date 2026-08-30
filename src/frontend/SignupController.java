@@ -1,20 +1,16 @@
 package frontend;
 import db.DatabaseHelper;
-import algorithm.*;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.event.ActionEvent;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
-
 import javafx.scene.Node;
 import javafx.application.Platform;
 
@@ -22,57 +18,114 @@ public class SignupController {
 
     @FXML private TextField txtUsernameSignup;
     @FXML private PasswordField txtPasswordSignup;
+    @FXML private TextField txtPasswordVisibleSignup; 
     @FXML private TextField txtEmailSignup;
+    @FXML private CheckBox chbShowPassword;
 
     public static String username;
     public static String password;
     public static String email;
 
     public void initialize() {
-        // This method is called after the FXML file has been loaded
+        txtPasswordSignup.setText("");
+        txtUsernameSignup.setText("");
+        txtEmailSignup.setText("");
 
-        txtPasswordSignup.setText(null);
-        txtUsernameSignup.setText(null);
-        txtEmailSignup.setText(null);
+        if (txtPasswordVisibleSignup != null) {
+            txtPasswordVisibleSignup.textProperty().bindBidirectional(txtPasswordSignup.textProperty()); // Bind the visible password. so that when the user types in the password field, it updates the visible password field and vice versa.
+                                                                                                        
+        }
 
         Platform.runLater(() -> {
             Stage stage = (Stage) txtUsernameSignup.getScene().getWindow();
             stage.setWidth(600);
             stage.setHeight(435);
-            // Optional: center the window on screen
             stage.centerOnScreen();
         });
     }
 
     @FXML
     public void onCheckchbShowPassword(ActionEvent event) {
-        
-
+        if (chbShowPassword.isSelected()) {
+            txtPasswordVisibleSignup.setVisible(true);
+            txtPasswordSignup.setVisible(false);
+        } else {
+            txtPasswordVisibleSignup.setVisible(false);
+            txtPasswordSignup.setVisible(true);
+        }
     }
 
+    @FXML
     public void onClickbtnCreateAccount(ActionEvent event) {
-
         username = txtUsernameSignup.getText();
         password = txtPasswordSignup.getText();
         email = txtEmailSignup.getText();
 
-        //Check if the user already exists in the database
+        if (username == null || username.trim().isEmpty() || 
+            password == null || password.isEmpty() || 
+            email == null || email.trim().isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "All fields are required!");
+            return;
+        }
+
+        //DATA VALIDATION
+
+        // Validate email format
+        boolean isValidEmail = false;
+        int atCount = 0;
+        int dotCountAfterAt = 0;
+        int atPosition = -1;
+
+        for (int i = 0; i < email.length(); i++) {
+            char c = email.charAt(i);
+            if (c == '@') {
+                atCount++;
+                atPosition = i;
+            } else if (c == '.' && atCount == 1 && i > atPosition + 1) {
+                // Counts dots only if they appear after the '@' and aren't right next to it
+                dotCountAfterAt++;
+            }
+        }
+
+        // Valid if: exactly one '@', at least one '.' after the '@'
+        if (atCount == 1 && dotCountAfterAt >= 1 && atPosition > 0 && email.charAt(email.length() - 1) != '.') {
+            isValidEmail = true;
+        }
+
+        if (!isValidEmail) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Please enter a valid email address.");
+            return;
+        }
+
+        //Check password length
+        if (password.length() < 8) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Password must be at least 8 characters long.");
+            return;
+        }
+
+        //Check if password contains at least one number
+        boolean hasNumber = false;
+        for (int i = 0; i < password.length(); i++) {
+            if (Character.isDigit(password.charAt(i))) {
+                hasNumber = true;
+                break;
+            }
+        }
+        
+        if (!hasNumber) {
+            showAlert(Alert.AlertType.WARNING, "Validation Error", "Password must contain at least one number.");
+            return;
+        }
+
         if (DatabaseHelper.userExists(username)) {
-            // 4. If the user exists, display an error message
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Signup Failed");
-            alert.setHeaderText(null); // Set to null to remove the header space
-            alert.setContentText("A user with that username already exists!");
-            alert.showAndWait();
+            showAlert(Alert.AlertType.ERROR, "Signup Failed", "A user with that username already exists!");
         } else {
-            //If the user does not exist, create a new user in the database
             int newUserID = DatabaseHelper.addUser(username, email, password);
-            // Track who just signed up so the questionnaire knows whose preferences to save
             Session.currentUserId = newUserID;
             Session.currentUsername = username;
-            //Load the questionnaire page with the user new logged in
+            
             try {
-                 FXMLLoader loader = new FXMLLoader(getClass().getResource("Questions.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("Questions.fxml"));
                 Parent root = loader.load();
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
@@ -81,8 +134,14 @@ public class SignupController {
                 e.printStackTrace();
             }
         }
+    }
 
-
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     public void onClickbtnBack(ActionEvent event) {

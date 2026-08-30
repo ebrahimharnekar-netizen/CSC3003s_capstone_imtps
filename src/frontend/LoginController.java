@@ -22,42 +22,55 @@ public class LoginController {
 
     @FXML private TextField txtUsernameLogin;
     @FXML private PasswordField txtPasswordLogin;
-    
-    @FXML private CheckBox chbShowPasswordLogin;
+    @FXML private TextField txtPasswordVisibleLogin; 
+    @FXML private CheckBox chbShowPasswordL;
 
     public void initialize() {
-        // This method is called after the FXML file has been loaded
-        txtPasswordLogin.setText(null);
-        txtUsernameLogin.setText(null);
+        txtPasswordLogin.setText("");
+        txtUsernameLogin.setText("");
+
+        if (txtPasswordVisibleLogin != null) {
+            txtPasswordVisibleLogin.textProperty().bindBidirectional(txtPasswordLogin.textProperty()); // Bind the visible password. so that when the user types in the password field, it updates the visible password field and vice versa.
+        }
 
         Platform.runLater(() -> {
             Stage stage = (Stage) txtUsernameLogin.getScene().getWindow();
             stage.setWidth(620);
-            stage.setHeight(500);
+            stage.setHeight(430);
             stage.centerOnScreen();
         });
     }
 
-
+    @FXML
     public void onCheckchbShowPasswordL(ActionEvent event) {
-        
-
+        if (chbShowPasswordL.isSelected()) {
+            txtPasswordVisibleLogin.setVisible(true);
+            txtPasswordLogin.setVisible(false);
+        } else {
+            txtPasswordVisibleLogin.setVisible(false);
+            txtPasswordLogin.setVisible(true);
+        }
     }
 
+    @FXML
     public void onClickbtnSignIn(ActionEvent event) {
-
         String username = txtUsernameLogin.getText();
         String password = txtPasswordLogin.getText();
 
-        // Check if the user exists in the database
-        if (DatabaseHelper.validateUser(username, password)) {
+        if (username == null || username.trim().isEmpty() || password == null || password.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Validation Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Username and Password cannot be empty.");
+            alert.showAndWait();
+            return;
+        }
 
-            // Track who is logged in so later screens know whose data to save
+        if (DatabaseHelper.validateUser(username, password)) {
             Session.currentUserId = DatabaseHelper.getUserId(username);
             Session.currentUsername = username;
 
-            //Loads the imtps page if the user exists in the database
-        try {
+            try {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Login Successful");
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("imtps.fxml"));
@@ -69,16 +82,12 @@ public class LoginController {
                 e.printStackTrace();
             }
         } else {
-            // User does not exist, shows an error message
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Login Failed");
-            alert.setHeaderText(null); // Set to null to remove the header space
+            alert.setHeaderText(null); 
             alert.setContentText("Invalid username or password. Please try again.");
             alert.showAndWait();
-            
         }
-
-
     }
 
     public void onClickbtnLoginSignup(ActionEvent event) {

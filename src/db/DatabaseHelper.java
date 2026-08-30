@@ -3,7 +3,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 
 /**
- * Class contains all the CRUD (Create, Read, update, delete) methods for users, tasks, and preferences. 
+ * Class contains all the CRUD (Create, Read, update, delete) methods and some other useful SQL queries for users, tasks, and preferences. 
  */
 
 public class DatabaseHelper {
@@ -469,7 +469,6 @@ public class DatabaseHelper {
 
     //Simple test of the DatabaseHelper methods
    
-
     public static void main(String[] args) {
         int userId = addUser("nadim","nadim@example.com", "password_here");
         System.out.println("Created user with id: " + userId);
