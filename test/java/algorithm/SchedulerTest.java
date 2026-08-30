@@ -34,7 +34,7 @@ public class SchedulerTest {
         // ACreate a task with no due date
         Task noDeadlineTask = new Task(4, "Chill Task", 3, 1, 1.0, null, null);
 
-        // the system should assign the fallback of 87600.0 hours (10 years)[cite: 25]
+        // the system should assign the fallback of 87600.0 hours (10 years)
         assertEquals(87600.0, noDeadlineTask.timeUntilDue, 0.1, "Null due date should default to 10 years");
     }
 
