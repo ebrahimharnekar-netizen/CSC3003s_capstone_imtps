@@ -48,28 +48,25 @@ public class DatabaseHelperTest {
 
     @Test
     public void testOverlapLogicWithNullStart() {
-        // Arrange: A new task that is floating (null start time)[cite: 27]
         int mockUserId = 999;
         LocalDateTime nullStartTime = null;
         double duration = 2.0;
 
-        // Act: Run it through your overlap checker[cite: 27]
+
         boolean doesOverlap = DatabaseHelper.hasTimeOverlap(mockUserId, nullStartTime, duration, -1);
 
-        // Assert: A floating task can never overlap because it isn't pinned yet[cite: 27]
+
         assertFalse(doesOverlap, "A task with a null start time should immediately return false for overlaps");
     }
-    
+
     @Test
     public void testUserValidationFailsForBadCredentials() {
-        // Arrange: A completely fake username and password[cite: 27]
+
         String fakeUser = "TestUserThatDoesNotExist";
         String fakePass = "WrongPassword123";
 
-        // Act: Attempt to validate[cite: 27]
         boolean isValid = DatabaseHelper.validateUser(fakeUser, fakePass);
 
-        // Assert: The database should reject it[cite: 27]
         assertFalse(isValid, "Database should return false for non-existent users");
     }
 
@@ -86,9 +83,7 @@ public class DatabaseHelperTest {
 
     @Test
     void login_sqlInjectionInUsername_doesNotBypassAuthentication() {
-        // Classic auth-bypass payload. If validateUser() built its query with string
-        // concatenation instead of a PreparedStatement, this would make the WHERE
-        // clause always true and log in as the first user in the table.
+
         String injection = "' OR '1'='1";
  
         assertFalse(DatabaseHelper.validateUser(injection, "anything"),
@@ -113,8 +108,6 @@ public class DatabaseHelperTest {
         int userId = DatabaseHelper.addUser(username, username + "@example.com", "realPassword");
         createdUserIds.add(userId);
  
-        // Payload that would comment out the rest of the query (including the password
-        // check) in a naive, concatenated SQL statement.
         String injection = username + "' --";
  
         assertFalse(DatabaseHelper.validateUser(injection, "wrongOrAnyPassword"),
@@ -132,8 +125,6 @@ public class DatabaseHelperTest {
         assertTrue(DatabaseHelper.userExists(maliciousUsername),
                 "the malicious string should be stored (and matched) literally, not executed as SQL");
  
-        // If the payload had actually executed as SQL, the users table would be gone
-        // and this query would throw instead of returning a row.
         try (Connection conn = DatabaseHelper.connect();
              Statement stmt = conn.createStatement()) {
  
