@@ -2,10 +2,11 @@ package algorithm;
 import java.util.List;    // we will be creating lists of items
 import java.util.ArrayList;   // cant predict number of tasks user will input so need flexible arrays.
 import java.util.Comparator;  // this allows us to compare task objects in our own way.
-
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 // the equation we will be using for this scheduling algorithm: priority = focus_multiplier x duration_mult x ((impW x importance) + (urgW x 1/time))
-
 
 public class Scheduler implements SchedulingAlg{
     
@@ -94,9 +95,8 @@ public class Scheduler implements SchedulingAlg{
     private void findTimeSlots(List<Task> floatingTasks, List<Task> pinnedTasks) {
 
         // the work day window is 7am to 10pm
-        java.time.LocalDate today = java.time.LocalDate.now();
-        java.time.LocalDateTime dayStart = today.atTime(7, 0);
-        java.time.LocalDateTime dayEnd = today.atTime(22, 0);
+        LocalTime startHour = LocalTime.of(7, 0);
+        LocalTime endHour = LocalTime.of(22, 0);
 
         pinnedTasks.sort(new Comparator<Task>() {
 
@@ -111,58 +111,90 @@ public class Scheduler implements SchedulingAlg{
 
         for (Task task : floatingTasks) {  // schedule each floating task one by one.
 
-            long taskMinutes = (long) (task.duration * 60);  // converting the duration of the task to minutes
+            //  START of added date-range logic
+            LocalDate today = LocalDate.now();
+            LocalDate searchStartDate = today;
+            LocalDate searchEndDate = today;
 
-            java.time.LocalDateTime searchTime = dayStart;  // the search starts at 7am
+            // If the task has a start date, do not schedule before that date.
+            if (task.startDate != null && task.startDate.isAfter(today)) {
+                searchStartDate = task.startDate;
+            }
+
+            // If the task has a due date, do not schedule after that date.
+            if (task.dueDate != null) {
+                LocalDate dueDate = task.dueDate.toLocalDate();
+                if (dueDate.isBefore(searchStartDate)) {
+                    // If due date is before the start date, start searching today anyway.
+                    searchStartDate = today;
+                }
+                if (dueDate.isBefore(searchEndDate) && dueDate.isAfter(searchStartDate)) {
+                    searchEndDate = dueDate;
+                }
+            }
+            // END of added date-range logic
+
+            long taskMinutes = (long) (task.duration * 60);  // converting the duration of the task to minutes
             boolean isScheduled = false;
 
-            while (!searchTime.plusMinutes(taskMinutes).isAfter(dayEnd)) {   // continue searching as long as the current search time is not after the end of the working day
+            // START of multi‑day loop (replaces single‑day search)
+            for (LocalDate currentDate = searchStartDate; 
+                 !currentDate.isAfter(searchEndDate) && !isScheduled; 
+                 currentDate = currentDate.plusDays(1)) {
 
-                java.time.LocalDateTime potEnd = searchTime.plusMinutes(taskMinutes);
-                boolean collision = false;
-                java.time.LocalDateTime nextFreeTime = null;
+                LocalDateTime dayStart = currentDate.atTime(startHour);
+                LocalDateTime dayEnd = currentDate.atTime(endHour);
 
-                for (Task pinned : pinnedTasks) {    // checing the potential time slot to every other pinned task on the calendar.
+                LocalDateTime searchTime = dayStart;  // the search starts at 7am on this day
 
-                    long pinnedMins = (long) (pinned.duration * 60);
-                    java.time.LocalDateTime pinnedEnd = pinned.startTime.plusMinutes(pinnedMins);
+                while (!searchTime.plusMinutes(taskMinutes).isAfter(dayEnd)) {   // continue searching as long as the current search time is not after the end of the working day
 
-                    if (searchTime.isBefore(pinnedEnd) && potEnd.isAfter(pinned.startTime)) {    // does the time slot collide with the current pinned task?
+                    LocalDateTime potEnd = searchTime.plusMinutes(taskMinutes);
+                    boolean collision = false;
+                    LocalDateTime nextFreeTime = null;
 
-                        collision = true;
-                        nextFreeTime = pinnedEnd;  // gap is too small therefore search again after pinned task ends.
+                    for (Task pinned : pinnedTasks) {    // checking the potential time slot to every other pinned task on the calendar.
+
+                        long pinnedMins = (long) (pinned.duration * 60);
+                        LocalDateTime pinnedEnd = pinned.startTime.plusMinutes(pinnedMins);
+
+                        if (searchTime.isBefore(pinnedEnd) && potEnd.isAfter(pinned.startTime)) {    // does the time slot collide with the current pinned task?
+
+                            collision = true;
+                            nextFreeTime = pinnedEnd;  // gap is too small therefore search again after pinned task ends.
+                            break;
+
+                        }
+
+                    }
+
+                    if (!collision) {    // a gap was found successfully
+
+                        task.startTime = searchTime;
+                        pinnedTasks.add(task);  // becomes a pinned "obstacle" for upcoming floating task
+
+                        pinnedTasks.sort(new Comparator<Task>() {
+                            
+                            @Override
+                            public int compare(Task t1, Task t2) {
+
+                                return t1.startTime.compareTo(t2.startTime);    // sort the obstacles again.
+
+                            }
+
+                        });
+
+                        isScheduled = true;
                         break;
+
+                    } else {
+
+                        searchTime = nextFreeTime;  // go to end of obstacle and try the search again
 
                     }
 
                 }
-
-                if (!collision) {    // a gap was found successfully
-
-                    task.startTime = searchTime;
-                    pinnedTasks.add(task);  // becomes a pinned "obstacle" for upcoming floating task
-
-                    pinnedTasks.sort(new Comparator<Task>() {
-                        
-                        @Override
-                        public int compare(Task t1, Task t2) {
-
-                            return t1.startTime.compareTo(t2.startTime);    // sort the obstacles again.
-
-                        }
-
-                    });
-
-                    isScheduled = true;
-                    break;
-
-                } else {
-
-                    searchTime = nextFreeTime;  // go to end of obstacle and try the search again
-
-                }
-
-            }
+            } // END of multi‑day loop
 
             if (!isScheduled) {
 
