@@ -2,7 +2,6 @@ package db;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 /**
  * Class contains all the CRUD (Create, Read, update, delete) methods and some other useful SQL queries for users, tasks, and preferences. 
@@ -11,7 +10,6 @@ import java.time.LocalTime;
 public class DatabaseHelper {
 
     private static final String URL = "jdbc:sqlite:imtps_db.db";
-    private static final LocalTime START_OF_DAY = LocalTime.of(0, 0);
 
     // Get a fresh connection. Caller is responsible for closing it. 
     public static Connection connect() throws SQLException {
