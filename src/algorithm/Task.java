@@ -34,6 +34,26 @@ public class Task {
         }
     }
 
+    // this is an overload constructor used by the ui when creating a new task, it sets the task id to 0 until the database assigns a new one to it.
+    public Task(String taskName, int category, int importance, double duration, LocalDateTime startTime, LocalDateTime dueDate){
+        
+        this.taskId = 0; 
+        this.category = category;
+        this.taskName = taskName;
+        this.importance = importance;
+        this.duration = duration;
+        this.startTime = startTime;
+        this.dueDate = dueDate;
+
+        if (this.dueDate == null) {
+            this.timeUntilDue = 87600.0;  
+        } else {
+            LocalDateTime now = LocalDateTime.now();  
+            Duration timeDiff = Duration.between(now, this.dueDate);  
+            this.timeUntilDue = timeDiff.toMinutes() / 60.0;  
+        }
+    }
+
     public boolean isPinned(){   
         return this.startTime != null;
     }
