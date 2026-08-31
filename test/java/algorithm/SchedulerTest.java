@@ -79,7 +79,7 @@ public class SchedulerTest {
         
         // We create two 1 hour floating tasks
         Task highPriorityTask = new Task(2, "Important Task", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
-        Task lowPriorityTask = new Task(3, "Chill Task", 1, 1, 1.0, LocalDateTime.now().plusDays(5), null);
+        Task lowPriorityTask = new Task(3, "Chill Task", 1, 1, 1.0, today7AM.plusHours(15), null);
 
         List<Task> rawList = new ArrayList<>();
         rawList.add(giantPinnedTask);
