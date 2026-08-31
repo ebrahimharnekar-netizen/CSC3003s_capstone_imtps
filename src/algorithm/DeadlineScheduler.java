@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-public class AltScheduler implements SchedulingAlg{
+public class DeadlineScheduler implements SchedulingAlg{
     
     // this algorithm will prioritize the earliest deadline tasks first
     // this means that it will completely ignore the users preferences

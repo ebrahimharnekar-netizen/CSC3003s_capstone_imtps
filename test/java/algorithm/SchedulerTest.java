@@ -110,7 +110,7 @@ public class SchedulerTest {
         rawList.add(importantButLate);
         rawList.add(chillButUrgent);
 
-        AltScheduler altAlgorithm = new AltScheduler();
+        DeadlineScheduler altAlgorithm = new DeadlineScheduler();
         Questionnaire dummyPrefs = new Questionnaire(1, 1, false, 8);
         
         List<Task> schedule = altAlgorithm.genSchedule(rawList, dummyPrefs);

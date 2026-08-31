@@ -3,7 +3,7 @@ package algorithm;
 import java.util.ArrayList;
 import java.util.List;
 
-public class bucketScheduler implements SchedulingAlg{
+public class KnapsackScheduler implements SchedulingAlg{
     
     public List<Task> genSchedule(List<Task> allTasks, Questionnaire userPrefs) {
 

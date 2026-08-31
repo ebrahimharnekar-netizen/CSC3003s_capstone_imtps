@@ -40,11 +40,11 @@ public class IMTPS {
         // ====================================================================
         // 4. RUN ALGORITHM 2 (The Earliest Deadline First Engine)
         // ====================================================================
-        System.out.println("=== RUNNING: EDF ALGORITHM ===");
-        SchedulingAlg altEngine = new AltScheduler();
-        List<Task> altSchedule = altEngine.genSchedule(new ArrayList<>(allTasks), userPrefs);
+        System.out.println("=== RUNNING: DEADLINE SCHEDULER ===");
+        SchedulingAlg altEngine = new DeadlineScheduler();
+        List<Task> deadlineSchedule = altEngine.genSchedule(new ArrayList<>(allTasks), userPrefs);
 
-        for (Task t : altSchedule) {
+        for (Task t : deadlineSchedule) {
             System.out.println("- " + t.taskName + " | Start Time: " +
             (t.startTime != null ? t.startTime.toLocalTime() : "Unscheduled"));
         }
