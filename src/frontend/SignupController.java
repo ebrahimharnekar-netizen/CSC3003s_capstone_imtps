@@ -32,8 +32,7 @@ public class SignupController {
         txtEmailSignup.setText("");
 
         if (txtPasswordVisibleSignup != null) {
-            txtPasswordVisibleSignup.textProperty().bindBidirectional(txtPasswordSignup.textProperty()); // Bind the visible password. so that when the user types in the password field, it updates the visible password field and vice versa.
-                                                                                                        
+            txtPasswordVisibleSignup.textProperty().bindBidirectional(txtPasswordSignup.textProperty());
         }
 
         Platform.runLater(() -> {
@@ -68,9 +67,7 @@ public class SignupController {
             return;
         }
 
-        //DATA VALIDATION
-
-        // Validate email format
+        // DATA VALIDATION
         boolean isValidEmail = false;
         int atCount = 0;
         int dotCountAfterAt = 0;
@@ -82,12 +79,10 @@ public class SignupController {
                 atCount++;
                 atPosition = i;
             } else if (c == '.' && atCount == 1 && i > atPosition + 1) {
-                // Counts dots only if they appear after the '@' and aren't right next to it
                 dotCountAfterAt++;
             }
         }
 
-        // Valid if: exactly one '@', at least one '.' after the '@'
         if (atCount == 1 && dotCountAfterAt >= 1 && atPosition > 0 && email.charAt(email.length() - 1) != '.') {
             isValidEmail = true;
         }
@@ -97,13 +92,11 @@ public class SignupController {
             return;
         }
 
-        //Check password length
         if (password.length() < 8) {
             showAlert(Alert.AlertType.WARNING, "Validation Error", "Password must be at least 8 characters long.");
             return;
         }
 
-        //Check if password contains at least one number
         boolean hasNumber = false;
         for (int i = 0; i < password.length(); i++) {
             if (Character.isDigit(password.charAt(i))) {
@@ -120,7 +113,7 @@ public class SignupController {
         if (DatabaseHelper.userExists(username)) {
             showAlert(Alert.AlertType.ERROR, "Signup Failed", "A user with that username already exists!");
         } else {
-            int newUserID = DatabaseHelper.addUser(username, email, password);
+            String newUserID = DatabaseHelper.addUser(username, email, password); // Modified to String
             Session.currentUserId = newUserID;
             Session.currentUsername = username;
             

@@ -24,12 +24,12 @@ public class User {
     private static final int HASH_ITERATIONS = 65536;
     private static final int KEY_LENGTH_BITS = 128;
 
-    private int userId;
+    private String userId;
     private String username;
     private String email;
     private boolean loggedIn;
 
-    private User(int userId, String username, String email) {
+    private User(String userId, String username, String email) {
         this.userId = userId;
         this.username = username;
         this.email = email;
@@ -37,7 +37,7 @@ public class User {
     }
 
     // getters
-    public int getUserId() {
+    public String getUserId() {
 
         return userId;
 
@@ -83,7 +83,7 @@ public class User {
 
                 if (keys.next()) {
 
-                    int newUserId = keys.getInt(1);
+                    String newUserId = keys.getString(1);
                     User newUser = new User(newUserId, username, email);
                     newUser.loggedIn = true; // signing up logs the user in straight away
                     return newUser;
@@ -132,7 +132,7 @@ public class User {
 
                 }
 
-                User user = new User(rs.getInt("user_id"), username, rs.getString("email"));
+                User user = new User(rs.getString("user_id"), username, rs.getString("email"));
                 user.loggedIn = true;
                 return user;
 

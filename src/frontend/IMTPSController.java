@@ -148,7 +148,7 @@ public class IMTPSController {
                 LocalTime parsedTime = LocalTime.parse(txtStartTime.getText());
                 startTime = startVal.atTime(parsedTime);
                 if (startTime != null && !startTime.toLocalTime().equals(START_OF_DAY)) {
-                    if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, startTime, duration, -1)) {
+                    if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, startTime, duration, null)) {
                         lblAddStatus.setText("Error: You already have a task scheduled during this time!");
                         lblAddStatus.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                         return;
@@ -165,7 +165,7 @@ public class IMTPSController {
             startTime = null;
         }
 
-        int userID = Session.currentUserId;
+        String userID = Session.currentUserId; // Updated to String
         DatabaseHelper.addTask(userID, addName, categoryInt, importance, duration, dueDate, startTime, startDate);
 
         String taskType = (startTime != null && !startTime.toLocalTime().equals(START_OF_DAY))
@@ -185,19 +185,19 @@ public class IMTPSController {
         lblEditStatus.setText("");
 
         String searchQuery = txtSearchTask.getText().toLowerCase().trim();
-        int userID = Session.currentUserId;
+        String userID = Session.currentUserId; // Updated to String
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
 
         try (Connection conn = DatabaseHelper.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, userID);
+            pstmt.setString(1, userID);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
                 String name = rs.getString("task_name");
                 if (searchQuery.isEmpty() || name.toLowerCase().contains(searchQuery)) {
-                    int id = rs.getInt("task_id");
+                    String id = rs.getString("task_id"); // Updated to String
                     int cat = rs.getInt("category");
                     int imp = rs.getInt("importance");
                     double dur = rs.getDouble("duration");
@@ -353,19 +353,6 @@ public class IMTPSController {
     // endregion
 
     // region Refresh Tasks
-
-    /**
-     * This method refreshes the task list displayed in the "View Tasks" tab. It performs the following steps:
-     * 1. Deletes any tasks that have been checked off by the user.
-     * 2. Fetches all tasks from the database for the current user.
-     * 3. Determines the current focus mode based on the selected radio button.
-     * 4. Separates tasks into pinned and floating categories.
-     * 5. Clones floating tasks for scheduling, preserving their original start and due dates.
-     * 6. Runs the scheduler to generate a schedule for floating tasks.
-     * 7. Filters tasks to display only those relevant to the selected view date.
-     * 8. Sorts the tasks chronologically and builds the UI elements to display them.
-     * Coding logic ensures that pinned tasks are displayed on their scheduled date and times and floating tasks are asigned a time using ur schedulers
-    */
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
         // Delete checked tasks
@@ -374,7 +361,7 @@ public class IMTPSController {
                 HBox card = (HBox) node;
                 CheckBox cb = (CheckBox) card.getChildren().get(0);
                 if (cb.isSelected()) {
-                    int taskId = (int) cb.getUserData();
+                    String taskId = (String) cb.getUserData(); 
                     DatabaseHelper.deleteTask(taskId);
                 }
             }
@@ -383,18 +370,18 @@ public class IMTPSController {
         taskContainer.getChildren().clear();
 
         // Fetch all tasks
-        int userID = Session.currentUserId;
+        String userID = Session.currentUserId; // Updated to String
         String sql = "SELECT * FROM tasks WHERE user_id = ? ORDER BY task_id";
         List<Task> allTasks = new ArrayList<>();
 
         try (Connection conn = DatabaseHelper.connect();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, userID);
+            pstmt.setString(1, userID);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                int id = rs.getInt("task_id");
+                String id = rs.getString("task_id"); // Updated to String
                 String name = rs.getString("task_name");
                 int cat = rs.getInt("category");
                 int imp = rs.getInt("importance");
@@ -426,7 +413,6 @@ public class IMTPSController {
             return;
         }
 
-        // Determine focus mode
         int currentMode = Questionnaire.PersonalMode;
         if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
         else if (rdbtnHealth.isSelected()) currentMode = Questionnaire.HealthMode;
@@ -434,7 +420,6 @@ public class IMTPSController {
 
         Questionnaire prefs = new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
 
-        // Separate pinned and floating tasks
         List<Task> pinnedTasks = new ArrayList<>();
         List<Task> floatingTasks = new ArrayList<>();
         for (Task t : allTasks) {
@@ -445,12 +430,11 @@ public class IMTPSController {
             }
         }
 
-        Set<Integer> originallyPinnedIds = new HashSet<>();
+        Set<String> originallyPinnedIds = new HashSet<>(); // Updated to Set of Strings
         for (Task t : pinnedTasks) {
             originallyPinnedIds.add(t.taskId);
         }
 
-        // Clone floating tasks for scheduling – use original fields and set startTime = null
         List<Task> floatingClones = new ArrayList<>();
         for (Task t : floatingTasks) {
             floatingClones.add(new Task(
@@ -459,13 +443,12 @@ public class IMTPSController {
                 t.category,
                 t.importance,
                 t.duration,
-                t.originalDueDate,      // original due date (not modified by previous scheduling)
-                null,                   // startTime = null → floating
-                t.originalStartDate     // original start date
+                t.originalDueDate,      
+                null,                   
+                t.originalStartDate     
             ));
         }
 
-        // Run scheduler
         List<Task> allClones = new ArrayList<>();
         allClones.addAll(pinnedTasks);
         allClones.addAll(floatingClones);
@@ -473,12 +456,10 @@ public class IMTPSController {
         Scheduler scheduler = new Scheduler();
         List<Task> scheduledFloating = scheduler.genSchedule(allClones, prefs);
 
-        // Build display list
         List<Task> displayTasks = new ArrayList<>();
         displayTasks.addAll(pinnedTasks);
         displayTasks.addAll(scheduledFloating);
 
-        // Filter by view date
         LocalDate viewDate = dpViewDate.getValue();
         if (viewDate == null) viewDate = LocalDate.now();
 
@@ -487,12 +468,10 @@ public class IMTPSController {
             LocalDate taskStart = null;
             LocalDate taskEnd = null;
 
-            // Strict lock: Scheduled floating tasks MUST only display on their explicitly scheduled day
             if (t.startTime != null && !originallyPinnedIds.contains(t.taskId)) {
                 taskStart = t.startTime.toLocalDate();
                 taskEnd = taskStart;
             } else {
-                // Determine effective start and end dates for display
                 if (t.originalStartDate != null) {
                     taskStart = t.originalStartDate;
                 } else if (t.startDate != null) {
@@ -511,7 +490,7 @@ public class IMTPSController {
             }
 
             if (taskStart == null || taskEnd == null) {
-                continue; // skip if no date info
+                continue; 
             }
 
             boolean inRange = (viewDate.isEqual(taskStart) || viewDate.isAfter(taskStart)) &&
@@ -521,18 +500,16 @@ public class IMTPSController {
             }
         }
 
-        // Sort strictly by time of day so multi-day tasks don't jump to the top
         tasksForToday.sort(Comparator.comparing(t -> {
             if (t.startTime != null) return t.startTime.toLocalTime();
             if (t.startDate != null) return t.startDate.atStartOfDay().toLocalTime();
             if (t.dueDate != null) return t.dueDate.toLocalTime();
-            return LocalTime.MAX; // Puts tasks with absolutely no time at the very bottom
+            return LocalTime.MAX; 
         }));
 
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");
 
-        // Build UI
         for (Task t : tasksForToday) {
             HBox taskCard = new HBox(15);
             taskCard.setAlignment(Pos.CENTER_LEFT);

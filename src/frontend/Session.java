@@ -10,7 +10,7 @@ package frontend;
  */
 public class Session {
 
-    public static int currentUserId = -1;
+    public static String currentUserId = "";
     public static String currentUsername;
 
 }

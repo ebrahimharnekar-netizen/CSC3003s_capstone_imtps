@@ -12,7 +12,6 @@ import java.sql.SQLException;
  * tasks: to store tasks associated with users
  * preferences: to store user preferences after answering the questionnaire
  */
-
 public class DatabaseSetup {
     public static void main(String[] args) {
         String url = "jdbc:sqlite:imtps_db.db";
@@ -20,17 +19,17 @@ public class DatabaseSetup {
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt = conn.createStatement()) {
 
-
             stmt.execute("CREATE TABLE IF NOT EXISTS users (" +
-                         "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                         "user_id STRING PRIMARY KEY, " +
                          "email VARCHAR(100) NOT NULL UNIQUE, " +
                          "username VARCHAR(100) NOT NULL UNIQUE, " +
                          "password VARCHAR(255) NOT NULL" +
                          ");");
 
+            // Removed AUTOINCREMENT from task_id and preference_id
             stmt.execute("CREATE TABLE IF NOT EXISTS tasks (" +
-                         "task_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                         "user_id INTEGER NOT NULL, " +
+                         "task_id STRING PRIMARY KEY, " +
+                         "user_id STRING NOT NULL, " +
                          "task_name VARCHAR(255) NOT NULL, " +
                          "category INTEGER CHECK (category BETWEEN 1 AND 3), " +
                          "importance INTEGER CHECK (importance BETWEEN 1 AND 5), " +
@@ -42,8 +41,8 @@ public class DatabaseSetup {
                          ");");
 
             stmt.execute("CREATE TABLE IF NOT EXISTS preferences (" +
-                         "preference_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                         "user_id INTEGER NOT NULL, " +
+                         "preference_id STRING PRIMARY KEY, " +
+                         "user_id STRING NOT NULL, " +
                          "peak_prodtime INTEGER CHECK (peak_prodtime BETWEEN 1 AND 3), " +
                          "daily_prod_hours INTEGER CHECK (daily_prod_hours BETWEEN 1 AND 10), " +
                          "preferred_quick_first BOOLEAN, " +

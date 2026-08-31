@@ -1,9 +1,10 @@
 package algorithm;
+import java.lang.invoke.StringConcatException;
 import java.time.*;
 
 public class Task {
     
-    public int taskId; 
+    public String taskId; 
     public String taskName;
     public int category;
     public double timeUntilDue;
@@ -19,7 +20,7 @@ public class Task {
     // Original start time (used to distinguish user‑pinned tasks)
     public LocalDateTime originalStartTime;
 
-        public Task(int taskId, String taskName, int category, int importance, double duration, 
+        public Task(String taskId, String taskName, int category, int importance, double duration, 
                 LocalDateTime dueDate, LocalDateTime startTime, LocalDate startDate) { // main constructor
         this.taskId = taskId;
         this.category = category;
@@ -42,7 +43,7 @@ public class Task {
         }
     }
 
-    public Task(int taskId, String taskName, int category, int importance, double duration, 
+    public Task(String taskId, String taskName, int category, int importance, double duration, 
                 LocalDateTime dueDate, LocalDateTime startTime) { // Constructor for tasks without start date (USED FOR TESTING)
         this.taskId = taskId;
         this.category = category;
@@ -69,7 +70,7 @@ public class Task {
 
     public Task(String taskName, int category, int importance, double duration, 
                 LocalDateTime startTime, LocalDateTime dueDate) { // Constructor for tasks without taskId (used in testing)
-        this.taskId = 0;
+        this.taskId = "0";
         this.category = category;
         this.taskName = taskName;
         this.importance = importance;

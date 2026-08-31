@@ -6,40 +6,57 @@ import java.time.LocalDateTime;
 /**
  * Class contains all the CRUD (Create, Read, update, delete) methods and some other useful SQL queries for users, tasks, and preferences. 
  */
-
 public class DatabaseHelper {
 
     private static final String URL = "jdbc:sqlite:imtps_db.db";
 
-    // Get a fresh connection. Caller is responsible for closing it. 
     public static Connection connect() throws SQLException {
         return DriverManager.getConnection(URL);
     }
 
+    /**
+     * Helper method to generate an ID consisting of the first 3 letters 
+     * of the base string (capitalized) followed by a random 3-digit number.
+     */
+    private static String generateCustomId(String base) {
+        String prefix;
+        if (base == null || base.trim().isEmpty()) {
+            prefix = "XXX";
+        } else {
+            // Remove spaces/special characters just in case, then take first 3 chars
+            String cleanBase = base.trim().replaceAll("[^a-zA-Z0-9]", "");
+            if (cleanBase.length() < 3) {
+                prefix = (cleanBase + "XXX").substring(0, 3).toUpperCase();
+            } else {
+                prefix = cleanBase.substring(0, 3).toUpperCase();
+            }
+        }
+        int randomDigits = (int) (Math.random() * 1000); // Generates 0 to 999
+        return String.format("%s%03d", prefix, randomDigits);
+    }
+
     // USERS
     
-    public static int addUser(String username, String email, String password) {
-        String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"; 
+    public static String addUser(String username, String email, String password) {
+        String userId = generateCustomId(username); // Generates custom ID
+        String sql = "INSERT INTO users (user_id, username, email, password) VALUES (?, ?, ?, ?)"; 
 
         try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, username);
-            pstmt.setString(2, email);
-            pstmt.setString(3, password);
+            pstmt.setString(1, userId);
+            pstmt.setString(2, username);
+            pstmt.setString(3, email);
+            pstmt.setString(4, password);
             pstmt.executeUpdate();
 
-            System.out.println("User added: " + username);
-
-            ResultSet keys = pstmt.getGeneratedKeys();
-            if (keys.next()) {
-                return keys.getInt(1);
-            }
+            System.out.println("User added: " + username + " (ID: " + userId + ")");
+            return userId;
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
     public static boolean userExists(String username) {
@@ -81,7 +98,7 @@ public class DatabaseHelper {
         return false;
     }
 
-    public static int getUserId(String username) {
+    public static String getUserId(String username) {
         String sql = "SELECT user_id FROM users WHERE username = ?";
 
         try (Connection conn = connect();
@@ -91,13 +108,13 @@ public class DatabaseHelper {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getInt("user_id");
+                return rs.getString("user_id");
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return -1;
+        return null;
     }
 
     public static void printAllUsers() {
@@ -108,7 +125,7 @@ public class DatabaseHelper {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                System.out.println(rs.getInt("user_id") + " | " +
+                System.out.println(rs.getString("user_id") + " | " +
                                     rs.getString("username"));
             }
 
@@ -119,44 +136,46 @@ public class DatabaseHelper {
 
     // TASKS
 
-    public static void addTask(int userId, String taskName, int category,
+    public static void addTask(String userId, String taskName, int category,
                                 int importance, double duration,
                                 LocalDateTime dueDate, LocalDateTime startTime,
                                 LocalDate startDate) {
-        String sql = "INSERT INTO tasks (user_id, task_name, category, importance, " +
-                     "duration, due_date, start_time, start_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String taskId = generateCustomId(taskName); // Generates custom ID
+        String sql = "INSERT INTO tasks (task_id, user_id, task_name, category, importance, " +
+                     "duration, due_date, start_time, start_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, userId);
-            pstmt.setString(2, taskName);
-            pstmt.setInt(3, category);
-            pstmt.setInt(4, importance);
-            pstmt.setDouble(5, duration);
-            pstmt.setObject(6, dueDate);
-            pstmt.setObject(7, startTime);
-            pstmt.setObject(8, startDate);
+            pstmt.setString(1, taskId);
+            pstmt.setString(2, userId);
+            pstmt.setString(3, taskName);
+            pstmt.setInt(4, category);
+            pstmt.setInt(5, importance);
+            pstmt.setDouble(6, duration);
+            pstmt.setObject(7, dueDate);
+            pstmt.setObject(8, startTime);
+            pstmt.setObject(9, startDate);
             pstmt.executeUpdate();
 
-            System.out.println("Task added: " + taskName);
+            System.out.println("Task added: " + taskName + " (ID: " + taskId + ")");
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void printTasksForUser(int userId) {
+    public static void printTasksForUser(String userId) {
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, userId);
+            pstmt.setString(1, userId);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                System.out.println(rs.getInt("task_id") + " | " +
+                System.out.println(rs.getString("task_id") + " | " +
                                     rs.getString("task_name") + " | " +
                                     rs.getString("category") + " | " +
                                     "importance=" + rs.getInt("importance") + " | " +
@@ -171,18 +190,18 @@ public class DatabaseHelper {
         }
     }
 
-    public static void getTasksForTheDay(int userId, String date) {
+    public static void getTasksForTheDay(String userId, String date) {
         String sql = "SELECT * FROM tasks WHERE user_id = ? AND due_date = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, userId);
+            pstmt.setString(1, userId);
             pstmt.setString(2, date);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                System.out.println(rs.getInt("task_id") + " | " +
+                System.out.println(rs.getString("task_id") + " | " +
                                     rs.getString("task_name") + " | " +
                                     rs.getString("category") + " | " +
                                     "importance=" + rs.getInt("importance") + " | " +
@@ -195,14 +214,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskImportance(int taskId, int newImportance) {
+    public static void updateTaskImportance(String taskId, int newImportance) {
         String sql = "UPDATE tasks SET importance = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, newImportance);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -210,14 +229,14 @@ public class DatabaseHelper {
         }
     }
     
-    public static void updateTaskName(int taskId, String newTaskName) {
+    public static void updateTaskName(String taskId, String newTaskName) {
         String sql = "UPDATE tasks SET task_name = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, newTaskName);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -225,14 +244,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskCategory(int taskId, int newCategory) {
+    public static void updateTaskCategory(String taskId, int newCategory) {
         String sql = "UPDATE tasks SET category = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, newCategory);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -240,14 +259,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskDuration(int taskId, double newDuration) {
+    public static void updateTaskDuration(String taskId, double newDuration) {
         String sql = "UPDATE tasks SET duration = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setDouble(1, newDuration);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -255,14 +274,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskDueDate(int taskId, LocalDateTime newDueDate) {
+    public static void updateTaskDueDate(String taskId, LocalDateTime newDueDate) {
         String sql = "UPDATE tasks SET due_date = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setObject(1, newDueDate);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -270,14 +289,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskStartTime(int taskId, LocalDateTime newStartTime) {
+    public static void updateTaskStartTime(String taskId, LocalDateTime newStartTime) {
         String sql = "UPDATE tasks SET start_time = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setObject(1, newStartTime);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -285,14 +304,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskStartDate(int taskId, LocalDate newStartDate) {
+    public static void updateTaskStartDate(String taskId, LocalDate newStartDate) {
         String sql = "UPDATE tasks SET start_date = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setObject(1, newStartDate);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -300,14 +319,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static void updateTaskEndTime(int taskId, LocalDateTime newEndTime) {
+    public static void updateTaskEndTime(String taskId, LocalDateTime newEndTime) {
         String sql = "UPDATE tasks SET end_time = ? WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setObject(1, newEndTime);
-            pstmt.setInt(2, taskId);
+            pstmt.setString(2, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -315,13 +334,13 @@ public class DatabaseHelper {
         }
     }
 
-    public static void deleteTask(int taskId) {
+    public static void deleteTask(String taskId) {
         String sql = "DELETE FROM tasks WHERE task_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, taskId);
+            pstmt.setString(1, taskId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -329,35 +348,22 @@ public class DatabaseHelper {
         }
     }
 
-    // ... (rest of the class remains the same)
-
-    /**
-     * Checks if the given time slot overlaps with any existing pinned task for the user.
-     * A pinned task with both a startDate and a dueDate will block that time on every day
-     * in that date range. Otherwise, it only blocks the day of its startTime.
-     *
-     * @param userId         the ID of the user
-     * @param newStart       the proposed start time (must not be null to check)
-     * @param newDuration    the duration in hours
-     * @param excludeTaskId  the ID of a task to ignore; pass -1 or 0 to ignore none
-     * @return true if there is an overlap with any other task, false otherwise
-     */
-    public static boolean hasTimeOverlap(int userId, LocalDateTime newStart, double newDuration, int excludeTaskId) {
+    public static boolean hasTimeOverlap(String userId, LocalDateTime newStart, double newDuration, String excludeTaskId) {
         if (newStart == null) return false;
 
         LocalDateTime newEnd = newStart.plusMinutes((long) (newDuration * 60));
 
         String sql = "SELECT task_id, start_time, duration, due_date, start_date FROM tasks WHERE user_id = ? AND start_time IS NOT NULL";
-        if (excludeTaskId > 0) {
+        if (excludeTaskId != null && !excludeTaskId.isEmpty()) {
             sql += " AND task_id != ?";
         }
 
         try (Connection conn = connect();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, userId);
-            if (excludeTaskId > 0) {
-                pstmt.setInt(2, excludeTaskId);
+            pstmt.setString(1, userId);
+            if (excludeTaskId != null && !excludeTaskId.isEmpty()) {
+                pstmt.setString(2, excludeTaskId);
             }
 
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -416,14 +422,14 @@ public class DatabaseHelper {
         }
         return false;
     }
-    // PREFERENCES
 
-    public static void setPreferences(int userId, int peakProdTime, int dailyProdHours,
+    public static void setPreferences(String userId, int peakProdTime, int dailyProdHours,
                                        boolean preferQuickFirst) {
+        String prefId = generateCustomId("PREF"); // Generates custom ID starting with PRE
         String updateSql = "UPDATE preferences SET peak_prodtime = ?, daily_prod_hours = ?, " +
                             "preferred_quick_first = ? WHERE user_id = ?";
-        String insertSql = "INSERT INTO preferences (user_id, peak_prodtime, daily_prod_hours, " +
-                            "preferred_quick_first) VALUES (?, ?, ?, ?)";
+        String insertSql = "INSERT INTO preferences (preference_id, user_id, peak_prodtime, daily_prod_hours, " +
+                            "preferred_quick_first) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = connect()) {
 
@@ -431,15 +437,16 @@ public class DatabaseHelper {
                 pstmt.setInt(1, peakProdTime);
                 pstmt.setInt(2, dailyProdHours);
                 pstmt.setBoolean(3, preferQuickFirst);
-                pstmt.setInt(4, userId);
+                pstmt.setString(4, userId);
                 int rowsAffected = pstmt.executeUpdate();
 
                 if (rowsAffected == 0) {
                     try (PreparedStatement insertPstmt = conn.prepareStatement(insertSql)) {
-                        insertPstmt.setInt(1, userId);
-                        insertPstmt.setInt(2, peakProdTime);
-                        insertPstmt.setInt(3, dailyProdHours);
-                        insertPstmt.setBoolean(4, preferQuickFirst);
+                        insertPstmt.setString(1, prefId);
+                        insertPstmt.setString(2, userId);
+                        insertPstmt.setInt(3, peakProdTime);
+                        insertPstmt.setInt(4, dailyProdHours);
+                        insertPstmt.setBoolean(5, preferQuickFirst);
                         insertPstmt.executeUpdate();
                     }
                 }
@@ -462,14 +469,14 @@ public class DatabaseHelper {
         }
     }
 
-    public static Preferences getPreferences(int userId) {
+    public static Preferences getPreferences(String userId) {
         String sql = "SELECT peak_prodtime, daily_prod_hours, preferred_quick_first " +
                      "FROM preferences WHERE user_id = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, userId);
+            pstmt.setString(1, userId);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
@@ -482,44 +489,5 @@ public class DatabaseHelper {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static void printPreferences(int userId) {
-        String sql = "SELECT * FROM preferences WHERE user_id = ?";
-
-        try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, userId);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                System.out.println("peak_prodtime=" + rs.getInt("peak_prodtime") +
-                                    " | daily_prod_hours=" + rs.getInt("daily_prod_hours") +
-                                    " | preferred_quick_first=" + rs.getBoolean("preferred_quick_first"));
-            } else {
-                System.out.println("No preferences set for user " + userId);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void main(String[] args) {
-        int userId = addUser("nadim","nadim@example.com", "password_here");
-        System.out.println("Created user with id: " + userId);
-
-        addTask(userId, "Finish capstone report", 1, 5, 3.5, 
-                LocalDateTime.of(2026, 8, 20, 17, 0), null, null);
-        addTask(userId, "Gym session", 2, 2, 1.0, null, 
-                LocalDateTime.of(2026, 8, 14, 7, 0), null);
-
-        System.out.println("\nTasks for user " + userId + ":");
-        printTasksForUser(userId);
-
-        setPreferences(userId, 1, 6, true);
-        System.out.println("\nPreferences for user " + userId + ":");
-        printPreferences(userId);
     }
 }

@@ -11,34 +11,36 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class DatabaseHelperTest {
 
-    private List<Integer> createdUserIds;
- 
+    private List<String> createdUserIds; // Updated to String
+
     @BeforeAll
     static void setUpDatabase() {
         // Makes sure users/tasks/preferences tables exist before any test runs
         DatabaseSetup.main(new String[0]);
     }
- 
+
     @BeforeEach
     void setUp() {
         createdUserIds = new ArrayList<>();
     }
- 
+
     @AfterEach
     void tearDown() throws SQLException {
         try (Connection conn = DatabaseHelper.connect();
              Statement stmt = conn.createStatement()) {
- 
-            for (int id : createdUserIds) {
-                stmt.executeUpdate("DELETE FROM users WHERE user_id = " + id);
+
+            for (String id : createdUserIds) { // Updated to String
+                // Enclosed the string ID in single quotes for the SQL query
+                stmt.executeUpdate("DELETE FROM users WHERE user_id = '" + id + "'");
             }
- 
+
         }
     }
 
@@ -48,13 +50,12 @@ public class DatabaseHelperTest {
 
     @Test
     public void testOverlapLogicWithNullStart() {
-        int mockUserId = 999;
+        String mockUserId = "999"; // Updated to String
         LocalDateTime nullStartTime = null;
         double duration = 2.0;
 
-
-        boolean doesOverlap = DatabaseHelper.hasTimeOverlap(mockUserId, nullStartTime, duration, -1);
-
+        // Passed null instead of -1 for the excludeTaskId
+        boolean doesOverlap = DatabaseHelper.hasTimeOverlap(mockUserId, nullStartTime, duration, null);
 
         assertFalse(doesOverlap, "A task with a null start time should immediately return false for overlaps");
     }
@@ -74,10 +75,10 @@ public class DatabaseHelperTest {
     void login_correctCredentials_succeeds() {
         String username = uniqueUsername("login");
         String password = "CorrectHorseBatteryStaple1";
- 
-        int userId = DatabaseHelper.addUser(username, username + "@example.com", password);
+
+        String userId = DatabaseHelper.addUser(username, username + "@example.com", password); // Updated to String
         createdUserIds.add(userId);
- 
+
         assertTrue(DatabaseHelper.validateUser(username, password));
     }
 
@@ -85,7 +86,7 @@ public class DatabaseHelperTest {
     void login_sqlInjectionInUsername_doesNotBypassAuthentication() {
 
         String injection = "' OR '1'='1";
- 
+
         assertFalse(DatabaseHelper.validateUser(injection, "anything"),
                 "a SQL injection payload in the username must not bypass login");
     }
@@ -93,10 +94,10 @@ public class DatabaseHelperTest {
     @Test
     void login_sqlInjectionInPassword_doesNotBypassAuthentication() {
         String username = uniqueUsername("login");
- 
-        int userId = DatabaseHelper.addUser(username, username + "@example.com", "realPassword");
+
+        String userId = DatabaseHelper.addUser(username, username + "@example.com", "realPassword"); // Updated to String
         createdUserIds.add(userId);
- 
+
         assertFalse(DatabaseHelper.validateUser(username, "' OR '1'='1"),
                 "a SQL injection payload in the password must not bypass login");
     }
@@ -104,12 +105,12 @@ public class DatabaseHelperTest {
     @Test
     void login_sqlInjectionCommentPayload_doesNotBypassAuthentication() {
         String username = uniqueUsername("login");
- 
-        int userId = DatabaseHelper.addUser(username, username + "@example.com", "realPassword");
+
+        String userId = DatabaseHelper.addUser(username, username + "@example.com", "realPassword"); // Updated to String
         createdUserIds.add(userId);
- 
+
         String injection = username + "' --";
- 
+
         assertFalse(DatabaseHelper.validateUser(injection, "wrongOrAnyPassword"),
                 "a comment-based injection payload must not bypass the password check");
     }
@@ -117,20 +118,20 @@ public class DatabaseHelperTest {
     @Test
     void signUp_sqlInjectionPayloadInUsername_isStoredLiterally_tableSurvives() throws SQLException {
         String maliciousUsername = "hacker'); DROP TABLE users; --";
- 
-        int userId = DatabaseHelper.addUser(maliciousUsername, "hacker@example.com", "pw");
+
+        String userId = DatabaseHelper.addUser(maliciousUsername, "hacker@example.com", "pw"); // Updated to String
         createdUserIds.add(userId);
- 
-        assertTrue(userId > 0, "sign-up should succeed, treating the payload as a literal string");
+
+        assertNotNull(userId, "sign-up should succeed, returning a valid UUID string"); // Updated assertion
         assertTrue(DatabaseHelper.userExists(maliciousUsername),
                 "the malicious string should be stored (and matched) literally, not executed as SQL");
- 
+
         try (Connection conn = DatabaseHelper.connect();
              Statement stmt = conn.createStatement()) {
- 
+
             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM users");
             assertTrue(rs.next(), "the users table must still exist after the injection attempt");
- 
+
         }
     }
 }

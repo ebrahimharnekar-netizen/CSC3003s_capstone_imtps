@@ -11,8 +11,8 @@ public class SchedulerTest {
     public void testTaskIsPinned() {
         // create one task with a start time, and one without
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
-        Task pinnedTask = new Task(1, "Pinned", 1, 5, 1.0, null, startTime);
-        Task floatingTask = new Task(2, "Floating", 1, 3, 2.0, null, null);
+        Task pinnedTask = new Task("1", "Pinned", 1, 5, 1.0, null, startTime);
+        Task floatingTask = new Task("2", "Floating", 1, 3, 2.0, null, null);
 
         // the class should correctly identify if it is pinned
         assertTrue(pinnedTask.isPinned(), "Task with a start time should be pinned");
@@ -23,7 +23,7 @@ public class SchedulerTest {
     public void testTaskTimeUntilDueCalculation() {
         // create a task due 3 hours from now
         LocalDateTime dueInThreeHours = LocalDateTime.now().plusHours(3);
-        Task testTask = new Task(3, "Urgent Task", 2, 4, 1.0, dueInThreeHours, null);
+        Task testTask = new Task("3", "Urgent Task", 2, 4, 1.0, dueInThreeHours, null);
 
         // the constructor calculates timeUntilDue automatically
         assertEquals(3.0, testTask.timeUntilDue, 0.1, "Task should calculate exactly 3 hours remaining");
@@ -32,7 +32,7 @@ public class SchedulerTest {
     @Test  // testig to see if a task with no due date is pushed to the back of the line instead of throwing a null pointer exception
     public void testFloatingTaskFallbackDeadline() {
         // ACreate a task with no due date
-        Task noDeadlineTask = new Task(4, "Chill Task", 3, 1, 1.0, null, null);
+        Task noDeadlineTask = new Task("4", "Chill Task", 3, 1, 1.0, null, null);
 
         // the system should assign the fallback of 87600.0 hours (10 years)
         assertEquals(87600.0, noDeadlineTask.timeUntilDue, 0.1, "Null due date should default to 10 years");
@@ -41,8 +41,8 @@ public class SchedulerTest {
     @Test    // testing to see if two identical tasks change sequence if only their category is changed
     public void testFocusModeChangesPriority() {
         // Create 2 identical tasks that only differ by Category
-        Task workTask = new Task(1, "Capstone Coding", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
-        Task healthTask = new Task(2, "10km Run", 2, 5, 1.0, LocalDateTime.now().plusDays(1), null);
+        Task workTask = new Task("1", "Capstone Coding", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
+        Task healthTask = new Task("2", "10km Run", 2, 5, 1.0, LocalDateTime.now().plusDays(1), null);
 
         // Test 1: Set Focus Mode to Work
         Questionnaire workPrefs = new Questionnaire(1, 1, false, 8); 
@@ -57,8 +57,8 @@ public class SchedulerTest {
 
         // Test 2: Set Focus Mode to Health
         // We recreate the tasks so they don't have leftover startTimes from the first run
-        Task workTask2 = new Task(1, "Capstone Coding", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
-        Task healthTask2 = new Task(2, "10km Run", 2, 5, 1.0, LocalDateTime.now().plusDays(1), null);
+        Task workTask2 = new Task("1", "Capstone Coding", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
+        Task healthTask2 = new Task("2", "10km Run", 2, 5, 1.0, LocalDateTime.now().plusDays(1), null);
         
         Questionnaire healthPrefs = new Questionnaire(2, 1, false, 8); 
         
@@ -75,11 +75,11 @@ public class SchedulerTest {
         // The day is 7 AM to 10 PM
         // We create a massive pinned task that takes up 14 hours (7 AM to 9 PM)
         LocalDateTime today7AM = java.time.LocalDate.now().atTime(7, 0);
-        Task giantPinnedTask = new Task(1, "Long Shift", 1, 5, 14.0, null, today7AM);
+        Task giantPinnedTask = new Task("1", "Long Shift", 1, 5, 14.0, null, today7AM);
         
         // We create two 1 hour floating tasks
-        Task highPriorityTask = new Task(2, "Important Task", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
-        Task lowPriorityTask = new Task(3, "Chill Task", 1, 1, 1.0, today7AM.plusHours(15), null);
+        Task highPriorityTask = new Task("2", "Important Task", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
+        Task lowPriorityTask = new Task("3", "Chill Task", 1, 1, 1.0, today7AM.plusHours(15), null);
 
         List<Task> rawList = new ArrayList<>();
         rawList.add(giantPinnedTask);
@@ -101,10 +101,10 @@ public class SchedulerTest {
     @Test  // testing to see if the alternate scheduling algorithm correctly ignores the importance and schedules tasks based on the due date
     public void testAltSchedulerPrioritizesDeadlines() {
         // High importance, but due next week
-        Task importantButLate = new Task(1, "Important, Due Late", 1, 5, 1.0, LocalDateTime.now().plusDays(7), null);
+        Task importantButLate = new Task("1", "Important, Due Late", 1, 5, 1.0, LocalDateTime.now().plusDays(7), null);
         
         // Low importance, but due in exactly 1 hour
-        Task chillButUrgent = new Task(2, "Chill, Due Soon", 1, 1, 1.0, LocalDateTime.now().plusHours(1), null);
+        Task chillButUrgent = new Task("2", "Chill, Due Soon", 1, 1, 1.0, LocalDateTime.now().plusHours(1), null);
 
         List<Task> rawList = new ArrayList<>();
         rawList.add(importantButLate);

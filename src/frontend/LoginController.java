@@ -27,7 +27,7 @@ public class LoginController {
         txtUsernameLogin.setText("");
 
         if (txtPasswordVisibleLogin != null) {
-            txtPasswordVisibleLogin.textProperty().bindBidirectional(txtPasswordLogin.textProperty()); // Bind the visible password. so that when the user types in the password field, it updates the visible password field and vice versa.
+            txtPasswordVisibleLogin.textProperty().bindBidirectional(txtPasswordLogin.textProperty()); 
         }
 
         Platform.runLater(() -> {
