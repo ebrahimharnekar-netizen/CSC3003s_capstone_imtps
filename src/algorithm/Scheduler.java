@@ -49,7 +49,7 @@ public class Scheduler implements SchedulingAlg{
 
         });
 
-        findTimeSlots(floatingTasks, pinnedTasks);  // running the sorted task through the gap finder to give them starting times
+        findTimeSlots(floatingTasks, pinnedTasks, userPrefs);  // running the sorted task through the gap finder to give them starting times
 
         return floatingTasks;  // returning the sorted list of tasks to be scheduled.
 
@@ -92,11 +92,11 @@ public class Scheduler implements SchedulingAlg{
 
     }
 
-    private void findTimeSlots(List<Task> floatingTasks, List<Task> pinnedTasks) {
+    private void findTimeSlots(List<Task> floatingTasks, List<Task> pinnedTasks, Questionnaire userPrefs) {
 
         // the work day window is 7am to 10pm
-        LocalTime startHour = LocalTime.of(7, 0);
-        LocalTime endHour = LocalTime.of(22, 0);
+        LocalTime startHour = userPrefs.getDayStartTime();
+        LocalTime endHour = userPrefs.getDayEndTime();
 
         pinnedTasks.sort(new Comparator<Task>() {
 

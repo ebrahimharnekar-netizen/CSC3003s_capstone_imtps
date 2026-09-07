@@ -41,17 +41,17 @@ public class DeadlineScheduler implements SchedulingAlg{
 
         });
 
-        findTimeSlots(floatingTasks, pinnedTasks);
+        findTimeSlots(floatingTasks, pinnedTasks, userPrefs);
 
         return floatingTasks;
 
     }
 
-    private void findTimeSlots(List<Task> floatingTasks, List<Task> pinnedTasks) {
+    private void findTimeSlots(List<Task> floatingTasks, List<Task> pinnedTasks, Questionnaire userPrefs) {
 
         // the work day window is 7am to 10pm
-        LocalTime startHour = LocalTime.of(7, 0);
-        LocalTime endHour = LocalTime.of(22, 0);
+        LocalTime startHour = userPrefs.getDayStartTime();
+        LocalTime endHour = userPrefs.getDayEndTime();
 
         pinnedTasks.sort(new Comparator<Task>() {
 
