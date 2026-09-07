@@ -22,6 +22,8 @@ public class LoginController {
     @FXML private TextField txtPasswordVisibleLogin; 
     @FXML private CheckBox chbShowPasswordL;
 
+    
+
     public void initialize() {
         txtPasswordLogin.setText("");
         txtUsernameLogin.setText("");
@@ -32,9 +34,7 @@ public class LoginController {
 
         Platform.runLater(() -> {
             Stage stage = (Stage) txtUsernameLogin.getScene().getWindow();
-            stage.setWidth(620);
-            stage.setHeight(435);
-            stage.centerOnScreen();
+            stage.setMaximized(true);
         });
     }
 
@@ -99,15 +99,7 @@ public class LoginController {
         }
     }
 
-    public void onClickbtnBack(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("menu.fxml"));
-            Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void onClickbtnBack(ActionEvent event) { //exit
+         System.exit(0);
     }
 }

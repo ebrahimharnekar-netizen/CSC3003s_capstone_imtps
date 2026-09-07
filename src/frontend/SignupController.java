@@ -37,9 +37,7 @@ public class SignupController {
 
         Platform.runLater(() -> {
             Stage stage = (Stage) txtUsernameSignup.getScene().getWindow();
-            stage.setWidth(600);
-            stage.setHeight(435);
-            stage.centerOnScreen();
+            stage.setMaximized(true);
         });
     }
 
@@ -138,15 +136,7 @@ public class SignupController {
     }
 
     public void onClickbtnBack(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("menu.fxml"));
-            Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        System.exit(0);
     }
 
     public void onClickbtnLogInSignup(ActionEvent event) {

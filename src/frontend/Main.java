@@ -20,11 +20,13 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         //Load the FXML file
-        Parent root = FXMLLoader.load(getClass().getResource("menu.fxml")); //Menu is the first page 
+        Parent root = FXMLLoader.load(getClass().getResource("login.fxml")); //Login is the first page 
                                                                                     // that will be displayed when the application starts
         
         //Attach it to a Scene
-        Scene scene = new Scene(root, 650, 425); 
+        Scene scene = new Scene(root); 
+        //maximize the window
+        primaryStage.setMaximized(true);
         
         //Set up the window (Stage) and show it
         primaryStage.setTitle("IMTPS Application"); // The text at the top of the window
