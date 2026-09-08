@@ -2,6 +2,7 @@ package algorithm;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,6 +118,55 @@ public class SchedulerTest {
 
         // AltScheduler strictly looks at timeUntilDue, ignoring importance entirely
         assertEquals("Chill, Due Soon", schedule.get(0).taskName, "AltScheduler failed to prioritize the absolute earliest deadline!");
+    }
+
+
+    @Test // testing to ensure the dynamic work window logic functions correctly in the Deadline Scheduler
+    public void testDeadlineSchedulerDynamicWindow() {
+        // Create a 2 hour task
+        Task eveningTask = new Task("1", "Evening Task", 1, 5, 2.0, null, null);
+        List<Task> rawList = new ArrayList<>();
+        rawList.add(eveningTask);
+
+        // Set a custom short window from 8 PM to 10 PM
+        Questionnaire customPrefs = new Questionnaire(1, 1, false, 8);
+        customPrefs.setWindow("20:00", "22:00");
+
+        DeadlineScheduler deadlineAlg = new DeadlineScheduler();
+        deadlineAlg.genSchedule(rawList, customPrefs);
+
+        // The task should snap to the new custom start time (20:00), not the default 07:00
+        assertNotNull(eveningTask.startTime, "Task should be scheduled within the dynamic window");
+        assertEquals(LocalTime.of(20, 0), eveningTask.startTime.toLocalTime(), "Task did not start at the dynamic 20:00 start time");
+    }
+
+    @Test // testing to ensure the 0/1 DP matrix correctly selects the maximum importance value under the time capacity
+    public void testKnapsackOptimizesImportance() {
+        // Our default knapsack capacity is 15 hours (900 minutes)
+        
+        // Task A takes up 10 hours but gives 5 importance
+        Task heavyLowValue = new Task("1", "Heavy Low Value", 1, 5, 10.0, null, null);
+        
+        // Task B and C take up 15 hours combined, but give a total of 8 importance
+        Task mediumHighValue1 = new Task("2", "Medium High Value 1", 1, 4, 8.0, null, null);
+        Task mediumHighValue2 = new Task("3", "Medium High Value 2", 1, 4, 7.0, null, null);
+
+        List<Task> rawList = new ArrayList<>();
+        rawList.add(heavyLowValue);
+        rawList.add(mediumHighValue1);
+        rawList.add(mediumHighValue2);
+
+        Questionnaire dummyPrefs = new Questionnaire(1, 1, false, 8);
+        KnapsackScheduler knapsack = new KnapsackScheduler();
+        
+        List<Task> optimalSchedule = knapsack.genSchedule(rawList, dummyPrefs);
+
+        // The DP table should realize that (Task B + Task C) = 15 hours and 8 Importance
+        // While (Task A) = 10 hours and 5 Importance, and no other tasks fit.
+        // It must pack B and C first, pushing A to the leftover pile (index 2).
+        assertEquals("Medium High Value 2", optimalSchedule.get(0).taskName, "Knapsack failed to pack the optimal subset");
+        assertEquals("Medium High Value 1", optimalSchedule.get(1).taskName, "Knapsack failed to pack the optimal subset");
+        assertEquals("Heavy Low Value", optimalSchedule.get(2).taskName, "The less optimal task should have been pushed to leftovers");
     }
 
 }

@@ -10,6 +10,9 @@ import java.time.Duration;
 // this is the knapsack scheduler, which finds the optimal subset of tasks for 'today' and pushes whatever doesnt fit
 // in todays schedule to the back of the line of tomorrows schedule
 
+// It looks at the same list and realizes that if it skips Task A, it can 
+// fit both Task B and Task C into the 10 hour window (8 hours total)
+
 public class KnapsackScheduler implements SchedulingAlg{
     
     public List<Task> genSchedule(List<Task> allTasks, Questionnaire userPrefs) {
@@ -49,7 +52,7 @@ public class KnapsackScheduler implements SchedulingAlg{
 
         if (totalCapMins < 0) {
 
-            totalCapMins = 0;
+            totalCapMins = 0;      // preventing out of bounds exception for tasks that exceed working hours.
 
         }
 
@@ -68,18 +71,18 @@ public class KnapsackScheduler implements SchedulingAlg{
             }
 
             // Build the DP Table
-            int[][] dp = new int[n + 1][totalCapMins + 1];
+            int[][] dp = new int[n + 1][totalCapMins + 1];   // dp[i][w], stores max importance with first i tasks using w minutes.
             
             for (int i = 1; i <= n; i++) {
 
                 for (int w = 0; w <= totalCapMins; w++) {
 
                     if (weights[i - 1] <= w) {
-
+                        // the task fits, therefore take the max between leving the task out and including the task.
                         dp[i][w] = Math.max(values[i - 1] + dp[i - 1][w - weights[i - 1]], dp[i - 1][w]);
                     
                     } else {
-
+                        // the task is too large to fit in this window, therefore carry over the previous optimal value.
                         dp[i][w] = dp[i - 1][w];
 
                     }
@@ -95,29 +98,17 @@ public class KnapsackScheduler implements SchedulingAlg{
             int res = dp[n][totalCapMins];
             int w = totalCapMins;
             
-            for (int i = n; i > 0 && res > 0; i--) {
-
-                if (res == dp[i - 1][w]) {
-
-                    // Task didn't make the cut for the optimal pack
-                    leftoverTasks.add(floatingTasks.get(i - 1));
-
-                } else {
-
+            for (int i = n; i > 0; i--) {
+                // If we still have 'res' to account for, AND the value changed from the row above it
+                if (res > 0 && res != dp[i - 1][w]) {
                     // Task got packed
                     optimalTasks.add(floatingTasks.get(i - 1));
                     res = res - values[i - 1];
                     w = w - weights[i - 1];
-
+                } else {
+                    // Task didn't make the cut for the optimal pack
+                    leftoverTasks.add(floatingTasks.get(i - 1));
                 }
-
-            }
-            
-            // Add any tasks that weren't evaluated because the result hit 0 early
-            while (optimalTasks.size() + leftoverTasks.size() < floatingTasks.size()) {
-
-                leftoverTasks.add(floatingTasks.get(optimalTasks.size() + leftoverTasks.size()));
-            
             }
 
             // Rebuild the floating list: Optimal tasks get scheduled first
@@ -150,11 +141,12 @@ public class KnapsackScheduler implements SchedulingAlg{
         List<Task> additionalTasks = new ArrayList<>();
 
         for (Task task : floatingTasks) { 
-
+            // search strictly within today
             LocalDate today = LocalDate.now();
             LocalDate searchStartDate = today;
             LocalDate searchEndDate = today;
 
+            // restricting the search window based on the users custom set window
             LocalDate taskStart = (task.originalStartDate != null) ? task.originalStartDate : task.startDate;
             LocalDate taskDue = (task.originalDueDate != null) ? task.originalDueDate.toLocalDate() : 
                                 (task.dueDate != null ? task.dueDate.toLocalDate() : null);
@@ -209,7 +201,7 @@ public class KnapsackScheduler implements SchedulingAlg{
                 LocalDateTime dayStart = currentDate.atTime(startHour);
                 LocalDateTime dayEnd = currentDate.atTime(endHour);
 
-                LocalDateTime searchTime = dayStart;  
+                LocalDateTime searchTime = dayStart;    // sliding window starts at the beginning of the custom period
                 boolean scheduledToday = false;
 
                 while (!searchTime.plusMinutes(taskMinutes).isAfter(dayEnd)) {   
@@ -218,7 +210,7 @@ public class KnapsackScheduler implements SchedulingAlg{
                     boolean collision = false;
                     LocalDateTime nextFreeTime = null;
 
-                    for (Task pinned : pinnedTasks) {    
+                    for (Task pinned : pinnedTasks) {      // check the current slot against all tasks pinned to the calendar
 
                         LocalDate pinnedStartDate;
                         LocalDate pinnedEndDate;
@@ -250,10 +242,11 @@ public class KnapsackScheduler implements SchedulingAlg{
                         long pinnedMins = (long) (pinned.duration * 60);
                         LocalDateTime pinnedEnd = pinnedStartOfDay.plusMinutes(pinnedMins);
 
+                        // colllision is noted
                         if (searchTime.isBefore(pinnedEnd) && potEnd.isAfter(pinnedStartOfDay)) {    
                             
                             collision = true;
-                            nextFreeTime = pinnedEnd;  
+                            nextFreeTime = pinnedEnd;  // go to the end of the pinned task as it is obstructing the sliding window.
                             break;
 
                         }
@@ -272,6 +265,7 @@ public class KnapsackScheduler implements SchedulingAlg{
 
                         } else {
 
+                            // blocking out time on different days (multi day scheduling)
                             Task clone = new Task(task.taskId, task.taskName, task.category, task.importance, 
                                                   task.duration, null, searchTime, searchTime.toLocalDate());
                             clone.originalStartDate = task.originalStartDate;
