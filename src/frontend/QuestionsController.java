@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import javafx.application.Platform;
@@ -36,6 +37,8 @@ public class QuestionsController {
     @FXML private RadioButton rdbtnMorning;
     @FXML private RadioButton rdbtnMidday;
     @FXML private RadioButton rdbtnNight;
+    @FXML private TextField txtPrefStartTime;
+    @FXML private TextField txtPrefEndTime;
     @FXML private Button btnSaveQuestionnaire;
 
     @FXML
@@ -74,6 +77,13 @@ public class QuestionsController {
             } else if (existing.peakProdTime == Questionnaire.EveningPeriod) {
                 rdbtnNight.setSelected(true);
             }
+            
+            if (existing.startTime != null) {
+                txtPrefStartTime.setText(existing.startTime);
+            }
+            if (existing.endTime != null) {
+                txtPrefEndTime.setText(existing.endTime);
+            }
 
         }
 
@@ -110,7 +120,17 @@ public class QuestionsController {
             peakProdTime = DEFAULT_PEAK_PROD_TIME;
         }
 
-        DatabaseHelper.setPreferences(Session.currentUserId, peakProdTime, dailyProdHours, preferQuickFirst);
+        String startTime = txtPrefStartTime.getText();
+        if (startTime == null || startTime.trim().isEmpty()) {
+            startTime = "07:00"; // default
+        }
+
+        String endTime = txtPrefEndTime.getText();
+        if (endTime == null || endTime.trim().isEmpty()) {
+            endTime = "22:00"; // default
+        }
+
+        DatabaseHelper.setPreferences(Session.currentUserId, peakProdTime, dailyProdHours, preferQuickFirst, startTime, endTime);
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("imtps.fxml"));
