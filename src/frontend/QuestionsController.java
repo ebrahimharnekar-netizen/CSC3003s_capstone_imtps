@@ -79,9 +79,7 @@ public class QuestionsController {
 
         Platform.runLater(() -> {
             Stage stage = (Stage) btnSaveQuestionnaire.getScene().getWindow();
-            stage.setWidth(600);
-            stage.setHeight(550);
-            stage.centerOnScreen();
+            stage.setMaximized(true);
         });
 
     }

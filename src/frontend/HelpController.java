@@ -20,10 +20,7 @@ public class HelpController {
         Platform.runLater(() -> {
             if (btnBack != null && btnBack.getScene() != null) {
                 Stage stage = (Stage) btnBack.getScene().getWindow();
-                stage.setWidth(665);
-                stage.setHeight(535);
-                // Optional: center the window on screen
-                stage.centerOnScreen();
+                stage.setMaximized(true);
             }
         });
     }

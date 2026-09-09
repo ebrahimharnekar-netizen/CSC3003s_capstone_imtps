@@ -31,6 +31,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
@@ -40,6 +41,10 @@ import javafx.application.Platform;
 
 public class IMTPSController {
     @FXML private Label lblUsernameIMTPS;
+    
+    // Taskbar Navigation Element
+    @FXML private TabPane mainTabPane;
+
     // Add Task Tab Elements
     @FXML private TextField btnAddName;
     @FXML private ComboBox<String> btnCategory;
@@ -53,6 +58,7 @@ public class IMTPSController {
     // View Tasks Tab Elements
     @FXML private VBox taskContainer;
     @FXML private DatePicker dpViewDate;
+    @FXML private ComboBox<String> cmbSchedulerType;
     @FXML private RadioButton rdbtnWork;
     @FXML private RadioButton rdbtnHealth;
     @FXML private RadioButton rdbtnPersonal;
@@ -83,11 +89,13 @@ public class IMTPSController {
 
         dpViewDate.setValue(LocalDate.now());
 
+        // Initialize Scheduler ComboBox
+        cmbSchedulerType.getItems().addAll("Priority Scheduler", "Deadline Scheduler", "Knapsack Scheduler");
+        cmbSchedulerType.getSelectionModel().selectFirst();
+
         Platform.runLater(() -> {
             Stage stage = (Stage) lblUsernameIMTPS.getScene().getWindow();
-            stage.setWidth(780);
-            stage.setHeight(570);
-            stage.centerOnScreen();
+            stage.setMaximized(true);
         });
     }
 
@@ -165,7 +173,7 @@ public class IMTPSController {
             startTime = null;
         }
 
-        String userID = Session.currentUserId; // Updated to String
+        String userID = Session.currentUserId; 
         DatabaseHelper.addTask(userID, addName, categoryInt, importance, duration, dueDate, startTime, startDate);
 
         String taskType = (startTime != null && !startTime.toLocalTime().equals(START_OF_DAY))
@@ -185,7 +193,7 @@ public class IMTPSController {
         lblEditStatus.setText("");
 
         String searchQuery = txtSearchTask.getText().toLowerCase().trim();
-        String userID = Session.currentUserId; // Updated to String
+        String userID = Session.currentUserId; 
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
 
         try (Connection conn = DatabaseHelper.connect();
@@ -197,7 +205,7 @@ public class IMTPSController {
             while (rs.next()) {
                 String name = rs.getString("task_name");
                 if (searchQuery.isEmpty() || name.toLowerCase().contains(searchQuery)) {
-                    String id = rs.getString("task_id"); // Updated to String
+                    String id = rs.getString("task_id");
                     int cat = rs.getInt("category");
                     int imp = rs.getInt("importance");
                     double dur = rs.getDouble("duration");
@@ -334,6 +342,10 @@ public class IMTPSController {
     // endregion
 
     // region Navigation
+    @FXML public void onClickBtnNavAddTask(ActionEvent event) { mainTabPane.getSelectionModel().select(0); }
+    @FXML public void onClickBtnNavViewTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(1); }
+    @FXML public void onClickBtnNavEditTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(2); }
+
     public void onClickbtnPref(ActionEvent event) { switchScene(event, "Questions.fxml"); }
     public void onClickbtnSignOut(ActionEvent event) { switchScene(event, "login.fxml"); }
     public void onClickbtnHelp(ActionEvent event) { switchScene(event, "help.fxml"); }
@@ -352,10 +364,42 @@ public class IMTPSController {
     }
     // endregion
 
-    // region Refresh Tasks
+    // region Refresh Tasks logic
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
-        // Delete checked tasks
+        deleteCheckedTasks();
+        taskContainer.getChildren().clear();
+
+        List<Task> allTasks = fetchAllTasksFromDB();
+        if (allTasks.isEmpty()) return;
+
+        List<Task> pinnedTasks = new ArrayList<>();
+        List<Task> floatingTasks = new ArrayList<>();
+        Set<String> originallyPinnedIds = new HashSet<>();
+
+        splitTasks(allTasks, pinnedTasks, floatingTasks, originallyPinnedIds);
+
+        List<Task> allClones = new ArrayList<>();
+        allClones.addAll(pinnedTasks);
+        allClones.addAll(cloneFloatingTasks(floatingTasks));
+
+        Questionnaire prefs = buildPreferences();
+        SchedulingAlg scheduler = getSelectedScheduler();
+
+        List<Task> scheduledFloating = scheduler.genSchedule(allClones, prefs);
+
+        List<Task> displayTasks = new ArrayList<>();
+        displayTasks.addAll(pinnedTasks);
+        displayTasks.addAll(scheduledFloating);
+
+        LocalDate viewDate = dpViewDate.getValue();
+        if (viewDate == null) viewDate = LocalDate.now();
+
+        List<Task> tasksForToday = filterTasksForDate(displayTasks, viewDate, originallyPinnedIds);
+        renderTasks(tasksForToday, originallyPinnedIds);
+    }
+
+    private void deleteCheckedTasks() {
         for (Node node : taskContainer.getChildren()) {
             if (node instanceof HBox) {
                 HBox card = (HBox) node;
@@ -366,22 +410,20 @@ public class IMTPSController {
                 }
             }
         }
+    }
 
-        taskContainer.getChildren().clear();
-
-        // Fetch all tasks
-        String userID = Session.currentUserId; // Updated to String
-        String sql = "SELECT * FROM tasks WHERE user_id = ? ORDER BY task_id";
+    private List<Task> fetchAllTasksFromDB() {
         List<Task> allTasks = new ArrayList<>();
-
+        String sql = "SELECT * FROM tasks WHERE user_id = ? ORDER BY task_id";
+        
         try (Connection conn = DatabaseHelper.connect();
-            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, userID);
+            pstmt.setString(1, Session.currentUserId);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                String id = rs.getString("task_id"); // Updated to String
+                String id = rs.getString("task_id");
                 String name = rs.getString("task_name");
                 int cat = rs.getInt("category");
                 int imp = rs.getInt("importance");
@@ -405,65 +447,59 @@ public class IMTPSController {
                     startDate = (startDateObj instanceof LocalDate) ? (LocalDate) startDateObj : LocalDate.parse(startDateObj.toString());
                 }
 
-                Task task = new Task(id, name, cat, imp, dur, due, start, startDate);
-                allTasks.add(task);
+                allTasks.add(new Task(id, name, cat, imp, dur, due, start, startDate));
             }
         } catch (Exception e) {
             System.out.println("Error fetching tasks: " + e.getMessage());
-            return;
         }
+        return allTasks;
+    }
 
+    private void splitTasks(List<Task> allTasks, List<Task> pinnedTasks, List<Task> floatingTasks, Set<String> originallyPinnedIds) {
+        for (Task t : allTasks) {
+            if (t.isPinned()) {
+                pinnedTasks.add(t);
+                originallyPinnedIds.add(t.taskId);
+            } else {
+                floatingTasks.add(t);
+            }
+        }
+    }
+
+    private List<Task> cloneFloatingTasks(List<Task> floatingTasks) {
+        List<Task> floatingClones = new ArrayList<>();
+        for (Task t : floatingTasks) {
+            floatingClones.add(new Task(
+                t.taskId, t.taskName, t.category, t.importance, t.duration,
+                t.originalDueDate, null, t.originalStartDate
+            ));
+        }
+        return floatingClones;
+    }
+
+    private Questionnaire buildPreferences() {
         int currentMode = Questionnaire.PersonalMode;
         if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
         else if (rdbtnHealth.isSelected()) currentMode = Questionnaire.HealthMode;
         else if (rdbtnPersonal.isSelected()) currentMode = Questionnaire.PersonalMode;
 
-        Questionnaire prefs = new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
+        return new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
+    }
 
-        List<Task> pinnedTasks = new ArrayList<>();
-        List<Task> floatingTasks = new ArrayList<>();
-        for (Task t : allTasks) {
-            if (t.isPinned()) {
-                pinnedTasks.add(t);
-            } else {
-                floatingTasks.add(t);
-            }
+    private SchedulingAlg getSelectedScheduler() {
+        String selection = cmbSchedulerType.getValue();
+        if ("Deadline Scheduler".equals(selection)) {
+            return new DeadlineScheduler();
+        } else if ("Knapsack Scheduler".equals(selection)) {
+            return new KnapsackScheduler();
         }
+        // Default to Priority Scheduler
+        return new Scheduler();
+    }
 
-        Set<String> originallyPinnedIds = new HashSet<>(); // Updated to Set of Strings
-        for (Task t : pinnedTasks) {
-            originallyPinnedIds.add(t.taskId);
-        }
-
-        List<Task> floatingClones = new ArrayList<>();
-        for (Task t : floatingTasks) {
-            floatingClones.add(new Task(
-                t.taskId,
-                t.taskName,
-                t.category,
-                t.importance,
-                t.duration,
-                t.originalDueDate,      
-                null,                   
-                t.originalStartDate     
-            ));
-        }
-
-        List<Task> allClones = new ArrayList<>();
-        allClones.addAll(pinnedTasks);
-        allClones.addAll(floatingClones);
-
-        Scheduler scheduler = new Scheduler();
-        List<Task> scheduledFloating = scheduler.genSchedule(allClones, prefs);
-
-        List<Task> displayTasks = new ArrayList<>();
-        displayTasks.addAll(pinnedTasks);
-        displayTasks.addAll(scheduledFloating);
-
-        LocalDate viewDate = dpViewDate.getValue();
-        if (viewDate == null) viewDate = LocalDate.now();
-
+    private List<Task> filterTasksForDate(List<Task> displayTasks, LocalDate viewDate, Set<String> originallyPinnedIds) {
         List<Task> tasksForToday = new ArrayList<>();
+
         for (Task t : displayTasks) {
             LocalDate taskStart = null;
             LocalDate taskEnd = null;
@@ -472,26 +508,16 @@ public class IMTPSController {
                 taskStart = t.startTime.toLocalDate();
                 taskEnd = taskStart;
             } else {
-                if (t.originalStartDate != null) {
-                    taskStart = t.originalStartDate;
-                } else if (t.startDate != null) {
-                    taskStart = t.startDate;
-                } else if (t.startTime != null) {
-                    taskStart = t.startTime.toLocalDate();
-                }
+                if (t.originalStartDate != null) taskStart = t.originalStartDate;
+                else if (t.startDate != null) taskStart = t.startDate;
+                else if (t.startTime != null) taskStart = t.startTime.toLocalDate();
 
-                if (t.originalDueDate != null) {
-                    taskEnd = t.originalDueDate.toLocalDate();
-                } else if (t.dueDate != null) {
-                    taskEnd = t.dueDate.toLocalDate();
-                } else if (t.startTime != null) {
-                    taskEnd = t.startTime.toLocalDate();
-                }
+                if (t.originalDueDate != null) taskEnd = t.originalDueDate.toLocalDate();
+                else if (t.dueDate != null) taskEnd = t.dueDate.toLocalDate();
+                else if (t.startTime != null) taskEnd = t.startTime.toLocalDate();
             }
 
-            if (taskStart == null || taskEnd == null) {
-                continue; 
-            }
+            if (taskStart == null || taskEnd == null) continue;
 
             boolean inRange = (viewDate.isEqual(taskStart) || viewDate.isAfter(taskStart)) &&
                               (viewDate.isEqual(taskEnd) || viewDate.isBefore(taskEnd));
@@ -507,6 +533,10 @@ public class IMTPSController {
             return LocalTime.MAX; 
         }));
 
+        return tasksForToday;
+    }
+
+    private void renderTasks(List<Task> tasksForToday, Set<String> originallyPinnedIds) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");
 
