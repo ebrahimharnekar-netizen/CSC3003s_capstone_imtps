@@ -4,6 +4,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -19,37 +20,45 @@
          </font></Label>
       <ComboBox fx:id="cmbProductiveHours" layoutX="469.0" layoutY="353.0" prefHeight="36.0" prefWidth="69.0" promptText="1-10" />
 
-      <Label layoutX="448.0" layoutY="440.0" text="2. Do you prefer doing quick tasks first?">
+      <Label layoutX="448.0" layoutY="421.0" text="2. Do you prefer doing quick tasks first?">
          <font>
             <Font size="22.0" />
          </font></Label>
-      <RadioButton fx:id="rdbtnQuickYes" layoutX="468.0" layoutY="499.0" mnemonicParsing="false" text="Yes">
+      <RadioButton fx:id="rdbtnQuickYes" layoutX="469.0" layoutY="470.0" mnemonicParsing="false" text="Yes">
          <font>
             <Font size="16.0" />
          </font></RadioButton>
-      <RadioButton fx:id="rdbtnQuickNo" layoutX="469.0" layoutY="549.0" mnemonicParsing="false" text="No">
+      <RadioButton fx:id="rdbtnQuickNo" layoutX="469.0" layoutY="515.0" mnemonicParsing="false" text="No">
          <font>
             <Font size="16.0" />
          </font></RadioButton>
 
-      <Label layoutX="448.0" layoutY="626.0" text="3. When are you most productive?">
+      <Label layoutX="448.0" layoutY="563.0" text="3. When are you most productive?">
          <font>
             <Font size="22.0" />
          </font></Label>
-      <RadioButton fx:id="rdbtnMorning" layoutX="465.0" layoutY="685.0" mnemonicParsing="false" text="Morning">
+      <RadioButton fx:id="rdbtnMorning" layoutX="469.0" layoutY="622.0" mnemonicParsing="false" text="Morning">
          <font>
             <Font size="16.0" />
          </font></RadioButton>
-      <RadioButton fx:id="rdbtnMidday" layoutX="469.0" layoutY="745.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="82.0" text="Midday">
+      <RadioButton fx:id="rdbtnMidday" layoutX="469.0" layoutY="662.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="82.0" text="Midday">
          <font>
             <Font size="16.0" />
          </font></RadioButton>
-      <RadioButton fx:id="rdbtnNight" layoutX="469.0" layoutY="809.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="69.0" text="Night">
+      <RadioButton fx:id="rdbtnNight" layoutX="469.0" layoutY="712.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="69.0" text="Night">
          <font>
             <Font size="16.0" />
          </font></RadioButton>
+         
+      <Label layoutX="448.0" layoutY="776.0" text="4. Working Window (HH:mm)">
+         <font>
+            <Font size="22.0" />
+         </font>
+      </Label>
+      <TextField fx:id="txtPrefStartTime" layoutX="469.0" layoutY="835.0" prefHeight="35.0" prefWidth="120.0" promptText="Start (07:00)" />
+      <TextField fx:id="txtPrefEndTime" layoutX="625.0" layoutY="835.0" prefHeight="35.0" prefWidth="120.0" promptText="End (22:00)" />
 
-      <Button fx:id="btnSaveQuestionnaire" layoutX="448.0" layoutY="878.0" mnemonicParsing="false" onAction="#onClickbtnSaveQuestionnaire" prefHeight="75.0" prefWidth="1181.0" style="-fx-background-color: black;" text="Set Preferences" textFill="WHITE">
+      <Button fx:id="btnSaveQuestionnaire" layoutX="448.0" layoutY="893.0" mnemonicParsing="false" onAction="#onClickbtnSaveQuestionnaire" prefHeight="75.0" prefWidth="1181.0" style="-fx-background-color: black;" text="Set Preferences" textFill="WHITE">
          <font>
             <Font size="16.0" />
          </font></Button>

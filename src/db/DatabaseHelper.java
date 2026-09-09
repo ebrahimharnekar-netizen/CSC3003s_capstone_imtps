@@ -424,12 +424,12 @@ public class DatabaseHelper {
     }
 
     public static void setPreferences(String userId, int peakProdTime, int dailyProdHours,
-                                       boolean preferQuickFirst) {
+                                       boolean preferQuickFirst, String startTime, String endTime) {
         String prefId = generateCustomId("PREF"); // Generates custom ID starting with PRE
         String updateSql = "UPDATE preferences SET peak_prodtime = ?, daily_prod_hours = ?, " +
-                            "preferred_quick_first = ? WHERE user_id = ?";
+                            "preferred_quick_first = ?, start_time = ?, end_time = ? WHERE user_id = ?";
         String insertSql = "INSERT INTO preferences (preference_id, user_id, peak_prodtime, daily_prod_hours, " +
-                            "preferred_quick_first) VALUES (?, ?, ?, ?, ?)";
+                            "preferred_quick_first, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = connect()) {
 
@@ -437,7 +437,9 @@ public class DatabaseHelper {
                 pstmt.setInt(1, peakProdTime);
                 pstmt.setInt(2, dailyProdHours);
                 pstmt.setBoolean(3, preferQuickFirst);
-                pstmt.setString(4, userId);
+                pstmt.setString(4, startTime);
+                pstmt.setString(5, endTime);
+                pstmt.setString(6, userId);
                 int rowsAffected = pstmt.executeUpdate();
 
                 if (rowsAffected == 0) {
@@ -447,6 +449,8 @@ public class DatabaseHelper {
                         insertPstmt.setInt(3, peakProdTime);
                         insertPstmt.setInt(4, dailyProdHours);
                         insertPstmt.setBoolean(5, preferQuickFirst);
+                        insertPstmt.setString(6, startTime);
+                        insertPstmt.setString(7, endTime);
                         insertPstmt.executeUpdate();
                     }
                 }
@@ -461,16 +465,20 @@ public class DatabaseHelper {
         public final int peakProdTime;
         public final int dailyProdHours;
         public final boolean preferQuickFirst;
+        public final String startTime;
+        public final String endTime;
 
-        public Preferences(int peakProdTime, int dailyProdHours, boolean preferQuickFirst) {
+        public Preferences(int peakProdTime, int dailyProdHours, boolean preferQuickFirst, String startTime, String endTime) {
             this.peakProdTime = peakProdTime;
             this.dailyProdHours = dailyProdHours;
             this.preferQuickFirst = preferQuickFirst;
+            this.startTime = startTime;
+            this.endTime = endTime;
         }
     }
 
     public static Preferences getPreferences(String userId) {
-        String sql = "SELECT peak_prodtime, daily_prod_hours, preferred_quick_first " +
+        String sql = "SELECT peak_prodtime, daily_prod_hours, preferred_quick_first, start_time, end_time " +
                      "FROM preferences WHERE user_id = ?";
 
         try (Connection conn = connect();
@@ -482,7 +490,9 @@ public class DatabaseHelper {
             if (rs.next()) {
                 return new Preferences(rs.getInt("peak_prodtime"),
                                         rs.getInt("daily_prod_hours"),
-                                        rs.getBoolean("preferred_quick_first"));
+                                        rs.getBoolean("preferred_quick_first"),
+                                        rs.getString("start_time"),
+                                        rs.getString("end_time"));
             }
 
         } catch (SQLException e) {

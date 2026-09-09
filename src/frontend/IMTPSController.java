@@ -365,39 +365,6 @@ public class IMTPSController {
     // endregion
 
     // region Refresh Tasks logic
-    @FXML
-    public void onClickRefreshTasks(ActionEvent event) {
-        deleteCheckedTasks();
-        taskContainer.getChildren().clear();
-
-        List<Task> allTasks = fetchAllTasksFromDB();
-        if (allTasks.isEmpty()) return;
-
-        List<Task> pinnedTasks = new ArrayList<>();
-        List<Task> floatingTasks = new ArrayList<>();
-        Set<String> originallyPinnedIds = new HashSet<>();
-
-        splitTasks(allTasks, pinnedTasks, floatingTasks, originallyPinnedIds);
-
-        List<Task> allClones = new ArrayList<>();
-        allClones.addAll(pinnedTasks);
-        allClones.addAll(cloneFloatingTasks(floatingTasks));
-
-        Questionnaire prefs = buildPreferences();
-        SchedulingAlg scheduler = getSelectedScheduler();
-
-        List<Task> scheduledFloating = scheduler.genSchedule(allClones, prefs);
-
-        List<Task> displayTasks = new ArrayList<>();
-        displayTasks.addAll(pinnedTasks);
-        displayTasks.addAll(scheduledFloating);
-
-        LocalDate viewDate = dpViewDate.getValue();
-        if (viewDate == null) viewDate = LocalDate.now();
-
-        List<Task> tasksForToday = filterTasksForDate(displayTasks, viewDate, originallyPinnedIds);
-        renderTasks(tasksForToday, originallyPinnedIds);
-    }
 
     private void deleteCheckedTasks() {
         for (Node node : taskContainer.getChildren()) {
@@ -412,6 +379,9 @@ public class IMTPSController {
         }
     }
 
+    //This method fetches all tasks from the database for the current user. 
+    // It retrieves task details such as ID, name, category, importance, duration, due date, start time, and start date. 
+    // The method constructs Task objects for each record and returns a list of all tasks.
     private List<Task> fetchAllTasksFromDB() {
         List<Task> allTasks = new ArrayList<>();
         String sql = "SELECT * FROM tasks WHERE user_id = ? ORDER BY task_id";
@@ -455,6 +425,8 @@ public class IMTPSController {
         return allTasks;
     }
 
+    //This method splits the list of all tasks into two separate lists: pinned tasks and floating tasks. 
+    // It also keeps track of the IDs of the originally pinned tasks in a set for later reference.
     private void splitTasks(List<Task> allTasks, List<Task> pinnedTasks, List<Task> floatingTasks, Set<String> originallyPinnedIds) {
         for (Task t : allTasks) {
             if (t.isPinned()) {
@@ -466,7 +438,8 @@ public class IMTPSController {
         }
     }
 
-    private List<Task> cloneFloatingTasks(List<Task> floatingTasks) {
+    //This method creates clones of the floating tasks to ensure that the original task objects remain unchanged during scheduling.
+    private List<Task> cloneFloatingTasks(List<Task> floatingTasks) { 
         List<Task> floatingClones = new ArrayList<>();
         for (Task t : floatingTasks) {
             floatingClones.add(new Task(
@@ -477,15 +450,41 @@ public class IMTPSController {
         return floatingClones;
     }
 
+    //This method constructs a Questionnaire object based on the user's selected preferences in the UI.
     private Questionnaire buildPreferences() {
-        int currentMode = Questionnaire.PersonalMode;
-        if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
+
+     // 1. Get the current mode from the Radio Buttons
+         int currentMode = Questionnaire.PersonalMode;
+         if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
         else if (rdbtnHealth.isSelected()) currentMode = Questionnaire.HealthMode;
         else if (rdbtnPersonal.isSelected()) currentMode = Questionnaire.PersonalMode;
 
-        return new Questionnaire(currentMode, Questionnaire.MorningPeriod, true, 8);
+    // 2. Set default values
+        int peakProdTime = Questionnaire.MorningPeriod;
+        boolean prefQuickFirst = true;
+        int dailyProdHours = 8;
+        String startTime = "07:00";
+        String endTime = "22:00";
+
+    // 3. Fetch the actual preferences using your DatabaseHelper
+        DatabaseHelper.Preferences dbPrefs = DatabaseHelper.getPreferences(Session.currentUserId);
+    
+     if (dbPrefs != null) {
+            peakProdTime = dbPrefs.peakProdTime;
+            prefQuickFirst = dbPrefs.preferQuickFirst;
+            dailyProdHours = dbPrefs.dailyProdHours;
+            if (dbPrefs.startTime != null) startTime = dbPrefs.startTime;
+            if (dbPrefs.endTime != null) endTime = dbPrefs.endTime;
     }
 
+    // 4. Construct Questionnaire and set the dynamic window
+        Questionnaire prefs = new Questionnaire(currentMode, peakProdTime, prefQuickFirst, dailyProdHours);
+        prefs.setWindow(startTime, endTime);
+    
+        return prefs;
+    }
+
+    //This method retrieves the selected scheduling algorithm based on the user's choice in the UI.
     private SchedulingAlg getSelectedScheduler() {
         String selection = cmbSchedulerType.getValue();
         if ("Deadline Scheduler".equals(selection)) {
@@ -497,6 +496,9 @@ public class IMTPSController {
         return new Scheduler();
     }
 
+    //This method filters the list of tasks to include only those that are relevant for the specified view date. 
+    // It checks each task's start and end dates (or times) to determine if it falls within the range of the view date. 
+    // The method also sorts the resulting list of tasks based on their start times, ensuring that tasks with earlier start times appear first in the list.
     private List<Task> filterTasksForDate(List<Task> displayTasks, LocalDate viewDate, Set<String> originallyPinnedIds) {
         List<Task> tasksForToday = new ArrayList<>();
 
@@ -535,6 +537,10 @@ public class IMTPSController {
 
         return tasksForToday;
     }
+
+    //This method is responsible for rendering the tasks in the UI. It creates a visual representation of each task, 
+    // including its name, category, time information, and importance. The tasks are displayed in a VBox container, 
+    // with each task represented as an HBox containing a checkbox and a VBox for text details.
 
     private void renderTasks(List<Task> tasksForToday, Set<String> originallyPinnedIds) {
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
@@ -602,6 +608,45 @@ public class IMTPSController {
             taskCard.getChildren().addAll(taskCheckbox, textBox);
             taskContainer.getChildren().add(taskCard);
         }
+
+    
+    }
+    //refresh tasks button click handler, utilizes the above methods to delete checked tasks, 
+    // fetch all tasks, split them into pinned and floating, schedule the floating tasks, filter for the selected date, 
+    // and render them in the UI.
+    @FXML
+    public void onClickRefreshTasks(ActionEvent event) {
+        //First delete any tasks that have been checked for deletion, then clear the task container to prepare for re-rendering.
+        deleteCheckedTasks();
+        taskContainer.getChildren().clear();
+        //Next, fetch all tasks from the database. If there are no tasks, simply return without further processing.
+        List<Task> allTasks = fetchAllTasksFromDB();
+        if (allTasks.isEmpty()) return;
+        //Split the fetched tasks into pinned and floating tasks, while also keeping track of the IDs of originally pinned tasks.
+        List<Task> pinnedTasks = new ArrayList<>();
+        List<Task> floatingTasks = new ArrayList<>();
+        Set<String> originallyPinnedIds = new HashSet<>();
+
+        splitTasks(allTasks, pinnedTasks, floatingTasks, originallyPinnedIds);
+        //Create clones of the floating tasks to ensure that the original task objects remain unchanged during scheduling.
+        List<Task> allClones = new ArrayList<>();
+        allClones.addAll(pinnedTasks);
+        allClones.addAll(cloneFloatingTasks(floatingTasks));
+        //Build a Questionnaire object based on the user's selected preferences in the UI, and retrieve the selected scheduling algorithm.
+        Questionnaire prefs = buildPreferences();
+        SchedulingAlg scheduler = getSelectedScheduler();
+        //Generate a schedule for the floating tasks using the selected scheduling algorithm and user preferences.
+        List<Task> scheduledFloating = scheduler.genSchedule(allClones, prefs);
+        //Combine the pinned tasks and the newly scheduled floating tasks into a single list for display.
+        List<Task> displayTasks = new ArrayList<>();
+        displayTasks.addAll(pinnedTasks);
+        displayTasks.addAll(scheduledFloating);
+        //Filter the combined list of tasks to include only those that are relevant for the selected view date, and render them in the UI.
+        LocalDate viewDate = dpViewDate.getValue();
+        if (viewDate == null) viewDate = LocalDate.now();
+        //Filter the combined list of tasks to include only those that are relevant for the selected view date, and render them in the UI.
+        List<Task> tasksForToday = filterTasksForDate(displayTasks, viewDate, originallyPinnedIds);
+        renderTasks(tasksForToday, originallyPinnedIds);
     }
     // endregion
 }
