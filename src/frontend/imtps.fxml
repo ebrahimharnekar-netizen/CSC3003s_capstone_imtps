@@ -140,6 +140,32 @@
                   </AnchorPane>
             </content>
           </Tab>
+            <Tab text="Completed tasks">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="1919.0">
+                     <children>
+                        <Button layoutX="18.0" layoutY="41.0" mnemonicParsing="false" onAction="#onClickRefreshCompletedTasks" prefHeight="44.0" prefWidth="136.0" text="Refresh">
+                           <font>
+                              <Font size="16.0" />
+                           </font></Button>
+                        <Button layoutX="1763.0" layoutY="41.0" mnemonicParsing="false" onAction="#onClickClearCompleted" prefHeight="44.0" prefWidth="136.0" style="-fx-background-color: #E57373; -fx-text-fill: white;" text="Clear Completed">
+                           <font>
+                              <Font size="14.0" />
+                           </font></Button>
+                        <Label fx:id="lblCompletedStatus" layoutX="180.0" layoutY="55.0" prefWidth="1500.0" textFill="GREEN">
+                           <font>
+                              <Font size="16.0" />
+                           </font></Label>
+
+                        <ScrollPane layoutX="18.0" layoutY="99.0" prefHeight="607.0" prefWidth="1901.0">
+                           <content>
+                              <VBox fx:id="completedTaskContainer" prefHeight="609.0" prefWidth="1899.0" spacing="10.0" style="-fx-padding: 10;" />
+                           </content>
+                        </ScrollPane>
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
             <Tab text="Edit task">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
@@ -172,6 +198,7 @@
          <children>
             <Button layoutX="248.0" layoutY="36.0" mnemonicParsing="false" onAction="#onClickbtnPref" style="-fx-background-color: none;" text="Update Preferences" textFill="WHITE" underline="true" />
             <Button layoutX="377.0" layoutY="36.0" mnemonicParsing="false" onAction="#onClickbtnHelp" style="-fx-background-color: none;" text="Help" textFill="WHITE" underline="true" />
+            <Button layoutX="470.0" layoutY="36.0" mnemonicParsing="false" onAction="#onClickBtnNavCompletedTasks" style="-fx-background-color: none;" text="Completed tasks" textFill="WHITE" underline="true" />
             <Button layoutX="167.0" layoutY="36.0" mnemonicParsing="false" onAction="#onClickBtnNavViewTasks" style="-fx-background-color: none;" text="View tasks" textFill="WHITE" underline="true" />
             <Button layoutX="85.0" layoutY="36.0" mnemonicParsing="false" onAction="#onClickBtnNavEditTasks" style="-fx-background-color: none;" text="Edit tasks" textFill="WHITE" underline="true" />
             <Button layoutX="14.0" layoutY="36.0" mnemonicParsing="false" onAction="#onClickBtnNavAddTask" style="-fx-background-color: none;" text="Add task" textFill="WHITE" underline="true" />

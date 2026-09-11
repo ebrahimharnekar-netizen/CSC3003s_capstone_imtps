@@ -13,7 +13,22 @@ import java.sql.SQLException;
  * preferences: to store user preferences after answering the questionnaire
  */
 public class DatabaseSetup {
+
+    // Kept so this class can still be run standalone (e.g. from an IDE) if ever needed.
     public static void main(String[] args) {
+        initializeDatabase();
+    }
+
+    /**
+     * Creates the database/tables if they don't exist yet, and applies any
+     * schema migrations (like adding new columns) to databases that already
+     * exist from before those columns were added.
+     *
+     * Safe to call on every application launch - CREATE TABLE IF NOT EXISTS
+     * and the try/catch'd ALTER TABLE calls are no-ops once the schema is
+     * already current, so this doesn't need to be run manually anymore.
+     */
+    public static void initializeDatabase() {
         String url = "jdbc:sqlite:imtps_db.db";
 
         try (Connection conn = DriverManager.getConnection(url);
@@ -37,8 +52,18 @@ public class DatabaseSetup {
             "due_date DATETIME NULL, " +
             "start_time DATETIME NULL, " +
             "start_date DATE NULL, " +  
+            "completed BOOLEAN NOT NULL DEFAULT 0, " +
             "FOREIGN KEY (user_id) REFERENCES users(user_id)" +
             ");");
+
+            // Migration for databases created before the "completed" column existed.
+            // SQLite has no "ADD COLUMN IF NOT EXISTS", so this just swallows the
+            // "duplicate column" error on a database that already has it.
+            try {
+                stmt.execute("ALTER TABLE tasks ADD COLUMN completed BOOLEAN NOT NULL DEFAULT 0");
+            } catch (SQLException alreadyExists) {
+                // column already present - nothing to do
+            }
 
             stmt.execute("CREATE TABLE IF NOT EXISTS preferences (" +
 
@@ -52,7 +77,7 @@ public class DatabaseSetup {
             "end_time VARCHAR(5), " +   // e.g. "22:00"
             "FOREIGN KEY (user_id) REFERENCES users(user_id)" +
             ");");
-            System.out.println("Database and tables created successfully!");
+            System.out.println("Database ready.");
 
         } catch (SQLException e) {
             System.out.println("Database error occurred:");
