@@ -8,7 +8,6 @@ which is a requirement for any JavaFX application. The start method is overridde
 
 package frontend;
 
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -19,14 +18,16 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // Creates/migrates imtps_db.db before anything else loads - safe to run on
+        // every launch, so nobody needs a separate manual DatabaseSetup step anymore.
+        db.DatabaseSetup.initializeDatabase();
+
         //Load the FXML file
-        Parent root = FXMLLoader.load(getClass().getResource("login.fxml")); //Login is the first page 
+        Parent root = FXMLLoader.load(getClass().getResource("login.fxml")); //Menu is the first page 
                                                                                     // that will be displayed when the application starts
         
         //Attach it to a Scene
-        Scene scene = new Scene(root); 
-        //maximize the window
-        primaryStage.setMaximized(true);
+        Scene scene = new Scene(root, 650, 425); 
         
         //Set up the window (Stage) and show it
         primaryStage.setTitle("IMTPS Application"); // The text at the top of the window

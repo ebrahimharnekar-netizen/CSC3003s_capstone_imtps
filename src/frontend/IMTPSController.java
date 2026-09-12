@@ -23,7 +23,9 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -35,6 +37,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.application.Platform;
@@ -68,6 +71,10 @@ public class IMTPSController {
     @FXML private VBox editTaskContainer;
     @FXML private Label lblEditStatus;
 
+    // Completed Tasks Tab Elements
+    @FXML private VBox completedTaskContainer;
+    @FXML private Label lblCompletedStatus;
+
     private static final LocalTime START_OF_DAY = LocalTime.of(0, 0);
 
     @FXML
@@ -96,6 +103,19 @@ public class IMTPSController {
         Platform.runLater(() -> {
             Stage stage = (Stage) lblUsernameIMTPS.getScene().getWindow();
             stage.setMaximized(true);
+        });
+
+        // Auto-refresh each tab's content when the user switches to it, instead of
+        // requiring a manual "Refresh"/"Search" click every time.
+        mainTabPane.getSelectionModel().selectedIndexProperty().addListener((obs, oldIndex, newIndex) -> {
+            int tab = newIndex.intValue();
+            if (tab == 1) {
+                onClickRefreshTasks(null);
+            } else if (tab == 2) {
+                onClickRefreshCompletedTasks(null);
+            } else if (tab == 3) {
+                onClickSearchTasks(null);
+            }
         });
     }
 
@@ -183,6 +203,10 @@ public class IMTPSController {
 
         btnAddName.clear();
         txtStartTime.clear();
+
+        // Keep the View tasks list current so it doesn't need a manual refresh
+        // next time the user switches to it.
+        onClickRefreshTasks(null);
     }
     // endregion
 
@@ -344,7 +368,8 @@ public class IMTPSController {
     // region Navigation
     @FXML public void onClickBtnNavAddTask(ActionEvent event) { mainTabPane.getSelectionModel().select(0); }
     @FXML public void onClickBtnNavViewTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(1); }
-    @FXML public void onClickBtnNavEditTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(2); }
+    @FXML public void onClickBtnNavCompletedTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(2); }
+    @FXML public void onClickBtnNavEditTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(3); }
 
     public void onClickbtnPref(ActionEvent event) { switchScene(event, "Questions.fxml"); }
     public void onClickbtnSignOut(ActionEvent event) { switchScene(event, "login.fxml"); }
@@ -366,25 +391,27 @@ public class IMTPSController {
 
     // region Refresh Tasks logic
 
-    private void deleteCheckedTasks() {
+    // Ticking a task off marks it completed (it moves to the Completed tasks tab)
+    // instead of being deleted outright, so it can still be viewed/restored later.
+    private void markCheckedTasksCompleted() {
         for (Node node : taskContainer.getChildren()) {
             if (node instanceof HBox) {
                 HBox card = (HBox) node;
                 CheckBox cb = (CheckBox) card.getChildren().get(0);
                 if (cb.isSelected()) {
                     String taskId = (String) cb.getUserData(); 
-                    DatabaseHelper.deleteTask(taskId);
+                    DatabaseHelper.markTaskCompleted(taskId);
                 }
             }
         }
     }
 
-    //This method fetches all tasks from the database for the current user. 
+    //This method fetches all active (not-yet-completed) tasks from the database for the current user. 
     // It retrieves task details such as ID, name, category, importance, duration, due date, start time, and start date. 
     // The method constructs Task objects for each record and returns a list of all tasks.
     private List<Task> fetchAllTasksFromDB() {
         List<Task> allTasks = new ArrayList<>();
-        String sql = "SELECT * FROM tasks WHERE user_id = ? ORDER BY task_id";
+        String sql = "SELECT * FROM tasks WHERE user_id = ? AND (completed = 0 OR completed IS NULL) ORDER BY task_id";
         
         try (Connection conn = DatabaseHelper.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -616,8 +643,8 @@ public class IMTPSController {
     // and render them in the UI.
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
-        //First delete any tasks that have been checked for deletion, then clear the task container to prepare for re-rendering.
-        deleteCheckedTasks();
+        //First mark any tasks that have been checked as completed, then clear the task container to prepare for re-rendering.
+        markCheckedTasksCompleted();
         taskContainer.getChildren().clear();
         //Next, fetch all tasks from the database. If there are no tasks, simply return without further processing.
         List<Task> allTasks = fetchAllTasksFromDB();
@@ -647,6 +674,117 @@ public class IMTPSController {
         //Filter the combined list of tasks to include only those that are relevant for the selected view date, and render them in the UI.
         List<Task> tasksForToday = filterTasksForDate(displayTasks, viewDate, originallyPinnedIds);
         renderTasks(tasksForToday, originallyPinnedIds);
+    }
+    // endregion
+
+    // region Completed Tasks
+    @FXML
+    public void onClickRefreshCompletedTasks(ActionEvent event) {
+        completedTaskContainer.getChildren().clear();
+        lblCompletedStatus.setText("");
+
+        String userID = Session.currentUserId;
+        String sql = "SELECT * FROM tasks WHERE user_id = ? AND completed = 1 ORDER BY task_id";
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy");
+
+        try (Connection conn = DatabaseHelper.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userID);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String id = rs.getString("task_id");
+                String name = rs.getString("task_name");
+                int cat = rs.getInt("category");
+
+                Object dueObj = rs.getObject("due_date");
+                LocalDateTime due = null;
+                if (dueObj != null) {
+                    due = (dueObj instanceof LocalDateTime) ? (LocalDateTime) dueObj : LocalDateTime.parse(dueObj.toString().replace(" ", "T"));
+                }
+
+                String catString = (cat == 1) ? "Work" : (cat == 2) ? "Health" : "Personal";
+                String dueString = (due != null) ? "Was due: " + due.format(dateFormatter) : "No due date";
+
+                HBox card = new HBox(15);
+                card.setAlignment(Pos.CENTER_LEFT);
+                card.setStyle("-fx-padding: 10; -fx-border-color: lightgray; -fx-border-radius: 5; " +
+                              "-fx-background-radius: 5; -fx-background-color: #F0F0F0;");
+
+                VBox textBox = new VBox(4);
+                Label nameLabel = new Label(name);
+                nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
+                Label detailsLabel = new Label(catString + "  |  " + dueString);
+                detailsLabel.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
+                textBox.getChildren().addAll(nameLabel, detailsLabel);
+                HBox.setHgrow(textBox, Priority.ALWAYS);
+
+                Button btnRestore = new Button("Restore");
+                btnRestore.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                LocalDateTime dueForClosure = due;
+                btnRestore.setOnAction(e -> restoreCompletedTask(id, dueForClosure));
+
+                card.getChildren().addAll(textBox, btnRestore);
+                completedTaskContainer.getChildren().add(card);
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error fetching completed tasks: " + e.getMessage());
+        }
+    }
+
+    // Restores a completed task. If its due date has already passed, the user
+    // is asked to pick a new one first so it doesn't come back already overdue.
+    private void restoreCompletedTask(String taskId, LocalDateTime dueDate) {
+        boolean overdue = dueDate != null && dueDate.isBefore(LocalDateTime.now());
+
+        if (overdue) {
+            DatePicker newDueDatePicker = new DatePicker(LocalDate.now().plusDays(1));
+
+            Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+            dialog.setTitle("Restore Task");
+            dialog.setHeaderText("This task's due date has already passed.");
+            VBox content = new VBox(10, new Label("Choose a new due date to restore it:"), newDueDatePicker);
+            content.setStyle("-fx-padding: 10 0 0 0;");
+            dialog.getDialogPane().setContent(content);
+
+            dialog.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    LocalDate newDue = newDueDatePicker.getValue();
+                    if (newDue == null) {
+                        lblCompletedStatus.setText("Error: Please choose a due date.");
+                        lblCompletedStatus.setStyle("-fx-text-fill: red;");
+                        return;
+                    }
+                    DatabaseHelper.updateTaskDueDate(taskId, newDue.atTime(23, 59));
+                    DatabaseHelper.restoreTask(taskId);
+                    onClickRefreshCompletedTasks(null);
+                }
+            });
+        } else {
+            DatabaseHelper.restoreTask(taskId);
+            onClickRefreshCompletedTasks(null);
+        }
+    }
+
+    // Permanently deletes every completed task, after an explicit confirmation
+    // (this cannot be undone, so it's gated to help prevent accidental clicks).
+    public void onClickClearCompleted(ActionEvent event) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Clear Completed Tasks");
+        confirm.setHeaderText("This will permanently delete all completed tasks.");
+        confirm.setContentText("Are you sure you want to continue? This cannot be undone.");
+
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                DatabaseHelper.clearCompletedTasks(Session.currentUserId);
+                onClickRefreshCompletedTasks(event);
+                lblCompletedStatus.setText("Completed tasks cleared.");
+                lblCompletedStatus.setStyle("-fx-text-fill: green;");
+            }
+        });
     }
     // endregion
 }
