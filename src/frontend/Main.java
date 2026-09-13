@@ -23,11 +23,7 @@ public class Main extends Application {
         db.DatabaseSetup.initializeDatabase();
 
         //Load the FXML file
-<<<<<<< HEAD
         Parent root = FXMLLoader.load(getClass().getResource("/frontend/login.fxml")); //Login is the first page 
-=======
-        Parent root = FXMLLoader.load(getClass().getResource("login.fxml")); //Menu is the first page 
->>>>>>> 84a8439b0cf0138541f65e572fc62ead59dc88f0
                                                                                     // that will be displayed when the application starts
         
         //Attach it to a Scene
