@@ -2,6 +2,13 @@ package db;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 /**
  * Class contains all the CRUD (Create, Read, update, delete) methods and some other useful SQL queries for users, tasks, and preferences. 
@@ -35,10 +42,83 @@ public class DatabaseHelper {
         return String.format("%s%03d", prefix, randomDigits);
     }
 
+    // PASSWORD HASHING
+    // Passwords are never stored in plain text - each one is hashed with
+    // PBKDF2WithHmacSHA1 using a random per-user salt, so two users with the
+    // same password get completely different stored values (and rainbow
+    // tables don't work against them). The salt travels alongside the hash
+    // in the same `password` column: "base64(salt):base64(hash)".
+
+    private static final int SALT_LENGTH_BYTES = 16;
+    private static final int HASH_ITERATIONS = 65536;
+    private static final int KEY_LENGTH_BITS = 128;
+
+    private static String hashPassword(String password) {
+
+        byte[] salt = new byte[SALT_LENGTH_BYTES];
+        new SecureRandom().nextBytes(salt);
+
+        byte[] hash = pbkdf2(password, salt);
+
+        return Base64.getEncoder().encodeToString(salt) + ":" + Base64.getEncoder().encodeToString(hash);
+
+    }
+
+    private static boolean verifyPassword(String password, String storedValue) {
+
+        if (storedValue == null) {
+
+            return false;
+
+        }
+
+        String[] parts = storedValue.split(":");
+
+        if (parts.length != 2) {
+
+            // covers old plaintext rows from before hashing was added - they simply
+            // won't verify anymore, rather than throwing, so login fails cleanly
+            return false;
+
+        }
+
+        try {
+
+            byte[] salt = Base64.getDecoder().decode(parts[0]);
+            byte[] expectedHash = Base64.getDecoder().decode(parts[1]);
+            byte[] actualHash = pbkdf2(password, salt);
+
+            return MessageDigest.isEqual(expectedHash, actualHash);
+
+        } catch (IllegalArgumentException notBase64) {
+
+            return false;
+
+        }
+
+    }
+
+    private static byte[] pbkdf2(String password, byte[] salt) {
+
+        try {
+
+            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, HASH_ITERATIONS, KEY_LENGTH_BITS);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            return factory.generateSecret(spec).getEncoded();
+
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+
+            throw new RuntimeException("Password hashing failed", e);
+
+        }
+
+    }
+
     // USERS
     
     public static String addUser(String username, String email, String password) {
         String userId = generateCustomId(username); // Generates custom ID
+        String passwordHash = hashPassword(password);
         String sql = "INSERT INTO users (user_id, username, email, password) VALUES (?, ?, ?, ?)"; 
 
         try (Connection conn = connect();
@@ -47,7 +127,7 @@ public class DatabaseHelper {
             pstmt.setString(1, userId);
             pstmt.setString(2, username);
             pstmt.setString(3, email);
-            pstmt.setString(4, password);
+            pstmt.setString(4, passwordHash);
             pstmt.executeUpdate();
 
             System.out.println("User added: " + username + " (ID: " + userId + ")");
@@ -79,17 +159,16 @@ public class DatabaseHelper {
     }
 
     public static boolean validateUser(String username, String password) {
-        String sql = "SELECT COUNT(*) FROM users WHERE username = ? AND password = ?";
+        String sql = "SELECT password FROM users WHERE username = ?";
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, username);
-            pstmt.setString(2, password);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                return rs.getInt(1) > 0;
+                return verifyPassword(password, rs.getString("password"));
             }
 
         } catch (SQLException e) {
@@ -341,6 +420,53 @@ public class DatabaseHelper {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Marks a task as completed instead of deleting it, so it can still be
+    // viewed/restored later. Used when the user ticks a task off in View tasks.
+    public static void markTaskCompleted(String taskId) {
+        String sql = "UPDATE tasks SET completed = 1 WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Moves a completed task back onto the active schedule.
+    public static void restoreTask(String taskId) {
+        String sql = "UPDATE tasks SET completed = 0 WHERE task_id = ?";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, taskId);
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Permanently removes every completed task for a user. Only call this after
+    // the user has explicitly confirmed - there's no undo.
+    public static void clearCompletedTasks(String userId) {
+        String sql = "DELETE FROM tasks WHERE user_id = ? AND completed = 1";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, userId);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
