@@ -70,41 +70,59 @@ public class KnapsackScheduler implements SchedulingAlg{
             
             }
 
-            // Build the DP Table
-            int[][] dp = new int[n + 1][totalCapMins + 1];   // dp[i][w], stores max importance with first i tasks using w minutes.
+            // Build the 3D DP Table
+            int maxWorkMins = userPrefs.getDailyProdHours() * 60; // limit
+            
+            // dp[i][t][w], stores max importance with first i tasks using t total mins and w work mins.
+            int[][][] dp = new int[n + 1][totalCapMins + 1][maxWorkMins + 1];   
             
             for (int i = 1; i <= n; i++) {
+                Task task = floatingTasks.get(i - 1);
+                int weight = weights[i - 1]; 
+                int value = values[i - 1];
+                boolean isWork = (task.category == 1);
 
-                for (int w = 0; w <= totalCapMins; w++) {
+                for (int t = 0; t <= totalCapMins; t++) {
+                    for (int w = 0; w <= maxWorkMins; w++) {
+                        
+                        // Default: carry over the previous optimal value
+                        dp[i][t][w] = dp[i - 1][t][w];
 
-                    if (weights[i - 1] <= w) {
-                        // the task fits, therefore take the max between leving the task out and including the task.
-                        dp[i][w] = Math.max(values[i - 1] + dp[i - 1][w - weights[i - 1]], dp[i - 1][w]);
-                    
-                    } else {
-                        // the task is too large to fit in this window, therefore carry over the previous optimal value.
-                        dp[i][w] = dp[i - 1][w];
-
+                        if (isWork) {
+                            // Work task requires BOTH total time and work time capacity
+                            if (weight <= t && weight <= w) {
+                                dp[i][t][w] = Math.max(dp[i][t][w], dp[i - 1][t - weight][w - weight] + value);
+                            }
+                        } else {
+                            // Health/Personal task only requires total time capacity
+                            if (weight <= t) {
+                                dp[i][t][w] = Math.max(dp[i][t][w], dp[i - 1][t - weight][w] + value);
+                            }
+                        }
                     }
-
                 }
-
             }
 
             // Backtrack to find exactly which tasks got packed
             List<Task> optimalTasks = new ArrayList<>();
             List<Task> leftoverTasks = new ArrayList<>();
             
-            int res = dp[n][totalCapMins];
-            int w = totalCapMins;
+            int res = dp[n][totalCapMins][maxWorkMins];
+            int t = totalCapMins;
+            int w = maxWorkMins;
             
             for (int i = n; i > 0; i--) {
-                // If we still have 'res' to account for, AND the value changed from the row above it
-                if (res > 0 && res != dp[i - 1][w]) {
+                if (res > 0 && res != dp[i - 1][t][w]) {
                     // Task got packed
-                    optimalTasks.add(floatingTasks.get(i - 1));
+                    Task task = floatingTasks.get(i - 1);
+                    optimalTasks.add(task);
+                    
                     res = res - values[i - 1];
-                    w = w - weights[i - 1];
+                    t = t - weights[i - 1];
+                    
+                    if (task.category == 1) {
+                        w = w - weights[i - 1];
+                    }
                 } else {
                     // Task didn't make the cut for the optimal pack
                     leftoverTasks.add(floatingTasks.get(i - 1));
@@ -131,16 +149,24 @@ public class KnapsackScheduler implements SchedulingAlg{
         LocalTime startHour = userPrefs.getDayStartTime();
         LocalTime endHour = userPrefs.getDayEndTime();
 
+        java.util.Map<LocalDate, Integer> dailyWorkMinutes = new java.util.HashMap<>();
+        int maxWorkMinsPerDay = userPrefs.getDailyProdHours() * 60;
+
         pinnedTasks.sort(new Comparator<Task>() {
+
             @Override
             public int compare(Task t1, Task t2) {
+
                 return t1.startTime.compareTo(t2.startTime);
+
             }
+
         });
         
         List<Task> additionalTasks = new ArrayList<>();
 
         for (Task task : floatingTasks) { 
+
             // search strictly within today
             LocalDate today = LocalDate.now();
             LocalDate searchStartDate = today;
@@ -197,6 +223,18 @@ public class KnapsackScheduler implements SchedulingAlg{
             for (LocalDate currentDate = searchStartDate; 
                  !currentDate.isAfter(searchEndDate); 
                  currentDate = currentDate.plusDays(1)) {
+
+                // Gatekeeper: If it's a Work task and this day is maxed out, skip to tomorrow
+                if (task.category == 1) {
+
+                    int currentWorkMins = dailyWorkMinutes.getOrDefault(currentDate, 0);
+                    if (currentWorkMins + taskMinutes > maxWorkMinsPerDay) {
+
+                        continue; 
+
+                    }
+
+                }
 
                 LocalDateTime dayStart = currentDate.atTime(startHour);
                 LocalDateTime dayEnd = currentDate.atTime(endHour);
@@ -286,6 +324,12 @@ public class KnapsackScheduler implements SchedulingAlg{
                             }
 
                         });
+
+                        // Update the tracker if a Work task was scheduled
+                        if (task.category == 1) {
+                            int currentWorkMins = dailyWorkMinutes.getOrDefault(currentDate, 0);
+                            dailyWorkMinutes.put(currentDate, currentWorkMins + (int)taskMinutes);
+                        }
 
                         scheduledToday = true;
                         scheduledAtLeastOnce = true;

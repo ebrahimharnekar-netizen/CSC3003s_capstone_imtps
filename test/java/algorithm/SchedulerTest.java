@@ -1,6 +1,8 @@
 package algorithm;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -156,7 +158,7 @@ public class SchedulerTest {
         rawList.add(mediumHighValue1);
         rawList.add(mediumHighValue2);
 
-        Questionnaire dummyPrefs = new Questionnaire(1, 1, false, 8);
+        Questionnaire dummyPrefs = new Questionnaire(1, 1, false, 15);
         KnapsackScheduler knapsack = new KnapsackScheduler();
         
         List<Task> optimalSchedule = knapsack.genSchedule(rawList, dummyPrefs);
@@ -167,6 +169,114 @@ public class SchedulerTest {
         assertEquals("Medium High Value 2", optimalSchedule.get(0).taskName, "Knapsack failed to pack the optimal subset");
         assertEquals("Medium High Value 1", optimalSchedule.get(1).taskName, "Knapsack failed to pack the optimal subset");
         assertEquals("Heavy Low Value", optimalSchedule.get(2).taskName, "The less optimal task should have been pushed to leftovers");
+    }
+
+    @Test // testing to ensure Work tasks respect the dailyProdHours limit and overflow to tomorrow
+    public void testKnapsackRespectsWorkLimit() {
+        // Set a 10-hour day (08:00 to 18:00) but a strict 3 hour work limit
+        Questionnaire burnoutPrefs = new Questionnaire(1, 1, false, 3);
+        burnoutPrefs.setWindow("08:00", "18:00");
+        
+        // We give work2 a due date of tomorrow so the sliding window is allowed to look at tomorrow.
+        // work1 gets a null due date so it restricts itself purely to today.
+        LocalDateTime dueTomorrow = LocalDateTime.now().plusDays(1);
+        Task work1 = new Task("1", "High Priority Work", 1, 5, 2.0, null, null);
+        Task work2 = new Task("2", "Low Priority Work", 1, 3, 2.0, dueTomorrow, null);
+        
+        List<Task> rawList = new ArrayList<>();
+        rawList.add(work1);
+        rawList.add(work2);
+        
+        KnapsackScheduler knapsack = new KnapsackScheduler();
+        knapsack.genSchedule(rawList, burnoutPrefs);
+        
+        LocalDate today = LocalDate.now();
+        
+        // Work 1 fits perfectly in today's 3-hour limit
+        assertEquals(today, work1.startTime.toLocalDate(), "Highest importance work task should schedule today");
+        
+        // Work 2 pushes today's total to 4 hours, which breaks the 3-hour limit. 
+        // It must be successfully pushed to tomorrow.
+        assertEquals(today.plusDays(1), work2.startTime.toLocalDate(), "Second work task must be pushed to tomorrow due to the burnout limit");
+    }
+
+    @Test // testing to ensure Health and Personal bypass the work limit and fill the day
+    public void testKnapsackHealthBypassesWorkLimit() {
+        // Set a 10-hour day (08:00 to 18:00) but a strict 2-hour work limit
+        Questionnaire mixedPrefs = new Questionnaire(1, 1, false, 2);
+        mixedPrefs.setWindow("08:00", "18:00");
+        
+        // 2 hours of Work, 4 hours of Health, 3 hours of Personal (Total = 9 hours)
+        Task workTask = new Task("1", "Coding", 1, 5, 2.0, null, null);
+        Task healthTask = new Task("2", "Long Run", 2, 4, 4.0, null, null);
+        Task personalTask = new Task("3", "Gaming", 3, 3, 3.0, null, null);
+        
+        List<Task> rawList = new ArrayList<>();
+        rawList.add(workTask);
+        rawList.add(healthTask);
+        rawList.add(personalTask);
+        
+        KnapsackScheduler knapsack = new KnapsackScheduler();
+        knapsack.genSchedule(rawList, mixedPrefs);
+        
+        LocalDate today = LocalDate.now();
+        
+        // Because Health and Personal tasks only check total capacity (10 hrs), not work capacity (2 hrs),
+        // ALL of these tasks should successfully schedule on Day 1.
+        assertEquals(today, workTask.startTime.toLocalDate(), "Work task should schedule today");
+        assertEquals(today, healthTask.startTime.toLocalDate(), "Health task ignores work limit and should schedule today");
+        assertEquals(today, personalTask.startTime.toLocalDate(), "Personal task ignores work limit and should schedule today");
+    }
+
+    @Test // testing to ensure Priority Scheduler also respects the dailyProdHours burnout limit
+    public void testPrioritySchedulerRespectsWorkLimit() {
+        // Set a 10-hour day (08:00 to 18:00) but a strict 3-hour work limit
+        Questionnaire burnoutPrefs = new Questionnaire(1, 1, false, 3);
+        burnoutPrefs.setWindow("08:00", "18:00");
+        
+        LocalDateTime dueTomorrow = LocalDateTime.now().plusDays(1);
+        Task work1 = new Task("1", "High Priority Work", 1, 5, 2.0, null, null);
+        Task work2 = new Task("2", "Lower Priority Work", 1, 3, 2.0, dueTomorrow, null);
+        
+        List<Task> rawList = new ArrayList<>();
+        rawList.add(work1);
+        rawList.add(work2);
+        
+        Scheduler priorityScheduler = new Scheduler();
+        priorityScheduler.genSchedule(rawList, burnoutPrefs);
+        
+        LocalDate today = LocalDate.now();
+        
+        assertEquals(today, work1.startTime.toLocalDate(), "Highest priority work task should schedule today");
+        assertEquals(today.plusDays(1), work2.startTime.toLocalDate(), "Second work task must be pushed to tomorrow due to the burnout limit");
+    }
+
+    @Test // testing to ensure Deadline Scheduler also respects the dailyProdHours burnout limit
+    public void testDeadlineSchedulerRespectsWorkLimit() {
+        // Set a 10 hour day (08:00 to 18:00) but a strict 3 hour work limit
+        Questionnaire burnoutPrefs = new Questionnaire(1, 1, false, 3);
+        burnoutPrefs.setWindow("08:00", "18:00");
+        
+        // DeadlineScheduler sorts by earliest deadline first.
+        // work1 is due today, so it gets scheduled first.
+        LocalDateTime dueToday = LocalDateTime.now().plusHours(5);
+        // work2 is due tomorrow, so it gets scheduled second, and has permission to slide to tomorrow.
+        LocalDateTime dueTomorrow = LocalDateTime.now().plusDays(1);
+        
+        Task work1 = new Task("1", "Urgent Work", 1, 5, 2.0, dueToday, null);
+        Task work2 = new Task("2", "Less Urgent Work", 1, 3, 2.0, dueTomorrow, null);
+        
+        List<Task> rawList = new ArrayList<>();
+        rawList.add(work1);
+        rawList.add(work2);
+        
+        DeadlineScheduler deadlineScheduler = new DeadlineScheduler();
+        deadlineScheduler.genSchedule(rawList, burnoutPrefs);
+        
+        LocalDate today = LocalDate.now();
+        
+        assertEquals(today, work1.startTime.toLocalDate(), "Most urgent work task should schedule today");
+        assertEquals(today.plusDays(1), work2.startTime.toLocalDate(), "Second work task must be pushed to tomorrow due to the burnout limit");
     }
 
 }

@@ -20,7 +20,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         //Load the FXML file
-        Parent root = FXMLLoader.load(getClass().getResource("login.fxml")); //Login is the first page 
+        Parent root = FXMLLoader.load(getClass().getResource("/frontend/login.fxml")); //Login is the first page 
                                                                                     // that will be displayed when the application starts
         
         //Attach it to a Scene

@@ -29,30 +29,34 @@ public class Questionnaire {
 
     }
 
-    public void setWindow(String startStr, String endStr) {    // db will call this to pass string data to the algorithm
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");   // expecting 24 hour format
-
+    public void setWindow(String startStr, String endStr) {
+        // Split into two separate try catch blocks so one typo does not ruin the whole window
         try {
 
-            if (startStr != null && !startStr.isEmpty()) {    // checking for null value from db
+            if (startStr != null && !startStr.trim().isEmpty()) {
 
-                this.dayStartTime = LocalTime.parse(startStr, formatter);
-
-            }
-            
-            if (endStr != null && !endStr.isEmpty()) {
-
-                this.dayEndTime = LocalTime.parse(endStr, formatter);
+                // .trim() removes hidden spaces. automatically handles HH:mm and HH:mm:ss
+                this.dayStartTime = LocalTime.parse(startStr.trim());
 
             }
-
         } catch (Exception e) {
 
-            System.out.println("invalid time format");
+            System.out.println("Debug: Failed to parse start time -> '" + startStr + "'");
 
         }
 
+        try {
+
+            if (endStr != null && !endStr.trim().isEmpty()) {
+
+                this.dayEndTime = LocalTime.parse(endStr.trim());
+
+            }
+        } catch (Exception e) {
+
+            System.out.println("Debug: Failed to parse end time -> '" + endStr + "'");
+            
+        }
     }
 
     // getters
