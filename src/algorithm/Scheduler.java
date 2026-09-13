@@ -94,41 +94,37 @@ public class Scheduler implements SchedulingAlg{
 
     private void findTimeSlots(List<Task> floatingTasks, List<Task> pinnedTasks, Questionnaire userPrefs) {
 
-        // the work day window is 7am to 10pm
+        // the work day window is dynamically pulled from user preferences
         LocalTime startHour = userPrefs.getDayStartTime();
         LocalTime endHour = userPrefs.getDayEndTime();
 
-        pinnedTasks.sort(new Comparator<Task>() {
+        // Track work minutes per day
+        java.util.Map<LocalDate, Integer> dailyWorkMinutes = new java.util.HashMap<>();
+        int maxWorkMinsPerDay = userPrefs.getDailyProdHours() * 60;
 
+        pinnedTasks.sort(new Comparator<Task>() {
             @Override
             public int compare(Task t1, Task t2) {
-
                 return t1.startTime.compareTo(t2.startTime);
-
             }
-
         });
         
         List<Task> additionalTasks = new ArrayList<>();
 
-        for (Task task : floatingTasks) {  // schedule each floating task one by one.
+        for (Task task : floatingTasks) {  
 
-            //  START of date-range logic
             LocalDate today = LocalDate.now();
             LocalDate searchStartDate = today;
             LocalDate searchEndDate = today;
 
-            // Use original fields for the search window (if available) so we know where to look
             LocalDate taskStart = (task.originalStartDate != null) ? task.originalStartDate : task.startDate;
             LocalDate taskDue = (task.originalDueDate != null) ? task.originalDueDate.toLocalDate() : 
                                 (task.dueDate != null ? task.dueDate.toLocalDate() : null);
 
-            // If the task has a start date, do not schedule before that date.
             if (taskStart != null && taskStart.isAfter(today)) {
                 searchStartDate = taskStart;
             }
 
-            // If the task has a due date, we can schedule up to that date.
             if (taskDue != null) {
                 if (taskDue.isAfter(today)) {
                     searchEndDate = taskDue;
@@ -144,84 +140,78 @@ public class Scheduler implements SchedulingAlg{
                     }
                 }
             } else {
-                // No due date: only schedule on today.
                 searchEndDate = today;
             }
-            // END of date-range logic
 
-            long taskMinutes = (long) (task.duration * 60);  // converting the duration of the task to minutes
+            long taskMinutes = (long) (task.duration * 60);  
             boolean isFirstDayScheduled = true;
             boolean scheduledAtLeastOnce = false;
 
-            // START of multi‑day loop (Removed early exit to schedule every day in range)
             for (LocalDate currentDate = searchStartDate; 
                  !currentDate.isAfter(searchEndDate); 
                  currentDate = currentDate.plusDays(1)) {
 
+                // Gatekeeper Check
+                // If it's a Work task and this day is already maxed out, skip to tomorrow
+                if (task.category == 1) {
+                    int currentWorkMins = dailyWorkMinutes.getOrDefault(currentDate, 0);
+                    if (currentWorkMins + taskMinutes > maxWorkMinsPerDay) {
+                        continue; 
+                    }
+                }
+
                 LocalDateTime dayStart = currentDate.atTime(startHour);
                 LocalDateTime dayEnd = currentDate.atTime(endHour);
 
-                LocalDateTime searchTime = dayStart;  // the search starts at 7am on this day
+                LocalDateTime searchTime = dayStart;  
                 boolean scheduledToday = false;
 
-                while (!searchTime.plusMinutes(taskMinutes).isAfter(dayEnd)) {   // continue searching as long as the current search time is not after the end of the working day
+                while (!searchTime.plusMinutes(taskMinutes).isAfter(dayEnd)) {   
 
                     LocalDateTime potEnd = searchTime.plusMinutes(taskMinutes);
                     boolean collision = false;
                     LocalDateTime nextFreeTime = null;
 
-                    for (Task pinned : pinnedTasks) {    // checking the potential time slot to every other pinned task on the calendar.
+                    for (Task pinned : pinnedTasks) {    
 
-                        // Determine the date range for this pinned task using its CURRENT fields
-                        // (NOT original fields, because scheduled floating tasks have been turned into single‑day blockers)
                         LocalDate pinnedStartDate;
                         LocalDate pinnedEndDate;
 
                         if (pinned.startDate != null && pinned.dueDate != null) {
-                            // Task has both startDate and dueDate (user‑defined pinned task or scheduled with range)
                             pinnedStartDate = pinned.startDate;
                             pinnedEndDate = pinned.dueDate.toLocalDate();
                         } else if (pinned.isPinned() && pinned.dueDate != null) {
-                            // Pinned task with startTime and dueDate but no startDate (start is inferred from startTime)
                             pinnedStartDate = pinned.startTime.toLocalDate();
                             pinnedEndDate = pinned.dueDate.toLocalDate();
                         } else {
-                            // Single‑day task (e.g., a floating task that was scheduled and now blocks only that day)
                             pinnedStartDate = pinned.startTime.toLocalDate();
                             pinnedEndDate = pinnedStartDate;
                         }
 
-                        // Only consider this pinned task if the current date falls within its range
                         if (currentDate.isBefore(pinnedStartDate) || currentDate.isAfter(pinnedEndDate)) {
                             continue;
                         }
 
-                        // Build the start and end times for the pinned task on this day
                         LocalDateTime pinnedStartOfDay = currentDate.atTime(pinned.startTime.toLocalTime());
                         long pinnedMins = (long) (pinned.duration * 60);
                         LocalDateTime pinnedEnd = pinnedStartOfDay.plusMinutes(pinnedMins);
 
-                        if (searchTime.isBefore(pinnedEnd) && potEnd.isAfter(pinnedStartOfDay)) {    // does the time slot collide with the current pinned task?
-
+                        if (searchTime.isBefore(pinnedEnd) && potEnd.isAfter(pinnedStartOfDay)) {    
                             collision = true;
-                            nextFreeTime = pinnedEnd;  // gap is too small therefore search again after pinned task ends.
+                            nextFreeTime = pinnedEnd;  
                             break;
-
                         }
-
                     }
 
-                    if (!collision) {    // a gap was found successfully
+                    if (!collision) {    
                     
                         if (isFirstDayScheduled) {
                             task.startTime = searchTime;
-                            // After scheduling, set the task to be a single‑day blocker (so it doesn't block future days)
                             task.startDate = task.startTime.toLocalDate();
-                            task.dueDate = null;  // clear due date so it doesn't extend beyond today
-                            pinnedTasks.add(task);  // becomes a pinned "obstacle" for upcoming floating task
+                            task.dueDate = null;  
+                            pinnedTasks.add(task);  
                             isFirstDayScheduled = false;
                         } else {
-                            // Create a new schedule block for the following days
                             Task clone = new Task(task.taskId, task.taskName, task.category, task.importance, 
                                                   task.duration, null, searchTime, searchTime.toLocalDate());
                             clone.originalStartDate = task.originalStartDate;
@@ -232,44 +222,39 @@ public class Scheduler implements SchedulingAlg{
                         }
 
                         pinnedTasks.sort(new Comparator<Task>() {
-                            
                             @Override
                             public int compare(Task t1, Task t2) {
-
-                                return t1.startTime.compareTo(t2.startTime);    // sort the obstacles again.
-
+                                return t1.startTime.compareTo(t2.startTime);    
                             }
-
                         });
+
+                        // Update the tracker if a Work task was scheduled
+                        if (task.category == 1) {
+                            int currentWorkMins = dailyWorkMinutes.getOrDefault(currentDate, 0);
+                            dailyWorkMinutes.put(currentDate, currentWorkMins + (int)taskMinutes);
+                        }
 
                         scheduledToday = true;
                         scheduledAtLeastOnce = true;
-                        break; // Move on to the next date
+                        break; 
 
                     } else {
-
-                        searchTime = nextFreeTime;  // go to end of obstacle and try the search again
-
+                        searchTime = nextFreeTime;  
                     }
-
                 }
                 
                 if (!scheduledToday) {
                     System.out.println(task.taskName + " could not fit in the window on " + currentDate);
                 }
                 
-            } // END of multi‑day loop
+            } 
 
             if (!scheduledAtLeastOnce) {
-
                 System.out.println(task.taskName + " could not fit anywhere in its date range.");
-
             }
-
         }
         
         floatingTasks.addAll(additionalTasks);
-
     }
 
 }
