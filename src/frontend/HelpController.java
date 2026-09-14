@@ -16,12 +16,20 @@ public class HelpController {
     private Button btnBack;  // injected from the FXML
 
     public void initialize() {
-        // Use Platform.runLater to ensure the stage is fully available
         Platform.runLater(() -> {
-            if (btnBack != null && btnBack.getScene() != null) {
-                Stage stage = (Stage) btnBack.getScene().getWindow();
-                stage.setMaximized(true);
-            }
+            Stage stage = (Stage) btnBack.getScene().getWindow();
+            
+            // Fetch the dimensions of the user's actual monitor
+            javafx.geometry.Rectangle2D bounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+            
+            // Bind the window to the monitor's edges
+            stage.setX(bounds.getMinX());
+            stage.setY(bounds.getMinY());
+            stage.setWidth(bounds.getWidth());
+            stage.setHeight(bounds.getHeight());
+            
+            // Force the OS to maximize the window
+            stage.setMaximized(true);
         });
     }
 

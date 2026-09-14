@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -8,78 +9,108 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.QuestionsController">
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #f1f5f9;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.QuestionsController">
    <children>
-
-      <Label layoutX="448.0" layoutY="295.0" text="1. How many hours a day do you want to be productive?">
-         <font>
-            <Font size="22.0" />
-         </font></Label>
-      <ComboBox fx:id="cmbProductiveHours" layoutX="469.0" layoutY="353.0" prefHeight="36.0" prefWidth="69.0" promptText="1-10" />
-
-      <Label layoutX="448.0" layoutY="421.0" text="2. Do you prefer doing quick tasks first?">
-         <font>
-            <Font size="22.0" />
-         </font></Label>
-      <RadioButton fx:id="rdbtnQuickYes" layoutX="469.0" layoutY="470.0" mnemonicParsing="false" text="Yes">
-         <font>
-            <Font size="16.0" />
-         </font></RadioButton>
-      <RadioButton fx:id="rdbtnQuickNo" layoutX="469.0" layoutY="515.0" mnemonicParsing="false" text="No">
-         <font>
-            <Font size="16.0" />
-         </font></RadioButton>
-
-      <Label layoutX="448.0" layoutY="563.0" text="3. When are you most productive?">
-         <font>
-            <Font size="22.0" />
-         </font></Label>
-      <RadioButton fx:id="rdbtnMorning" layoutX="469.0" layoutY="622.0" mnemonicParsing="false" text="Morning">
-         <font>
-            <Font size="16.0" />
-         </font></RadioButton>
-      <RadioButton fx:id="rdbtnMidday" layoutX="469.0" layoutY="662.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="82.0" text="Midday">
-         <font>
-            <Font size="16.0" />
-         </font></RadioButton>
-      <RadioButton fx:id="rdbtnNight" layoutX="469.0" layoutY="712.0" mnemonicParsing="false" prefHeight="36.0" prefWidth="69.0" text="Night">
-         <font>
-            <Font size="16.0" />
-         </font></RadioButton>
-         
-      <Label layoutX="448.0" layoutY="776.0" text="4. Working Window (HH:mm)">
-         <font>
-            <Font size="22.0" />
-         </font>
-      </Label>
-      <TextField fx:id="txtPrefStartTime" layoutX="469.0" layoutY="835.0" prefHeight="35.0" prefWidth="120.0" promptText="Start (07:00)" />
-      <TextField fx:id="txtPrefEndTime" layoutX="625.0" layoutY="835.0" prefHeight="35.0" prefWidth="120.0" promptText="End (22:00)" />
-
-      <Button fx:id="btnSaveQuestionnaire" layoutX="448.0" layoutY="893.0" mnemonicParsing="false" onAction="#onClickbtnSaveQuestionnaire" prefHeight="75.0" prefWidth="1181.0" style="-fx-background-color: black;" text="Set Preferences" textFill="WHITE">
-         <font>
-            <Font size="16.0" />
-         </font></Button>
-      <ImageView fitHeight="349.0" fitWidth="638.0" layoutX="-41.0" layoutY="-7.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fitHeight="100.0" preserveRatio="true" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="20.0">
          <image>
             <Image url="@../Images/NEN.png" />
          </image>
       </ImageView>
-      <VBox layoutX="558.0" layoutY="64.0" prefHeight="171.0" prefWidth="1264.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
+      
+      <!-- Central Wrapper ensures the card stays centered and shrinks if needed -->
+      <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
-            <Label prefHeight="73.0" prefWidth="462.0" text="Set your preferences by filling in the onboarding Questionnaire" textFill="#222222" wrapText="true">
-               <font>
-                  <Font name="System Bold" size="22.0" />
-               </font>
-            </Label>
-            <Label prefHeight="40.0" text="Leave any question blank to use the recommended default." textFill="#555555" wrapText="true">
-               <font>
-                  <Font size="15.0" />
-               </font>
-            </Label>
+            
+            <VBox alignment="CENTER_LEFT" maxWidth="850.0" spacing="25.0" style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 50; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10);">
+               <StackPane.margin>
+                  <Insets bottom="40.0" top="80.0" />
+               </StackPane.margin>
+               <children>
+                  <VBox spacing="10.0">
+                     <children>
+                        <Label text="Set Your Preferences" textFill="#1e293b">
+                           <font><Font name="System Bold" size="28.0" /></font>
+                        </Label>
+                        <Label text="Leave any question blank to use the recommended default." textFill="#64748b">
+                           <font><Font size="16.0" /></font>
+                        </Label>
+                     </children>
+                     <VBox.margin>
+                        <Insets bottom="20.0" />
+                     </VBox.margin>
+                  </VBox>
+
+                  <!-- Question 1 -->
+                  <VBox spacing="10.0">
+                     <children>
+                        <Label text="1. How many hours a day do you want to be productive?" textFill="#334155">
+                           <font><Font name="System Bold" size="18.0" /></font>
+                        </Label>
+                        <ComboBox fx:id="cmbProductiveHours" prefHeight="40.0" prefWidth="150.0" promptText="1-10" style="-fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" />
+                     </children>
+                  </VBox>
+
+                  <!-- Question 2 -->
+                  <VBox spacing="10.0">
+                     <children>
+                        <Label text="2. Do you prefer doing quick tasks first?" textFill="#334155">
+                           <font><Font name="System Bold" size="18.0" /></font>
+                        </Label>
+                        <HBox spacing="30.0">
+                           <children>
+                              <RadioButton fx:id="rdbtnQuickYes" mnemonicParsing="false" text="Yes" textFill="#475569"><font><Font size="16.0" /></font></RadioButton>
+                              <RadioButton fx:id="rdbtnQuickNo" mnemonicParsing="false" text="No" textFill="#475569"><font><Font size="16.0" /></font></RadioButton>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <!-- Question 3 -->
+                  <VBox spacing="10.0">
+                     <children>
+                        <Label text="3. When are you most productive?" textFill="#334155">
+                           <font><Font name="System Bold" size="18.0" /></font>
+                        </Label>
+                        <HBox spacing="30.0">
+                           <children>
+                              <RadioButton fx:id="rdbtnMorning" mnemonicParsing="false" text="Morning" textFill="#475569"><font><Font size="16.0" /></font></RadioButton>
+                              <RadioButton fx:id="rdbtnMidday" mnemonicParsing="false" text="Midday" textFill="#475569"><font><Font size="16.0" /></font></RadioButton>
+                              <RadioButton fx:id="rdbtnNight" mnemonicParsing="false" text="Night" textFill="#475569"><font><Font size="16.0" /></font></RadioButton>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+                     
+                  <!-- Question 4 -->
+                  <VBox spacing="10.0">
+                     <children>
+                        <Label text="4. Working Window (HH:mm)" textFill="#334155">
+                           <font><Font name="System Bold" size="18.0" /></font>
+                        </Label>
+                        <HBox spacing="30.0">
+                           <children>
+                              <TextField fx:id="txtPrefStartTime" prefHeight="40.0" prefWidth="150.0" promptText="Start (07:00)" style="-fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" />
+                              <TextField fx:id="txtPrefEndTime" prefHeight="40.0" prefWidth="150.0" promptText="End (22:00)" style="-fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <!-- Save Button -->
+                  <Button fx:id="btnSaveQuestionnaire" maxWidth="1000.0" mnemonicParsing="false" onAction="#onClickbtnSaveQuestionnaire" prefHeight="55.0" style="-fx-background-color: #0f172a; -fx-background-radius: 8; -fx-cursor: hand;" text="Set Preferences" textFill="WHITE" VBox.vgrow="ALWAYS">
+                     <font><Font name="System Bold" size="18.0" /></font>
+                     <VBox.margin>
+                        <Insets top="20.0" />
+                     </VBox.margin>
+                  </Button>
+               </children>
+            </VBox>
          </children>
-      </VBox>
+      </StackPane>
    </children>
 </AnchorPane>

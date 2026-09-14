@@ -13,6 +13,8 @@ import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.application.Platform;
+import javafx.stage.Screen;
+import javafx.geometry.Rectangle2D;
 
 public class SignupController {
 
@@ -35,10 +37,21 @@ public class SignupController {
             txtPasswordVisibleSignup.textProperty().bindBidirectional(txtPasswordSignup.textProperty());
         }
 
-        Platform.runLater(() -> {
-            Stage stage = (Stage) txtUsernameSignup.getScene().getWindow();
-            stage.setMaximized(true);
-        });
+    Platform.runLater(() -> {
+        Stage stage = (Stage) txtUsernameSignup.getScene().getWindow();
+        
+        // Fetch the dimensions of the user's actual monitor
+        javafx.geometry.Rectangle2D bounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+        
+        // Bind the window to the monitor's edges
+        stage.setX(bounds.getMinX());
+        stage.setY(bounds.getMinY());
+        stage.setWidth(bounds.getWidth());
+        stage.setHeight(bounds.getHeight());
+        
+        // Force the OS to maximize the window
+        stage.setMaximized(true);
+    });
     }
 
     @FXML

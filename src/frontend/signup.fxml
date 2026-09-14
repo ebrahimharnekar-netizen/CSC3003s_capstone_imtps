@@ -8,143 +8,114 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.SignupController">
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.SignupController">
    <children>
-      <Pane layoutX="774.0" layoutY="-19.0" prefHeight="1101.0" prefWidth="1151.0" style="-fx-background-color: navy;">
+      <HBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
+            <!-- Left Side (White) -->
+            <AnchorPane minWidth="450.0" prefWidth="600.0" style="-fx-background-color: white;">
+               <children>
+                  <ImageView fitHeight="250.0" preserveRatio="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <image>
+                        <Image url="@../Images/NEN.png" />
+                     </image>
+                  </ImageView>
+                  
+                  <VBox alignment="CENTER_LEFT" spacing="20.0" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="250.0">
+                     <children>
+                        <Label text="Welcome to your personal priority task scheduler" wrapText="true">
+                           <font><Font name="System Bold" size="17.0" /></font>
+                        </Label>
+                        
+                        <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
+                           <children>
+                              <Label text="Organize your day" textFill="#222222"><font><Font name="System Bold" size="16.0" /></font></Label>
+                              <Label text="Easily map out your entire day by creating and managing detailed tasks. Never lose track of what needs to get done." textFill="#555555" wrapText="true"><font><Font size="14.0" /></font></Label>
+                           </children>
+                        </VBox>
+                        
+                        <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
+                           <children>
+                              <Label text="Priority Focused" textFill="#222222"><font><Font name="System Bold" size="16.0" /></font></Label>
+                              <Label text="Assign priority levels to your tasks. Ensure your most important deadlines are always front and center." textFill="#555555" wrapText="true"><font><Font size="14.0" /></font></Label>
+                           </children>
+                        </VBox>
+                        
+                        <VBox style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
+                           <children>
+                              <Label text="Versatility" textFill="#222222"><font><Font name="System Bold" size="16.0" /></font></Label>
+                              <Label text="Choose from a variety of different schedulers to meet your needs at a specific moment" textFill="#555555" wrapText="true"><font><Font size="14.0" /></font></Label>
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </AnchorPane>
             
-            <Label layoutX="159.0" layoutY="180.0" prefHeight="127.0" prefWidth="834.0" text="🔒          Please Sign Up using your Email, Username and Password" textAlignment="CENTER" textFill="WHITE" textOverrun="CLIP" wrapText="true">
-               <font>
-                  <Font name="System Bold" size="30.0" />
-               </font>
-            </Label>
-            
-            <!-- Email Field -->
-            <Label layoutX="269.0" layoutY="290.0" text="E-mail" textFill="WHITE">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </Label>
-            <TextField fx:id="txtEmailSignup" layoutX="269.0" layoutY="325.0" prefHeight="36.0" prefWidth="376.0" promptText="example@gmail.com">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </TextField>
-
-            <!-- Username Field -->
-            <Label layoutX="269.0" layoutY="385.0" text="Username" textFill="WHITE">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </Label>
-            <TextField fx:id="txtUsernameSignup" layoutX="269.0" layoutY="420.0" prefHeight="36.0" prefWidth="376.0" promptText="njakza">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </TextField>
-
-            <!-- Password Field -->
-            <Label layoutX="269.0" layoutY="480.0" prefHeight="25.0" prefWidth="77.0" text="Password" textFill="WHITE">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </Label>
-            <TextField fx:id="txtPasswordVisibleSignup" layoutX="269.0" layoutY="515.0" prefHeight="36.0" prefWidth="376.0" visible="false">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </TextField>
-            <PasswordField fx:id="txtPasswordSignup" layoutX="269.0" layoutY="515.0" prefHeight="36.0" prefWidth="376.0">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </PasswordField>
-            
-            <CheckBox fx:id="chbShowPassword" layoutX="675.0" layoutY="520.0" mnemonicParsing="false" onAction="#onCheckchbShowPassword" text="Show Password" textFill="WHITE">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </CheckBox>
-
-            <!-- Primary Action Button (Sign up) -->
-            <Button fx:id="btnCreateAccount" layoutX="212.0" layoutY="610.0" mnemonicParsing="false" onAction="#onClickbtnCreateAccount" prefHeight="53.0" prefWidth="716.0" style="-fx-background-color: black;" text="Sign up" textFill="WHITE" underline="true">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </Button>
-
-            <!-- Secondary Action Button (Login) -->
-            <Label layoutX="478.0" layoutY="685.0" text="Already have an account?" textFill="WHITE">
-               <font>
-                  <Font size="13.0" />
-               </font>
-            </Label>
-            <Button fx:id="btnLogInSignup" layoutX="212.0" layoutY="730.0" mnemonicParsing="false" onAction="#onClickbtnLogInSignup" prefHeight="53.0" prefWidth="716.0" style="-fx-background-color: black;" text="Login" textFill="WHITE">
-               <font>
-                  <Font size="16.0" />
-               </font>
-            </Button>
-            
-            <Button fx:id="btnBack" layoutX="986.0" layoutY="1038.0" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="122.0" text="Exit -&gt;" />
+            <!-- Right Side (Navy) -->
+            <AnchorPane style="-fx-background-color: navy;" HBox.hgrow="ALWAYS">
+               <children>
+                  <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <VBox alignment="CENTER" maxWidth="500.0" spacing="15.0">
+                           <children>
+                              <Label text="🔒 Please Sign Up using your Email, Username and Password" textAlignment="CENTER" textFill="WHITE" wrapText="true">
+                                 <font><Font name="System Bold" size="24.0" /></font>
+                              </Label>
+                              
+                              <VBox spacing="5.0">
+                                 <children>
+                                    <Label text="E-mail" textFill="WHITE"><font><Font size="16.0" /></font></Label>
+                                    <TextField fx:id="txtEmailSignup" prefHeight="36.0" promptText="example@gmail.com"><font><Font size="16.0" /></font></TextField>
+                                 </children>
+                              </VBox>
+                              
+                              <VBox spacing="5.0">
+                                 <children>
+                                    <Label text="Username" textFill="WHITE"><font><Font size="16.0" /></font></Label>
+                                    <TextField fx:id="txtUsernameSignup" prefHeight="36.0" promptText="njakza"><font><Font size="16.0" /></font></TextField>
+                                 </children>
+                              </VBox>
+                              
+                              <VBox spacing="5.0">
+                                 <children>
+                                    <Label text="Password" textFill="WHITE"><font><Font size="16.0" /></font></Label>
+                                    <StackPane>
+                                       <children>
+                                          <TextField fx:id="txtPasswordVisibleSignup" prefHeight="36.0" visible="false"><font><Font size="16.0" /></font></TextField>
+                                          <PasswordField fx:id="txtPasswordSignup" prefHeight="36.0"><font><Font size="16.0" /></font></PasswordField>
+                                       </children>
+                                    </StackPane>
+                                 </children>
+                              </VBox>
+                              
+                              <CheckBox fx:id="chbShowPassword" mnemonicParsing="false" onAction="#onCheckchbShowPassword" text="Show Password" textFill="WHITE">
+                                 <font><Font size="16.0" /></font>
+                              </CheckBox>
+                              
+                              <Button fx:id="btnCreateAccount" mnemonicParsing="false" onAction="#onClickbtnCreateAccount" prefHeight="50.0" prefWidth="500.0" style="-fx-background-color: black;" text="Sign up" textFill="WHITE" underline="true">
+                                 <font><Font size="16.0" /></font>
+                              </Button>
+                              
+                              <Label text="Already have an account?" textFill="WHITE">
+                                 <font><Font size="13.0" /></font>
+                              </Label>
+                              <Button fx:id="btnLogInSignup" mnemonicParsing="false" onAction="#onClickbtnLogInSignup" prefHeight="50.0" prefWidth="500.0" style="-fx-background-color: black;" text="Login" textFill="WHITE">
+                                 <font><Font size="16.0" /></font>
+                              </Button>
+                           </children>
+                        </VBox>
+                     </children>
+                  </StackPane>
+                  <Button fx:id="btnBack" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="122.0" text="Exit -&gt;" AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="20.0" />
+               </children>
+            </AnchorPane>
          </children>
-      </Pane>
-      
-      <!-- Left Side Design Elements -->
-      <ImageView fitHeight="349.0" fitWidth="638.0" layoutX="-36.0" layoutY="-49.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@../Images/NEN.png" />
-         </image>
-      </ImageView>
-      <VBox layoutX="42.0" layoutY="331.0" prefHeight="166.0" prefWidth="710.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
-         <children>
-            <Label text="Organize your day" textFill="#222222">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Label>
-            <Label prefHeight="40.0" text="Easily map out your entire day by creating and managing detailed tasks. Never lose track of what needs to get done." textFill="#555555" wrapText="true">
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Label>
-         </children>
-      </VBox>
-      <Label layoutX="73.0" layoutY="280.0" prefHeight="26.0" prefWidth="421.0" text="Welcome to your personal priority task scheduler" wrapText="true">
-         <font>
-            <Font name="System Bold" size="17.0" />
-         </font>
-      </Label>
-      <VBox layoutX="42.0" layoutY="565.0" prefHeight="145.0" prefWidth="710.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
-         <children>
-            <Label text="Priority Focused" textFill="#222222">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Label>
-            <Label prefHeight="40.0" text="Assign priority levels to your tasks. Ensure your most important deadlines are always front and center." textFill="#555555" wrapText="true">
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Label>
-         </children>
-      </VBox>
-      <VBox layoutX="42.0" layoutY="779.0" prefHeight="145.0" prefWidth="710.0" style="-fx-background-color: #ffffff; -fx-background-radius: 12; -fx-padding: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4); -fx-border-color: #eaeaea; -fx-border-radius: 12;">
-         <children>
-            <Label text="Versatility" textFill="#222222">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Label>
-            <Label prefHeight="33.0" prefWidth="548.0" text="Choose from a variety of different schedulers to meet your needs at a specific moment" textFill="#555555" wrapText="true">
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Label>
-         </children>
-      </VBox>
+      </HBox>
    </children>
 </AnchorPane>

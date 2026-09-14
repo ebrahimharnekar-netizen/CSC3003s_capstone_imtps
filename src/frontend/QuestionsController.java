@@ -89,6 +89,17 @@ public class QuestionsController {
 
         Platform.runLater(() -> {
             Stage stage = (Stage) btnSaveQuestionnaire.getScene().getWindow();
+            
+            // Fetch the dimensions of the user's actual monitor
+            javafx.geometry.Rectangle2D bounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+            
+            // Bind the window to the monitor's edges
+            stage.setX(bounds.getMinX());
+            stage.setY(bounds.getMinY());
+            stage.setWidth(bounds.getWidth());
+            stage.setHeight(bounds.getHeight());
+            
+            // Force the OS to maximize the window
             stage.setMaximized(true);
         });
 

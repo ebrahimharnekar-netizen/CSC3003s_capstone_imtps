@@ -11,78 +11,92 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" style="-fx-background-color: navy;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.HelpController">
+<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #f1f5f9;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.HelpController">
    <children>
-      
-      <!-- Scrollable content centered -->
-      <ScrollPane fitToHeight="true" fitToWidth="true" layoutX="0.0" layoutY="0.0" prefHeight="1080.0" prefWidth="1920.0" style="-fx-background: navy; -fx-background-color: transparent;">
+
+      <!-- Centered ScrollPane Wrapper -->
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <content>
             <StackPane>
                <children>
-                  <VBox alignment="TOP_CENTER" maxWidth="1000.0" prefWidth="1000.0" spacing="25.0" style="-fx-background-color: white; -fx-background-radius: 15; -fx-padding: 50; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 20, 0, 0, 5);">
+                  <VBox maxWidth="1000.0" spacing="30.0" style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 50; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10);">
                      <StackPane.margin>
-                        <Insets bottom="40.0" top="40.0" />
+                        <Insets bottom="60.0" top="60.0" />
                      </StackPane.margin>
                      <children>
                         
-                        <!-- Logo -->
-                        <ImageView fitHeight="226.0" fitWidth="452.0" pickOnBounds="true" preserveRatio="true">
+                        <ImageView fitHeight="120.0" preserveRatio="true">
                            <image>
                               <Image url="@../Images/NEN.png" />
                            </image>
                         </ImageView>
                         
-                        <!-- Quick overview -->
-                        <Label alignment="CENTER" prefHeight="43.0" prefWidth="900.0" style="-fx-font-weight: bold; -fx-text-fill: #37474f;" text="Below explains all the different terminology and rules needed to use NEN" textAlignment="CENTER">
-                           <font>
-                              <Font size="26.0" />
-                           </font>
-                        </Label>
-                        <Label alignment="CENTER" maxWidth="800.0" prefHeight="60.0" style="-fx-text-fill: #546e7a;" text="This app automatically schedules your tasks, respecting fixed appointments you set. Use the tabs below to add, view, or edit tasks." textAlignment="CENTER" wrapText="true">
-                           <font>
-                              <Font size="16.0" />
-                           </font>
-                        </Label>
-                        
-                        <!-- Pinned vs Floating -->
-                        <VBox maxWidth="900.0" spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 20; -fx-border-color: #e0e0e0; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
+                        <VBox spacing="10.0">
                            <children>
-                              <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #37474f;" text="📌 Pinned vs Floating Tasks" />
-                              <Label maxWidth="850.0" style="-fx-font-size: 15px; -fx-text-fill: #455a64; -fx-line-spacing: 5px;" text="• Pinned – have a start date AND start time. They are fixed and never moved.&#10;• Floating – have no start time. They are automatically scheduled when you click Refresh." wrapText="true" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #1e293b;" text="Terminology &amp; Rules for NEN" wrapText="true">
+                                 <font><Font size="26.0" /></font>
+                              </Label>
+                              <Label style="-fx-text-fill: #64748b;" text="This app automatically schedules your tasks, respecting fixed appointments you set. Use the tabs below to add, view, or edit tasks." wrapText="true">
+                                 <font><Font size="16.0" /></font>
+                              </Label>
                            </children>
                         </VBox>
                         
-                        <!-- Focus Modes -->
-                        <VBox maxWidth="900.0" spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 20; -fx-border-color: #90caf9; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
+                        <VBox spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 25; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-background-radius: 12;">
                            <children>
-                              <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0d47a1;" text="🎯 Focus Modes" />
-                              <Label maxWidth="850.0" style="-fx-font-size: 15px; -fx-text-fill: #0d47a1; -fx-line-spacing: 5px;" text="Choose Work, Health, or Personal in the View tab. Tasks from the selected category get priority and are scheduled earlier in the day." wrapText="true" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #334155;" text="📌 Pinned vs Floating Tasks">
+                                 <font><Font size="18.0" /></font>
+                              </Label>
+                              <Label style="-fx-text-fill: #475569; -fx-line-spacing: 5px;" text="• Pinned – have a start date AND start time. They are fixed and never moved.&#10;• Floating – have no start time. They are automatically scheduled when you click Refresh." wrapText="true">
+                                 <font><Font size="15.0" /></font>
+                              </Label>
                            </children>
                         </VBox>
                         
-                        <!-- Scheduling Algorithms -->
-                        <VBox maxWidth="900.0" spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 20; -fx-border-color: #a5d6a7; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
+                        <VBox spacing="10.0" style="-fx-background-color: #eff6ff; -fx-padding: 25; -fx-border-color: #bfdbfe; -fx-border-radius: 12; -fx-background-radius: 12;">
                            <children>
-                              <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1b5e20;" text="⚙️ How Scheduling Works" />
-                              <Label maxWidth="850.0" style="-fx-font-size: 15px; -fx-text-fill: #1b5e20; -fx-line-spacing: 5px;" text="• Priority Scheduler (Work mode) – scores tasks by importance, urgency, category match, and duration.&#10;• Deadline Scheduler (Health/Personal) – schedules tasks by earliest due date first.&#10;• Both algorithms respect pinned tasks and schedule within the day (7 AM – 10 PM)." wrapText="true" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #1d4ed8;" text="🎯 Focus Modes">
+                                 <font><Font size="18.0" /></font>
+                              </Label>
+                              <Label style="-fx-text-fill: #1e40af; -fx-line-spacing: 5px;" text="Choose Work, Health, or Personal in the View tab. Tasks from the selected category get priority and are scheduled earlier in the day." wrapText="true">
+                                 <font><Font size="15.0" /></font>
+                              </Label>
                            </children>
                         </VBox>
                         
-                        <!-- Quick Guide -->
-                        <VBox maxWidth="900.0" spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 20; -fx-border-color: #ffcc80; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
+                        <VBox spacing="10.0" style="-fx-background-color: #f0fdf4; -fx-padding: 25; -fx-border-color: #bbf7d0; -fx-border-radius: 12; -fx-background-radius: 12;">
                            <children>
-                              <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #e65100;" text="📋 Quick Guide" />
-                              <Label maxWidth="850.0" style="-fx-font-size: 15px; -fx-text-fill: #e65100; -fx-line-spacing: 5px;" text="• Add – fill in task details; leave Start Time blank to make it floating.&#10;• View – select a date, choose a focus mode, then click Refresh to schedule/update.&#10;• Edit – search for a task, change any field, and save.&#10;• To delete – check the box next to a task in View and click Refresh." wrapText="true" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #15803d;" text="⚙️ How Scheduling Works">
+                                 <font><Font size="18.0" /></font>
+                              </Label>
+                              <Label style="-fx-text-fill: #166534; -fx-line-spacing: 5px;" text="• Priority Scheduler (Work mode) – scores tasks by importance, urgency, category match, and duration.&#10;• Deadline Scheduler (Health/Personal) – schedules tasks by earliest due date first.&#10;• Both algorithms respect pinned tasks and schedule within the day (7 AM – 10 PM)." wrapText="true">
+                                 <font><Font size="15.0" /></font>
+                              </Label>
                            </children>
                         </VBox>
                         
-                        <!-- Important Note -->
-                        <VBox maxWidth="900.0" spacing="10.0" style="-fx-background-color: #fce4ec; -fx-padding: 20; -fx-border-color: #ef9a9a; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 2);">
+                        <VBox spacing="10.0" style="-fx-background-color: #fffbeb; -fx-padding: 25; -fx-border-color: #fde68a; -fx-border-radius: 12; -fx-background-radius: 12;">
                            <children>
-                              <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #b71c1c;" text="⚠️ Important" />
-                              <Label maxWidth="850.0" style="-fx-font-size: 15px; -fx-text-fill: #b71c1c; -fx-line-spacing: 5px;" text="Floating tasks are never saved with a start time. Each Refresh recomputes the schedule, so you always get the best possible arrangement based on your current focus mode." wrapText="true" />
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #b45309;" text="📋 Quick Guide">
+                                 <font><Font size="18.0" /></font>
+                              </Label>
+                              <Label style="-fx-text-fill: #92400e; -fx-line-spacing: 5px;" text="• Add – fill in task details; leave Start Time blank to make it floating.&#10;• View – select a date, choose a focus mode, then click Refresh to schedule/update.&#10;• Edit – search for a task, change any field, and save.&#10;• To delete – check the box next to a task in View and click Refresh." wrapText="true">
+                                 <font><Font size="15.0" /></font>
+                              </Label>
                            </children>
                         </VBox>
+                        
+                        <VBox spacing="10.0" style="-fx-background-color: #fef2f2; -fx-padding: 25; -fx-border-color: #fecaca; -fx-border-radius: 12; -fx-background-radius: 12;">
+                           <children>
+                              <Label style="-fx-font-weight: bold; -fx-text-fill: #b91c1c;" text="⚠️ Important">
+                                 <font><Font size="18.0" /></font>
+                              </Label>
+                              <Label style="-fx-text-fill: #991b1b; -fx-line-spacing: 5px;" text="Floating tasks are never saved with a start time. Each Refresh recomputes the schedule, so you always get the best possible arrangement based on your current focus mode." wrapText="true">
+                                 <font><Font size="15.0" /></font>
+                              </Label>
+                           </children>
+                        </VBox>
+
                      </children>
                   </VBox>
                </children>
@@ -90,10 +104,10 @@
          </content>
       </ScrollPane>
 
-      <!-- Floating Back Button -->
-      <Button fx:id="btnBack" layoutX="30.0" layoutY="30.0" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="40.0" prefWidth="100.0" style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #cccccc; -fx-border-radius: 8;" text="&lt; Back">
+      <!-- Floating Back Button (Above everything else) -->
+      <Button fx:id="btnBack" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="45.0" prefWidth="120.0" style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 4); -fx-cursor: hand;" text="&lt; Back" textFill="#334155" AnchorPane.leftAnchor="40.0" AnchorPane.topAnchor="40.0">
          <font>
-            <Font name="System Bold" size="14.0" />
+            <Font name="System Bold" size="16.0" />
          </font>
       </Button>
       

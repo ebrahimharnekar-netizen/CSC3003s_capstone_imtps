@@ -33,6 +33,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
@@ -41,12 +42,18 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.application.Platform;
+import javafx.stage.Screen;
+import javafx.geometry.Rectangle2D;
 
 public class IMTPSController {
     @FXML private Label lblUsernameIMTPS;
     
     // Taskbar Navigation Element
     @FXML private TabPane mainTabPane;
+    @FXML private Tab tabView;
+    @FXML private Tab tabAdd;
+    @FXML private Tab tabCompleted;
+    @FXML private Tab tabEdit;
 
     // Add Task Tab Elements
     @FXML private TextField btnAddName;
@@ -100,20 +107,29 @@ public class IMTPSController {
         cmbSchedulerType.getItems().addAll("Priority Scheduler", "Deadline Scheduler", "Knapsack Scheduler");
         cmbSchedulerType.getSelectionModel().selectFirst();
 
+        // Bind stage explicitly to the actual monitor boundaries
         Platform.runLater(() -> {
             Stage stage = (Stage) lblUsernameIMTPS.getScene().getWindow();
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            stage.setX(bounds.getMinX());
+            stage.setY(bounds.getMinY());
+            stage.setWidth(bounds.getWidth());
+            stage.setHeight(bounds.getHeight());
             stage.setMaximized(true);
+            
+            // Force the initial data loads so the screens aren't blank upon launch
+            onClickRefreshTasks(null);
+            onClickRefreshCompletedTasks(null);
+            onClickSearchTasks(null);
         });
 
-        // Auto-refresh each tab's content when the user switches to it, instead of
-        // requiring a manual "Refresh"/"Search" click every time.
-        mainTabPane.getSelectionModel().selectedIndexProperty().addListener((obs, oldIndex, newIndex) -> {
-            int tab = newIndex.intValue();
-            if (tab == 1) {
+        // Auto-refresh each tab's content when the user switches to it using the specific Tab objects
+        mainTabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            if (newTab == tabView) {
                 onClickRefreshTasks(null);
-            } else if (tab == 2) {
+            } else if (newTab == tabCompleted) {
                 onClickRefreshCompletedTasks(null);
-            } else if (tab == 3) {
+            } else if (newTab == tabEdit) {
                 onClickSearchTasks(null);
             }
         });
@@ -204,8 +220,6 @@ public class IMTPSController {
         btnAddName.clear();
         txtStartTime.clear();
 
-        // Keep the View tasks list current so it doesn't need a manual refresh
-        // next time the user switches to it.
         onClickRefreshTasks(null);
     }
     // endregion
@@ -216,7 +230,7 @@ public class IMTPSController {
         editTaskContainer.getChildren().clear();
         lblEditStatus.setText("");
 
-        String searchQuery = txtSearchTask.getText().toLowerCase().trim();
+        String searchQuery = txtSearchTask.getText() != null ? txtSearchTask.getText().toLowerCase().trim() : "";
         String userID = Session.currentUserId; 
         String sql = "SELECT * FROM tasks WHERE user_id = ?";
 
@@ -254,53 +268,80 @@ public class IMTPSController {
 
                     boolean isPinned = (start != null && !start.toLocalTime().equals(START_OF_DAY));
 
-                    HBox editCard = new HBox(15);
+                    String labelStyle = "-fx-font-size: 16px;";
+
+                    // Main spaced-out Card Container
+                    HBox editCard = new HBox(25);
                     editCard.setAlignment(Pos.CENTER_LEFT);
-                    editCard.setStyle("-fx-padding: 10; -fx-border-color: gray; -fx-border-radius: 5;");
+                    editCard.setStyle("-fx-padding: 20; -fx-border-color: #cccccc; -fx-border-radius: 8; -fx-background-color: #f8f9fa; -fx-background-radius: 8;");
 
-                    VBox inputsBox = new VBox(10);
+                    VBox inputsBox = new VBox(15);
+                    HBox.setHgrow(inputsBox, Priority.ALWAYS);
 
-                    HBox row1 = new HBox(10);
+                    // Row 1: Name & Category
+                    HBox row1 = new HBox(15);
+                    row1.setAlignment(Pos.CENTER_LEFT);
+                    Label lblName = new Label("Name:"); lblName.setStyle(labelStyle);
                     TextField editName = new TextField(name);
-                    editName.setPrefWidth(200);
+                    editName.setPrefWidth(280);
+                    
+                    Label lblCat = new Label("Category:"); lblCat.setStyle(labelStyle);
                     ComboBox<String> editCat = new ComboBox<>();
                     editCat.getItems().addAll("1. Work", "2. Health", "3. Personal");
                     editCat.getSelectionModel().select(cat - 1);
-                    row1.getChildren().addAll(new Label("Name:"), editName, new Label("Cat:"), editCat);
+                    editCat.setPrefWidth(150);
+                    row1.getChildren().addAll(lblName, editName, lblCat, editCat);
 
-                    HBox row2 = new HBox(10);
+                    // Row 2: Importance & Duration
+                    HBox row2 = new HBox(15);
+                    row2.setAlignment(Pos.CENTER_LEFT);
+                    Label lblImp = new Label("Importance:"); lblImp.setStyle(labelStyle);
                     Spinner<Integer> editImp = new Spinner<>(1, 5, imp);
-                    editImp.setPrefWidth(70);
+                    editImp.setPrefWidth(90);
+                    
+                    Label lblDur = new Label("Duration (hrs):"); lblDur.setStyle(labelStyle);
                     Spinner<Double> editDur = new Spinner<>(0.0, 24.0, dur, 0.25);
-                    editDur.setPrefWidth(70);
-                    row2.getChildren().addAll(new Label("Imp:"), editImp, new Label("Dur (hrs):"), editDur);
+                    editDur.setPrefWidth(90);
+                    row2.getChildren().addAll(lblImp, editImp, lblDur, editDur);
 
-                    HBox row3 = new HBox(10);
+                    // Row 3: Start Date & Time
+                    HBox row3 = new HBox(15);
+                    row3.setAlignment(Pos.CENTER_LEFT);
+                    Label lblStart = new Label("Start Date:"); lblStart.setStyle(labelStyle);
                     DatePicker editStartDate = new DatePicker();
                     if (start != null) editStartDate.setValue(start.toLocalDate());
                     else if (startDate != null) editStartDate.setValue(startDate);
-                    editStartDate.setPrefWidth(120);
+                    editStartDate.setPrefWidth(150);
 
+                    Label lblTime = new Label("Time:"); lblTime.setStyle(labelStyle);
                     TextField editStartTime = new TextField();
                     if (isPinned && start != null) {
                         editStartTime.setText(start.toLocalTime().toString());
                     }
-                    editStartTime.setPromptText("HH:mm (for pinned)");
-                    editStartTime.setPrefWidth(120);
-                    row3.getChildren().addAll(new Label("Start Date:"), editStartDate, new Label("Time:"), editStartTime);
+                    editStartTime.setPromptText("HH:mm");
+                    editStartTime.setPrefWidth(100);
+                    row3.getChildren().addAll(lblStart, editStartDate, lblTime, editStartTime);
 
-                    HBox row4 = new HBox(10);
+                    // Row 4: Due Date
+                    HBox row4 = new HBox(15);
+                    row4.setAlignment(Pos.CENTER_LEFT);
+                    Label lblDue = new Label("Due Date:"); lblDue.setStyle(labelStyle);
                     DatePicker editDueDate = new DatePicker();
                     if (due != null) editDueDate.setValue(due.toLocalDate());
-                    editDueDate.setPrefWidth(120);
-                    row4.getChildren().addAll(new Label("Due Date:"), editDueDate);
+                    editDueDate.setPrefWidth(150);
+                    row4.getChildren().addAll(lblDue, editDueDate);
 
-                    Label taskTypeLabel = new Label("Type: " + (isPinned ? "📌 Pinned" : "📋 Floating"));
-                    taskTypeLabel.setStyle((isPinned ? "-fx-text-fill: #2196F3;" : "-fx-text-fill: #FF9800;") + " -fx-font-weight: bold;");
+                    // Task Type Label
+                    Label taskTypeLabel = new Label("Type: " + (isPinned ? "📌 Pinned Task" : "📋 Floating Task"));
+                    taskTypeLabel.setStyle((isPinned ? "-fx-text-fill: #2196F3;" : "-fx-text-fill: #FF9800;") + " -fx-font-weight: bold; -fx-font-size: 16px;");
+                    
                     inputsBox.getChildren().addAll(row1, row2, row3, row4, taskTypeLabel);
 
+                    // Standard Save Button
                     Button btnSave = new Button("Save Changes");
-                    btnSave.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
+                    btnSave.setPrefHeight(40);
+                    btnSave.setPrefWidth(130);
+                    btnSave.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand;");
 
                     btnSave.setOnAction(e -> {
                         try {
@@ -326,7 +367,7 @@ public class IMTPSController {
                                     if (!pt.equals(START_OF_DAY)) {
                                         if (DatabaseHelper.hasTimeOverlap(Session.currentUserId, newStart, newDur, id)) {
                                             lblEditStatus.setText("Error: This time overlaps with an existing task!");
-                                            lblEditStatus.setStyle("-fx-text-fill: red;");
+                                            lblEditStatus.setStyle("-fx-text-fill: #ef4444;");
                                             return;
                                         }
                                     } else {
@@ -348,10 +389,10 @@ public class IMTPSController {
                             DatabaseHelper.updateTaskStartDate(id, newStartDate);
 
                             lblEditStatus.setText("Task Updated Successfully!");
-                            lblEditStatus.setStyle("-fx-text-fill: green;");
+                            lblEditStatus.setStyle("-fx-text-fill: #10b981;");
                         } catch (Exception ex) {
                             lblEditStatus.setText("Error: " + ex.getMessage());
-                            lblEditStatus.setStyle("-fx-text-fill: red;");
+                            lblEditStatus.setStyle("-fx-text-fill: #ef4444;");
                         }
                     });
 
@@ -366,10 +407,10 @@ public class IMTPSController {
     // endregion
 
     // region Navigation
-    @FXML public void onClickBtnNavAddTask(ActionEvent event) { mainTabPane.getSelectionModel().select(0); }
-    @FXML public void onClickBtnNavViewTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(1); }
-    @FXML public void onClickBtnNavCompletedTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(2); }
-    @FXML public void onClickBtnNavEditTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(3); }
+    @FXML public void onClickBtnNavAddTask(ActionEvent event) { mainTabPane.getSelectionModel().select(tabAdd); }
+    @FXML public void onClickBtnNavViewTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(tabView); }
+    @FXML public void onClickBtnNavCompletedTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(tabCompleted); }
+    @FXML public void onClickBtnNavEditTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(tabEdit); }
 
     public void onClickbtnPref(ActionEvent event) { switchScene(event, "Questions.fxml"); }
     public void onClickbtnSignOut(ActionEvent event) { switchScene(event, "login.fxml"); }
@@ -391,24 +432,29 @@ public class IMTPSController {
 
     // region Refresh Tasks logic
 
-    // Ticking a task off marks it completed (it moves to the Completed tasks tab)
-    // instead of being deleted outright, so it can still be viewed/restored later.
     private void markCheckedTasksCompleted() {
-        for (Node node : taskContainer.getChildren()) {
-            if (node instanceof HBox) {
-                HBox card = (HBox) node;
-                CheckBox cb = (CheckBox) card.getChildren().get(0);
-                if (cb.isSelected()) {
-                    String taskId = (String) cb.getUserData(); 
-                    DatabaseHelper.markTaskCompleted(taskId);
+        for (Node hourNode : taskContainer.getChildren()) {
+            if (hourNode instanceof HBox) {
+                HBox hourRow = (HBox) hourNode;
+                if (hourRow.getChildren().size() > 1 && hourRow.getChildren().get(1) instanceof VBox) {
+                    VBox tasksBox = (VBox) hourRow.getChildren().get(1);
+                    for (Node taskNode : tasksBox.getChildren()) {
+                        if (taskNode instanceof HBox) {
+                            HBox card = (HBox) taskNode;
+                            if (card.getChildren().get(0) instanceof CheckBox) {
+                                CheckBox cb = (CheckBox) card.getChildren().get(0);
+                                if (cb.isSelected()) {
+                                    String taskId = (String) cb.getUserData(); 
+                                    DatabaseHelper.markTaskCompleted(taskId);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    //This method fetches all active (not-yet-completed) tasks from the database for the current user. 
-    // It retrieves task details such as ID, name, category, importance, duration, due date, start time, and start date. 
-    // The method constructs Task objects for each record and returns a list of all tasks.
     private List<Task> fetchAllTasksFromDB() {
         List<Task> allTasks = new ArrayList<>();
         String sql = "SELECT * FROM tasks WHERE user_id = ? AND (completed = 0 OR completed IS NULL) ORDER BY task_id";
@@ -452,8 +498,6 @@ public class IMTPSController {
         return allTasks;
     }
 
-    //This method splits the list of all tasks into two separate lists: pinned tasks and floating tasks. 
-    // It also keeps track of the IDs of the originally pinned tasks in a set for later reference.
     private void splitTasks(List<Task> allTasks, List<Task> pinnedTasks, List<Task> floatingTasks, Set<String> originallyPinnedIds) {
         for (Task t : allTasks) {
             if (t.isPinned()) {
@@ -465,7 +509,6 @@ public class IMTPSController {
         }
     }
 
-    //This method creates clones of the floating tasks to ensure that the original task objects remain unchanged during scheduling.
     private List<Task> cloneFloatingTasks(List<Task> floatingTasks) { 
         List<Task> floatingClones = new ArrayList<>();
         for (Task t : floatingTasks) {
@@ -477,23 +520,18 @@ public class IMTPSController {
         return floatingClones;
     }
 
-    //This method constructs a Questionnaire object based on the user's selected preferences in the UI.
     private Questionnaire buildPreferences() {
-
-     // 1. Get the current mode from the Radio Buttons
          int currentMode = Questionnaire.PersonalMode;
          if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
         else if (rdbtnHealth.isSelected()) currentMode = Questionnaire.HealthMode;
         else if (rdbtnPersonal.isSelected()) currentMode = Questionnaire.PersonalMode;
 
-    // 2. Set default values
         int peakProdTime = Questionnaire.MorningPeriod;
         boolean prefQuickFirst = true;
         int dailyProdHours = 8;
         String startTime = "07:00";
         String endTime = "22:00";
 
-    // 3. Fetch the actual preferences using your DatabaseHelper
         DatabaseHelper.Preferences dbPrefs = DatabaseHelper.getPreferences(Session.currentUserId);
     
      if (dbPrefs != null) {
@@ -504,14 +542,12 @@ public class IMTPSController {
             if (dbPrefs.endTime != null) endTime = dbPrefs.endTime;
     }
 
-    // 4. Construct Questionnaire and set the dynamic window
         Questionnaire prefs = new Questionnaire(currentMode, peakProdTime, prefQuickFirst, dailyProdHours);
         prefs.setWindow(startTime, endTime);
     
         return prefs;
     }
 
-    //This method retrieves the selected scheduling algorithm based on the user's choice in the UI.
     private SchedulingAlg getSelectedScheduler() {
         String selection = cmbSchedulerType.getValue();
         if ("Deadline Scheduler".equals(selection)) {
@@ -519,13 +555,9 @@ public class IMTPSController {
         } else if ("Knapsack Scheduler".equals(selection)) {
             return new KnapsackScheduler();
         }
-        // Default to Priority Scheduler
         return new Scheduler();
     }
 
-    //This method filters the list of tasks to include only those that are relevant for the specified view date. 
-    // It checks each task's start and end dates (or times) to determine if it falls within the range of the view date. 
-    // The method also sorts the resulting list of tasks based on their start times, ensuring that tasks with earlier start times appear first in the list.
     private List<Task> filterTasksForDate(List<Task> displayTasks, LocalDate viewDate, Set<String> originallyPinnedIds) {
         List<Task> tasksForToday = new ArrayList<>();
 
@@ -565,82 +597,146 @@ public class IMTPSController {
         return tasksForToday;
     }
 
-    //This method is responsible for rendering the tasks in the UI. It creates a visual representation of each task, 
-    // including its name, category, time information, and importance. The tasks are displayed in a VBox container, 
-    // with each task represented as an HBox containing a checkbox and a VBox for text details.
+
+    // --------------------------------------------------------------------------------------
+    // CALENDAR TIMELINE RENDERING
+    // --------------------------------------------------------------------------------------
 
     private void renderTasks(List<Task> tasksForToday, Set<String> originallyPinnedIds) {
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");
 
-        for (Task t : tasksForToday) {
-            HBox taskCard = new HBox(15);
-            taskCard.setAlignment(Pos.CENTER_LEFT);
-
-            String baseStyle = "-fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5; -fx-border-width: 0 0 0 6; ";
-            String catString;
-            if (t.category == 1) {
-                catString = "Work";
-                taskCard.setStyle(baseStyle + "-fx-background-color: #E3F2FD; -fx-border-color: #2196F3;");
-            } else if (t.category == 2) {
-                catString = "Health";
-                taskCard.setStyle(baseStyle + "-fx-background-color: #E8F5E9; -fx-border-color: #4CAF50;");
-            } else {
-                catString = "Personal";
-                taskCard.setStyle(baseStyle + "-fx-background-color: #FFF3E0; -fx-border-color: #FF9800;");
-            }
-
-            CheckBox taskCheckbox = new CheckBox();
-            taskCheckbox.setUserData(t.taskId);
-
-            String timeString;
-            String taskType;
-            boolean isPinned = originallyPinnedIds.contains(t.taskId);
-
-            if (isPinned) {
-                LocalDateTime endTime = t.startTime.plusMinutes((long)(t.duration * 60));
-                timeString = t.startTime.format(timeFormatter) + " - " + endTime.format(timeFormatter);
-                taskType = "📌 Pinned";
-            } else if (t.startTime != null) {
-                LocalDateTime endTime = t.startTime.plusMinutes((long)(t.duration * 60));
-                timeString = t.startTime.format(timeFormatter) + " - " + endTime.format(timeFormatter);
-                taskType = "📋 Floating (Scheduled)";
-            } else if (t.originalStartDate != null && t.originalDueDate != null) {
-                timeString = "Starts: " + t.originalStartDate.format(dateFormatter) + " | Due: " + t.originalDueDate.format(dateFormatter);
-                taskType = "📋 Floating";
-            } else if (t.startDate != null && t.dueDate != null) {
-                timeString = "Starts: " + t.startDate.format(dateFormatter) + " | Due: " + t.dueDate.format(dateFormatter);
-                taskType = "📋 Floating";
-            } else if (t.startDate != null) {
-                timeString = "Starts: " + t.startDate.format(dateFormatter);
-                taskType = "📋 Floating";
-            } else if (t.dueDate != null) {
-                timeString = "Due: " + t.dueDate.format(dateFormatter);
-                taskType = "📋 Floating";
-            } else {
-                timeString = "No time set";
-                taskType = "📋 Floating";
-            }
-
-            VBox textBox = new VBox(5);
-            Label nameLabel = new Label(t.taskName);
-            nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
-
-            String detailsText = String.format("%s  |  %s  |  %s  |  Importance: %d",
-                catString, timeString, taskType, t.importance);
-            Label detailsLabel = new Label(detailsText);
-            detailsLabel.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
-
-            textBox.getChildren().addAll(nameLabel, detailsLabel);
-            taskCard.getChildren().addAll(taskCheckbox, textBox);
-            taskContainer.getChildren().add(taskCard);
+        Questionnaire prefs = buildPreferences();
+        int startDayHour = prefs.getDayStartTime().getHour();
+        int endDayHour = prefs.getDayEndTime().getHour();
+        int loopEnd = endDayHour;
+        if (endDayHour < startDayHour) {
+            loopEnd += 24; 
         }
 
-    
+        List<Task> timedTasks = new ArrayList<>();
+        List<Task> allDayTasks = new ArrayList<>();
+
+        for (Task t : tasksForToday) {
+            if (t.startTime != null) {
+                timedTasks.add(t);
+            } else {
+                allDayTasks.add(t);
+            }
+        }
+
+        taskContainer.getChildren().clear();
+
+        // Render "All Day / Unscheduled" section
+        if (!allDayTasks.isEmpty()) {
+            HBox allDayRow = createTimelineRow("All Day");
+            VBox container = (VBox) allDayRow.getChildren().get(1);
+            for (Task t : allDayTasks) {
+                container.getChildren().add(createTaskCard(t, originallyPinnedIds, dateFormatter));
+            }
+            taskContainer.getChildren().add(allDayRow);
+        }
+
+        // Render full hourly timeline
+        for (int h = startDayHour; h <= loopEnd; h++) {
+            int displayHour = h % 24;
+            LocalTime hourTime = LocalTime.of(displayHour, 0);
+            HBox hourRow = createTimelineRow(hourTime.format(DateTimeFormatter.ofPattern("hh:00 a")));
+            VBox container = (VBox) hourRow.getChildren().get(1);
+            hourRow.setMinHeight(80);
+
+            for (Task t : timedTasks) {
+                LocalTime tStart = t.startTime.toLocalTime();
+                int taskStartH = tStart.getHour();
+                int durationMins = (int)(t.duration * 60);
+                int taskEndH = tStart.plusMinutes(durationMins > 0 ? durationMins - 1 : 0).getHour();
+
+                boolean overlapsHour = false;
+                if (taskStartH <= taskEndH) {
+                    overlapsHour = (displayHour >= taskStartH && displayHour <= taskEndH);
+                } else {
+                    overlapsHour = (displayHour >= taskStartH || displayHour <= taskEndH);
+                }
+
+                if (overlapsHour) {
+                    HBox card = createTaskCard(t, originallyPinnedIds, dateFormatter);
+                    container.getChildren().add(card);
+                }
+            }
+            taskContainer.getChildren().add(hourRow);
+        }
     }
-    //refresh tasks button click handler, utilizes the above methods to delete checked tasks, 
-    // fetch all tasks, split them into pinned and floating, schedule the floating tasks, filter for the selected date, 
-    // and render them in the UI.
+
+    private HBox createTimelineRow(String timeString) {
+        HBox row = new HBox(20);
+        row.setStyle("-fx-padding: 10 0 10 0; -fx-border-color: #d3d3d3; -fx-border-width: 0 0 1 0;");
+        
+        Label timeLabel = new Label(timeString);
+        timeLabel.setPrefWidth(100);
+        timeLabel.setMinWidth(100);
+        timeLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #333333;");
+        timeLabel.setAlignment(Pos.TOP_RIGHT); 
+
+        VBox tasksBox = new VBox(10);
+        HBox.setHgrow(tasksBox, Priority.ALWAYS);
+
+        row.getChildren().addAll(timeLabel, tasksBox);
+        return row;
+    }
+
+    private HBox createTaskCard(Task t, Set<String> originallyPinnedIds, DateTimeFormatter dateFormatter) {
+        HBox taskCard = new HBox(15);
+        taskCard.setAlignment(Pos.TOP_LEFT); 
+
+        String baseStyle = "-fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5; -fx-border-width: 0 0 0 6; ";
+        String catString;
+        if (t.category == 1) {
+            catString = "Work";
+            taskCard.setStyle(baseStyle + "-fx-background-color: #E3F2FD; -fx-border-color: #2196F3;");
+        } else if (t.category == 2) {
+            catString = "Health";
+            taskCard.setStyle(baseStyle + "-fx-background-color: #E8F5E9; -fx-border-color: #4CAF50;");
+        } else {
+            catString = "Personal";
+            taskCard.setStyle(baseStyle + "-fx-background-color: #FFF3E0; -fx-border-color: #FF9800;");
+        }
+
+        CheckBox taskCheckbox = new CheckBox();
+        taskCheckbox.setUserData(t.taskId);
+        taskCheckbox.setTranslateY(3); 
+
+        String taskType = originallyPinnedIds.contains(t.taskId) ? "📌 Pinned" : (t.startTime != null ? "📋 Floating (Scheduled)" : "📋 Floating");
+
+        VBox textBox = new VBox(5);
+        Label nameLabel = new Label(t.taskName);
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
+
+        String detailsText = String.format("%s  |  %s  |  Importance: %d", catString, taskType, t.importance);
+        
+        // Exclude the time strictly for scheduled tasks, retaining date info for floating/unscheduled ones
+        if (t.startTime == null) {
+            if (t.originalStartDate != null && t.originalDueDate != null) {
+                detailsText += " | Starts: " + t.originalStartDate.format(dateFormatter) + " - Due: " + t.originalDueDate.format(dateFormatter);
+            } else if (t.startDate != null && t.dueDate != null) {
+                detailsText += " | Starts: " + t.startDate.format(dateFormatter) + " - Due: " + t.dueDate.format(dateFormatter);
+            } else if (t.startDate != null) {
+                detailsText += " | Starts: " + t.startDate.format(dateFormatter);
+            } else if (t.dueDate != null) {
+                detailsText += " | Due: " + t.dueDate.format(dateFormatter);
+            } else {
+                detailsText += " | No time set";
+            }
+        }
+
+        Label detailsLabel = new Label(detailsText);
+        detailsLabel.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
+        detailsLabel.setWrapText(true);
+
+        textBox.getChildren().addAll(nameLabel, detailsLabel);
+        taskCard.getChildren().addAll(taskCheckbox, textBox);
+
+        return taskCard;
+    }
+    
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
         //First mark any tasks that have been checked as completed, then clear the task container to prepare for re-rendering.

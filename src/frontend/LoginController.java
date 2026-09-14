@@ -32,10 +32,21 @@ public class LoginController {
             txtPasswordVisibleLogin.textProperty().bindBidirectional(txtPasswordLogin.textProperty()); 
         }
 
-        Platform.runLater(() -> {
-            Stage stage = (Stage) txtUsernameLogin.getScene().getWindow();
-            stage.setMaximized(true);
-        });
+    Platform.runLater(() -> {
+        Stage stage = (Stage) txtUsernameLogin.getScene().getWindow();
+        
+        // Fetch the dimensions of the user's actual monitor
+        javafx.geometry.Rectangle2D bounds = javafx.stage.Screen.getPrimary().getVisualBounds();
+        
+        // Bind the window to the monitor's edges
+        stage.setX(bounds.getMinX());
+        stage.setY(bounds.getMinY());
+        stage.setWidth(bounds.getWidth());
+        stage.setHeight(bounds.getHeight());
+        
+        // Force the OS to maximize the window
+        stage.setMaximized(true);
+    });
     }
 
     @FXML
