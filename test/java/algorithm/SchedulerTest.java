@@ -82,7 +82,7 @@ public class SchedulerTest {
         
         // We create two 1 hour floating tasks
         Task highPriorityTask = new Task("2", "Important Task", 1, 5, 1.0, LocalDateTime.now().plusDays(1), null);
-        Task lowPriorityTask = new Task("3", "Chill Task", 1, 1, 1.0, today7AM.plusHours(15), null);
+        Task lowPriorityTask = new Task("3", "Chill Task", 1, 1, 1.0, LocalDateTime.now().plusDays(7), null);
 
         List<Task> rawList = new ArrayList<>();
         rawList.add(giantPinnedTask);
@@ -98,7 +98,8 @@ public class SchedulerTest {
         assertEquals(today7AM.plusHours(14), highPriorityTask.startTime, "Task should start exactly at 9 PM");
 
         // The low priority task should be completely skipped because the 15-hour day is full
-        assertNull(lowPriorityTask.startTime, "Lower priority task should remain unscheduled because the day ended");
+        assertNotNull(lowPriorityTask.startTime, "Lower priority task should successfully float to the next day");
+        assertEquals(java.time.LocalDate.now().plusDays(1), lowPriorityTask.startTime.toLocalDate(), "Lower priority task must be pushed to tomorrow because today is exhausted");
     }
 
     @Test  // testing to see if the alternate scheduling algorithm correctly ignores the importance and schedules tasks based on the due date
@@ -259,9 +260,9 @@ public class SchedulerTest {
         
         // DeadlineScheduler sorts by earliest deadline first.
         // work1 is due today, so it gets scheduled first.
-        LocalDateTime dueToday = LocalDateTime.now().plusHours(5);
+        LocalDateTime dueToday = LocalDate.now().atTime(23, 59);
         // work2 is due tomorrow, so it gets scheduled second, and has permission to slide to tomorrow.
-        LocalDateTime dueTomorrow = LocalDateTime.now().plusDays(1);
+        LocalDateTime dueTomorrow = LocalDate.now().plusDays(1).atTime(23, 59);
         
         Task work1 = new Task("1", "Urgent Work", 1, 5, 2.0, dueToday, null);
         Task work2 = new Task("2", "Less Urgent Work", 1, 3, 2.0, dueTomorrow, null);
@@ -277,6 +278,36 @@ public class SchedulerTest {
         
         assertEquals(today, work1.startTime.toLocalDate(), "Most urgent work task should schedule today");
         assertEquals(today.plusDays(1), work2.startTime.toLocalDate(), "Second work task must be pushed to tomorrow due to the burnout limit");
+    }
+
+    @Test // testing to ensure tasks with no due date float to the next available day without infinite cloning
+    public void testNoDueDateTaskFloatsToNextDay() {
+        // Set a 10-hour day (08:00 to 18:00)
+        Questionnaire dummyPrefs = new Questionnaire(1, 1, false, 10);
+        dummyPrefs.setWindow("08:00", "18:00");
+        
+        // Create a pinned task that blocks ALL 10 hours of today
+        LocalDateTime today8AM = LocalDate.now().atTime(8, 0);
+        Task giantBlocker = new Task("1", "Full Day Meeting", 1, 5, 10.0, null, today8AM);
+        
+        // Create a 2-hour task with NO due date
+        Task floatingTask = new Task("2", "Chill Task", 1, 3, 2.0, null, null);
+        
+        List<Task> rawList = new ArrayList<>();
+        rawList.add(giantBlocker);
+        rawList.add(floatingTask);
+        
+        Scheduler scheduler = new Scheduler();
+        List<Task> resultList = scheduler.genSchedule(rawList, dummyPrefs);
+        
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        
+        // 1. Prove it successfully floated to tomorrow instead of failing
+        assertNotNull(resultList.get(0).startTime, "Task should have successfully scheduled");
+        assertEquals(tomorrow, resultList.get(0).startTime.toLocalDate(), "Task should float to tomorrow since today is fully blocked");
+        
+        // 2. Prove the new 'break' condition works (it didn't clone across the 1-year runway)
+        assertEquals(1, resultList.size(), "Task should immediately stop searching once placed, rather than infinitely cloning");
     }
 
 }
