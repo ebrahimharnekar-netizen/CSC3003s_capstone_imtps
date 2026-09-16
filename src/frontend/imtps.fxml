@@ -55,7 +55,7 @@
       </AnchorPane>
 
             <!-- Navigation Bar -->
-      <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="20.0" style="-fx-background-color: #0f172a; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5); -fx-padding: 0 40 0 40;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="130.0">
+      <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="20.0" style="-fx-background-color: navy; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5); -fx-padding: 0 40 0 40;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="130.0">
          <children>
             <Button mnemonicParsing="false" onAction="#onClickBtnNavViewTasks" style="-fx-background-color: transparent; -fx-cursor: hand;" text="View tasks" textFill="WHITE">
                <font>
@@ -67,23 +67,20 @@
                   <Font name="System Bold" size="16.0" />
                </font>
             </Button>
-            <Button mnemonicParsing="false" onAction="#onClickBtnNavAddTask" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Add task" textFill="WHITE">
+            <Button mnemonicParsing="false" onAction="#onClickBtnNavEditTasks" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Update a task" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
             </Button>
-            <Button mnemonicParsing="false" onAction="#onClickBtnNavEditTasks" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Edit tasks" textFill="WHITE">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Button>
-            <Pane prefHeight="88.0" prefWidth="430.0" HBox.hgrow="ALWAYS" /> <!-- Spacer -->
-            <Button mnemonicParsing="false" onAction="#onClickbtnPref" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Update Preferences" textFill="#94a3b8">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Button>
-            <Button mnemonicParsing="false" onAction="#onClickbtnHelp" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Help" textFill="#94a3b8">
+            <Pane prefHeight="88.0" prefWidth="430.0" HBox.hgrow="ALWAYS">
+               <children> <!-- Spacer -->
+                  <Button layoutX="524.0" layoutY="10.0" mnemonicParsing="false" onAction="#onClickbtnPref" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Update Preferences" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="16.0" />
+                     </font>
+                  </Button>
+               </children></Pane>
+            <Button mnemonicParsing="false" onAction="#onClickbtnHelp" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Help" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
@@ -126,21 +123,26 @@
                                           <RadioButton fx:id="rdbtnHealth" mnemonicParsing="false" text="Health" textFill="#334155"><font><Font size="16.0" /></font></RadioButton>
                                        </children>
                                     </VBox>
-                                    <Pane VBox.vgrow="ALWAYS" />
                                     <Button mnemonicParsing="false" onAction="#onClickRefreshTasks" prefHeight="50.0" prefWidth="300.0" style="-fx-background-color: #10b981; -fx-background-radius: 8; -fx-cursor: hand;" text="Refresh Timeline" textFill="WHITE">
                                        <font><Font name="System Bold" size="16.0" /></font>
                                     </Button>
+                                    <Pane VBox.vgrow="ALWAYS" />
                                  </children>
                               </VBox>
                               
                               <!-- Timeline ScrollPane -->
-                              <ScrollPane fitToWidth="true" style="-fx-background: white; -fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 20;" HBox.hgrow="ALWAYS">
+                              <ScrollPane fitToWidth="true" prefHeight="553.0" prefWidth="795.0" style="-fx-background: white; -fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 20;" HBox.hgrow="ALWAYS">
                                  <content>
                                     <VBox fx:id="taskContainer" spacing="10.0" style="-fx-padding: 10;" />
                                  </content>
                               </ScrollPane>
                            </children>
                         </HBox>
+                        <Button layoutX="1098.0" layoutY="-3.0" mnemonicParsing="false" onAction="#onClickBtnNavAddTask" prefHeight="35.0" prefWidth="170.0" style="-fx-background-color: none; -fx-cursor: hand;" text="Add task +" textFill="RED">
+                           <font>
+                              <Font name="System Bold" size="16.0" />
+                           </font>
+                        </Button>
                      </children>
                   </AnchorPane>
             </content>

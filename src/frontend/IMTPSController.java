@@ -37,7 +37,9 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -84,6 +86,17 @@ public class IMTPSController {
 
     private static final LocalTime START_OF_DAY = LocalTime.of(0, 0);
 
+    // Helper class used to manage overlapping tasks in the timeline
+    private static class TaskPlacement {
+        double startY, endY;
+        int col;
+        TaskPlacement(double startY, double endY, int col) {
+            this.startY = startY;
+            this.endY = endY;
+            this.col = col;
+        }
+    }
+
     @FXML
     public void initialize() {
         lblUsernameIMTPS.setText("Welcome, " + Session.currentUsername + "!");
@@ -103,7 +116,6 @@ public class IMTPSController {
 
         dpViewDate.setValue(LocalDate.now());
 
-        // Initialize Scheduler ComboBox
         cmbSchedulerType.getItems().addAll("Priority Scheduler", "Deadline Scheduler", "Knapsack Scheduler");
         cmbSchedulerType.getSelectionModel().selectFirst();
 
@@ -225,6 +237,9 @@ public class IMTPSController {
     // endregion
 
     // region Edit Task Logic
+
+    // This method handles the search functionality for tasks in the Edit Tasks tab. It retrieves tasks from the database based on 
+    // the user's search query and displays them in a structured format, allowing for editing.
     @FXML
     public void onClickSearchTasks(ActionEvent event) {
         editTaskContainer.getChildren().clear();
@@ -432,16 +447,33 @@ public class IMTPSController {
 
     // region Refresh Tasks logic
 
+
+    // This method iterates through the taskContainer and checks for any selected checkboxes. 
+    // If a checkbox is selected, it retrieves the associated task ID and marks that task as completed in the database.
     private void markCheckedTasksCompleted() {
-        for (Node hourNode : taskContainer.getChildren()) {
-            if (hourNode instanceof HBox) {
-                HBox hourRow = (HBox) hourNode;
-                if (hourRow.getChildren().size() > 1 && hourRow.getChildren().get(1) instanceof VBox) {
-                    VBox tasksBox = (VBox) hourRow.getChildren().get(1);
+        for (Node sectionNode : taskContainer.getChildren()) {
+            if (sectionNode instanceof AnchorPane) { // The Timed Tasks Grid
+                AnchorPane timeline = (AnchorPane) sectionNode;
+                for (Node timelineNode : timeline.getChildren()) {
+                    if (timelineNode instanceof HBox) { 
+                        HBox card = (HBox) timelineNode;
+                        if (card.getChildren().size() > 0 && card.getChildren().get(0) instanceof CheckBox) {
+                            CheckBox cb = (CheckBox) card.getChildren().get(0);
+                            if (cb.isSelected()) {
+                                String taskId = (String) cb.getUserData(); 
+                                DatabaseHelper.markTaskCompleted(taskId);
+                            }
+                        }
+                    }
+                }
+            } else if (sectionNode instanceof HBox) { // The "All Day" Row
+                HBox allDayRow = (HBox) sectionNode;
+                if (allDayRow.getChildren().size() > 1 && allDayRow.getChildren().get(1) instanceof VBox) {
+                    VBox tasksBox = (VBox) allDayRow.getChildren().get(1);
                     for (Node taskNode : tasksBox.getChildren()) {
                         if (taskNode instanceof HBox) {
                             HBox card = (HBox) taskNode;
-                            if (card.getChildren().get(0) instanceof CheckBox) {
+                            if (card.getChildren().size() > 0 && card.getChildren().get(0) instanceof CheckBox) {
                                 CheckBox cb = (CheckBox) card.getChildren().get(0);
                                 if (cb.isSelected()) {
                                     String taskId = (String) cb.getUserData(); 
@@ -455,6 +487,7 @@ public class IMTPSController {
         }
     }
 
+    // This method fetches all tasks for the current user from the database, filtering out completed tasks.
     private List<Task> fetchAllTasksFromDB() {
         List<Task> allTasks = new ArrayList<>();
         String sql = "SELECT * FROM tasks WHERE user_id = ? AND (completed = 0 OR completed IS NULL) ORDER BY task_id";
@@ -498,6 +531,7 @@ public class IMTPSController {
         return allTasks;
     }
 
+    // This method splits the list of all tasks into two separate lists: pinned tasks and floating tasks.
     private void splitTasks(List<Task> allTasks, List<Task> pinnedTasks, List<Task> floatingTasks, Set<String> originallyPinnedIds) {
         for (Task t : allTasks) {
             if (t.isPinned()) {
@@ -508,7 +542,8 @@ public class IMTPSController {
             }
         }
     }
-
+    // This method creates a deep copy of the list of floating tasks to ensure that the original list 
+    // remains unchanged during scheduling.
     private List<Task> cloneFloatingTasks(List<Task> floatingTasks) { 
         List<Task> floatingClones = new ArrayList<>();
         for (Task t : floatingTasks) {
@@ -520,6 +555,7 @@ public class IMTPSController {
         return floatingClones;
     }
 
+    // This method builds a Questionnaire object based on the user's preferences stored in the database.
     private Questionnaire buildPreferences() {
          int currentMode = Questionnaire.PersonalMode;
          if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
@@ -548,6 +584,7 @@ public class IMTPSController {
         return prefs;
     }
 
+    // This method returns the selected scheduling algorithm based on the user's choice.
     private SchedulingAlg getSelectedScheduler() {
         String selection = cmbSchedulerType.getValue();
         if ("Deadline Scheduler".equals(selection)) {
@@ -558,6 +595,7 @@ public class IMTPSController {
         return new Scheduler();
     }
 
+    // This method filters the list of tasks to include only those that are relevant for the specified view date.
     private List<Task> filterTasksForDate(List<Task> displayTasks, LocalDate viewDate, Set<String> originallyPinnedIds) {
         List<Task> tasksForToday = new ArrayList<>();
 
@@ -597,97 +635,15 @@ public class IMTPSController {
         return tasksForToday;
     }
 
-
-    // --------------------------------------------------------------------------------------
     // CALENDAR TIMELINE RENDERING
-    // --------------------------------------------------------------------------------------
 
-    private void renderTasks(List<Task> tasksForToday, Set<String> originallyPinnedIds) {
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");
-
-        Questionnaire prefs = buildPreferences();
-        int startDayHour = prefs.getDayStartTime().getHour();
-        int endDayHour = prefs.getDayEndTime().getHour();
-        int loopEnd = endDayHour;
-        if (endDayHour < startDayHour) {
-            loopEnd += 24; 
-        }
-
-        List<Task> timedTasks = new ArrayList<>();
-        List<Task> allDayTasks = new ArrayList<>();
-
-        for (Task t : tasksForToday) {
-            if (t.startTime != null) {
-                timedTasks.add(t);
-            } else {
-                allDayTasks.add(t);
-            }
-        }
-
-        taskContainer.getChildren().clear();
-
-        // Render "All Day / Unscheduled" section
-        if (!allDayTasks.isEmpty()) {
-            HBox allDayRow = createTimelineRow("All Day");
-            VBox container = (VBox) allDayRow.getChildren().get(1);
-            for (Task t : allDayTasks) {
-                container.getChildren().add(createTaskCard(t, originallyPinnedIds, dateFormatter));
-            }
-            taskContainer.getChildren().add(allDayRow);
-        }
-
-        // Render full hourly timeline
-        for (int h = startDayHour; h <= loopEnd; h++) {
-            int displayHour = h % 24;
-            LocalTime hourTime = LocalTime.of(displayHour, 0);
-            HBox hourRow = createTimelineRow(hourTime.format(DateTimeFormatter.ofPattern("hh:00 a")));
-            VBox container = (VBox) hourRow.getChildren().get(1);
-            hourRow.setMinHeight(80);
-
-            for (Task t : timedTasks) {
-                LocalTime tStart = t.startTime.toLocalTime();
-                int taskStartH = tStart.getHour();
-                int durationMins = (int)(t.duration * 60);
-                int taskEndH = tStart.plusMinutes(durationMins > 0 ? durationMins - 1 : 0).getHour();
-
-                boolean overlapsHour = false;
-                if (taskStartH <= taskEndH) {
-                    overlapsHour = (displayHour >= taskStartH && displayHour <= taskEndH);
-                } else {
-                    overlapsHour = (displayHour >= taskStartH || displayHour <= taskEndH);
-                }
-
-                if (overlapsHour) {
-                    HBox card = createTaskCard(t, originallyPinnedIds, dateFormatter);
-                    container.getChildren().add(card);
-                }
-            }
-            taskContainer.getChildren().add(hourRow);
-        }
-    }
-
-    private HBox createTimelineRow(String timeString) {
-        HBox row = new HBox(20);
-        row.setStyle("-fx-padding: 10 0 10 0; -fx-border-color: #d3d3d3; -fx-border-width: 0 0 1 0;");
-        
-        Label timeLabel = new Label(timeString);
-        timeLabel.setPrefWidth(100);
-        timeLabel.setMinWidth(100);
-        timeLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #333333;");
-        timeLabel.setAlignment(Pos.TOP_RIGHT); 
-
-        VBox tasksBox = new VBox(10);
-        HBox.setHgrow(tasksBox, Priority.ALWAYS);
-
-        row.getChildren().addAll(timeLabel, tasksBox);
-        return row;
-    }
-
-    private HBox createTaskCard(Task t, Set<String> originallyPinnedIds, DateTimeFormatter dateFormatter) {
+    // This method creates a visual representation of a task as an HBox card to put into the vbox container, including its details and styling 
+    // based on its category and type.
+    private HBox createTaskCard(Task t, Set<String> originallyPinnedIds, DateTimeFormatter dateFormatter, double setHeight) {
         HBox taskCard = new HBox(15);
         taskCard.setAlignment(Pos.TOP_LEFT); 
 
-        String baseStyle = "-fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5; -fx-border-width: 0 0 0 6; ";
+        String baseStyle = "-fx-padding: 10; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-width: 0 0 0 6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2); ";
         String catString;
         if (t.category == 1) {
             catString = "Work";
@@ -709,21 +665,19 @@ public class IMTPSController {
         VBox textBox = new VBox(5);
         Label nameLabel = new Label(t.taskName);
         nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
+        nameLabel.setWrapText(true);
 
         String detailsText = String.format("%s  |  %s  |  Importance: %d", catString, taskType, t.importance);
         
-        // Exclude the time strictly for scheduled tasks, retaining date info for floating/unscheduled ones
         if (t.startTime == null) {
             if (t.originalStartDate != null && t.originalDueDate != null) {
-                detailsText += " | Starts: " + t.originalStartDate.format(dateFormatter) + " - Due: " + t.originalDueDate.format(dateFormatter);
+                detailsText += "\nStarts: " + t.originalStartDate.format(dateFormatter) + " - Due: " + t.originalDueDate.format(dateFormatter);
             } else if (t.startDate != null && t.dueDate != null) {
-                detailsText += " | Starts: " + t.startDate.format(dateFormatter) + " - Due: " + t.dueDate.format(dateFormatter);
+                detailsText += "\nStarts: " + t.startDate.format(dateFormatter) + " - Due: " + t.dueDate.format(dateFormatter);
             } else if (t.startDate != null) {
-                detailsText += " | Starts: " + t.startDate.format(dateFormatter);
+                detailsText += "\nStarts: " + t.startDate.format(dateFormatter);
             } else if (t.dueDate != null) {
-                detailsText += " | Due: " + t.dueDate.format(dateFormatter);
-            } else {
-                detailsText += " | No time set";
+                detailsText += "\nDue: " + t.dueDate.format(dateFormatter);
             }
         }
 
@@ -734,8 +688,147 @@ public class IMTPSController {
         textBox.getChildren().addAll(nameLabel, detailsLabel);
         taskCard.getChildren().addAll(taskCheckbox, textBox);
 
+        if (setHeight > 0) {
+            taskCard.setMinHeight(setHeight);
+            taskCard.setMaxHeight(setHeight);
+        }
+
         return taskCard;
     }
+
+    // This method renders the tasks for the selected date, separating them into "All Day" tasks and timed tasks, 
+    // and displaying them in a structured layout.
+
+    private void renderTasks(List<Task> tasksForToday, Set<String> originallyPinnedIds) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");
+
+        Questionnaire prefs = buildPreferences();
+        // Determine the start and end hours window for the day based on user preferences
+        int startDayHour = prefs.getDayStartTime().getHour();
+        int endDayHour = prefs.getDayEndTime().getHour();
+        int loopEnd = endDayHour;
+        if (endDayHour < startDayHour) {
+            loopEnd += 24; 
+        }
+        // Split tasks into timed and all-day tasks for rendering
+        List<Task> timedTasks = new ArrayList<>();
+        List<Task> allDayTasks = new ArrayList<>();
+
+        for (Task t : tasksForToday) {
+            if (t.startTime != null) {
+                timedTasks.add(t);
+            } else {
+                allDayTasks.add(t);
+            }
+        }
+
+        taskContainer.getChildren().clear();
+
+        // 1. Render "All Day" Tasks
+        if (!allDayTasks.isEmpty()) {
+            HBox allDayRow = new HBox(20);
+            allDayRow.setStyle("-fx-padding: 10 0 20 0; -fx-border-color: #d3d3d3; -fx-border-width: 0 0 2 0;");
+            
+            Label timeLabel = new Label("All Day");
+            timeLabel.setPrefWidth(100);
+            timeLabel.setMinWidth(100);
+            timeLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #333333;");
+            timeLabel.setAlignment(Pos.TOP_RIGHT); 
+
+            VBox container = new VBox(10);
+            HBox.setHgrow(container, Priority.ALWAYS);
+            allDayRow.getChildren().addAll(timeLabel, container);
+
+            for (Task t : allDayTasks) {
+                container.getChildren().add(createTaskCard(t, originallyPinnedIds, dateFormatter, -1));
+            }
+            taskContainer.getChildren().add(allDayRow);
+        }
+
+        // 2. Render Full Calendar Timeline Grid
+        AnchorPane timeline = new AnchorPane();
+        double ROW_HEIGHT = 80.0;
+        double TIME_COL_WIDTH = 100.0;
+        int totalHours = loopEnd - startDayHour + 1;
+
+        // Draw background grid lines and time labels
+        for (int i = 0; i < totalHours; i++) {
+            int displayHour = (startDayHour + i) % 24;
+            LocalTime hourTime = LocalTime.of(displayHour, 0);
+
+            Label timeLabel = new Label(hourTime.format(DateTimeFormatter.ofPattern("hh:00 a")));
+            timeLabel.setPrefWidth(TIME_COL_WIDTH);
+            timeLabel.setAlignment(Pos.TOP_RIGHT);
+            timeLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #333333;");
+            
+            AnchorPane.setLeftAnchor(timeLabel, 0.0);
+            AnchorPane.setTopAnchor(timeLabel, i * ROW_HEIGHT + 10);
+
+            Pane line = new Pane();
+            line.setStyle("-fx-background-color: #e2e8f0;");
+            line.setPrefHeight(2);
+            
+            AnchorPane.setLeftAnchor(line, TIME_COL_WIDTH + 20);
+            AnchorPane.setRightAnchor(line, 20.0);
+            AnchorPane.setTopAnchor(line, i * ROW_HEIGHT + 20);
+
+            timeline.getChildren().addAll(timeLabel, line);
+        }
+
+        timeline.setMinHeight(totalHours * ROW_HEIGHT + 50);
+
+        List<TaskPlacement> placements = new ArrayList<>();
+
+        for (Task t : timedTasks) {
+            LocalTime tStart = t.startTime.toLocalTime();
+            int h = tStart.getHour();
+            int m = tStart.getMinute();
+            
+            int effectiveStartHour = h;
+            if (h < startDayHour) {
+                effectiveStartHour += 24;
+            }
+
+            double startY = (effectiveStartHour - startDayHour) * ROW_HEIGHT + (m / 60.0) * ROW_HEIGHT + 20;
+            double height = t.duration * ROW_HEIGHT;
+            height -= 4; // visual gap to not block line
+
+            int col = 0;
+            boolean collision;
+            do {
+                collision = false;
+                for (TaskPlacement p : placements) {
+                    if (p.col == col) {
+                        if (startY < p.endY && startY + height > p.startY) {
+                            collision = true;
+                            col++;
+                            break;
+                        }
+                    }
+                }
+            } while (collision);
+
+            placements.add(new TaskPlacement(startY, startY + height, col));
+
+            HBox card = createTaskCard(t, originallyPinnedIds, dateFormatter, height);
+            
+            // Allow card to stagger dynamically left based on overlap, but ALWAYS stretch to the far right!
+            double startX = TIME_COL_WIDTH + 30 + (col * 40.0); 
+
+            AnchorPane.setTopAnchor(card, startY);
+            AnchorPane.setLeftAnchor(card, startX);
+            AnchorPane.setRightAnchor(card, 20.0); // Binds perfectly to right edge of container
+            
+            card.setMinHeight(height);
+            card.setMaxHeight(height);
+
+            timeline.getChildren().add(card);
+        }
+
+        taskContainer.getChildren().add(timeline);
+    }
+
+
     
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
