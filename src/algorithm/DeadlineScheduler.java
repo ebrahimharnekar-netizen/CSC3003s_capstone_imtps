@@ -95,7 +95,7 @@ public class DeadlineScheduler implements SchedulingAlg{
                     }
                 }
             } else {
-                searchEndDate = today;
+                searchEndDate = today.plusYears(1);  // give taska. year window to find a slot
             }
 
             long taskMinutes = (long) (task.duration * 60);  
@@ -200,6 +200,9 @@ public class DeadlineScheduler implements SchedulingAlg{
                 
                 if (!scheduledToday) {
                     System.out.println(task.taskName + " could not fit in the window on " + currentDate);
+                } else if (taskDue == null) {
+                    // The task was scheduled successfully and has no due date.
+                    break;
                 }
                 
             } 
