@@ -15,6 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.stage.Stage;
 import javafx.application.Platform;
+
 /**
  * QuestionsController
  * Backs the onboarding questionnaire. Answers are saved to
@@ -40,6 +41,7 @@ public class QuestionsController {
     @FXML private TextField txtPrefStartTime;
     @FXML private TextField txtPrefEndTime;
     @FXML private Button btnSaveQuestionnaire;
+    @FXML private Button btnBack;
 
     @FXML
     public void initialize() {
@@ -105,6 +107,21 @@ public class QuestionsController {
 
     }
 
+    @FXML
+    public void onClickbtnBack(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("imtps.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            System.out.println("Error returning to main screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     public void onClickbtnSaveQuestionnaire(ActionEvent event) {
 
         int dailyProdHours = (cmbProductiveHours.getValue() != null)

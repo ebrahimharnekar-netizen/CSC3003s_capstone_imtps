@@ -26,7 +26,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -237,9 +236,6 @@ public class IMTPSController {
     // endregion
 
     // region Edit Task Logic
-
-    // This method handles the search functionality for tasks in the Edit Tasks tab. It retrieves tasks from the database based on 
-    // the user's search query and displays them in a structured format, allowing for editing.
     @FXML
     public void onClickSearchTasks(ActionEvent event) {
         editTaskContainer.getChildren().clear();
@@ -447,47 +443,6 @@ public class IMTPSController {
 
     // region Refresh Tasks logic
 
-
-    // This method iterates through the taskContainer and checks for any selected checkboxes. 
-    // If a checkbox is selected, it retrieves the associated task ID and marks that task as completed in the database.
-    private void markCheckedTasksCompleted() {
-        for (Node sectionNode : taskContainer.getChildren()) {
-            if (sectionNode instanceof AnchorPane) { // The Timed Tasks Grid
-                AnchorPane timeline = (AnchorPane) sectionNode;
-                for (Node timelineNode : timeline.getChildren()) {
-                    if (timelineNode instanceof HBox) { 
-                        HBox card = (HBox) timelineNode;
-                        if (card.getChildren().size() > 0 && card.getChildren().get(0) instanceof CheckBox) {
-                            CheckBox cb = (CheckBox) card.getChildren().get(0);
-                            if (cb.isSelected()) {
-                                String taskId = (String) cb.getUserData(); 
-                                DatabaseHelper.markTaskCompleted(taskId);
-                            }
-                        }
-                    }
-                }
-            } else if (sectionNode instanceof HBox) { // The "All Day" Row
-                HBox allDayRow = (HBox) sectionNode;
-                if (allDayRow.getChildren().size() > 1 && allDayRow.getChildren().get(1) instanceof VBox) {
-                    VBox tasksBox = (VBox) allDayRow.getChildren().get(1);
-                    for (Node taskNode : tasksBox.getChildren()) {
-                        if (taskNode instanceof HBox) {
-                            HBox card = (HBox) taskNode;
-                            if (card.getChildren().size() > 0 && card.getChildren().get(0) instanceof CheckBox) {
-                                CheckBox cb = (CheckBox) card.getChildren().get(0);
-                                if (cb.isSelected()) {
-                                    String taskId = (String) cb.getUserData(); 
-                                    DatabaseHelper.markTaskCompleted(taskId);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // This method fetches all tasks for the current user from the database, filtering out completed tasks.
     private List<Task> fetchAllTasksFromDB() {
         List<Task> allTasks = new ArrayList<>();
         String sql = "SELECT * FROM tasks WHERE user_id = ? AND (completed = 0 OR completed IS NULL) ORDER BY task_id";
@@ -531,7 +486,6 @@ public class IMTPSController {
         return allTasks;
     }
 
-    // This method splits the list of all tasks into two separate lists: pinned tasks and floating tasks.
     private void splitTasks(List<Task> allTasks, List<Task> pinnedTasks, List<Task> floatingTasks, Set<String> originallyPinnedIds) {
         for (Task t : allTasks) {
             if (t.isPinned()) {
@@ -542,8 +496,7 @@ public class IMTPSController {
             }
         }
     }
-    // This method creates a deep copy of the list of floating tasks to ensure that the original list 
-    // remains unchanged during scheduling.
+
     private List<Task> cloneFloatingTasks(List<Task> floatingTasks) { 
         List<Task> floatingClones = new ArrayList<>();
         for (Task t : floatingTasks) {
@@ -555,7 +508,6 @@ public class IMTPSController {
         return floatingClones;
     }
 
-    // This method builds a Questionnaire object based on the user's preferences stored in the database.
     private Questionnaire buildPreferences() {
          int currentMode = Questionnaire.PersonalMode;
          if (rdbtnWork.isSelected()) currentMode = Questionnaire.WorkMode;
@@ -584,7 +536,6 @@ public class IMTPSController {
         return prefs;
     }
 
-    // This method returns the selected scheduling algorithm based on the user's choice.
     private SchedulingAlg getSelectedScheduler() {
         String selection = cmbSchedulerType.getValue();
         if ("Deadline Scheduler".equals(selection)) {
@@ -595,7 +546,6 @@ public class IMTPSController {
         return new Scheduler();
     }
 
-    // This method filters the list of tasks to include only those that are relevant for the specified view date.
     private List<Task> filterTasksForDate(List<Task> displayTasks, LocalDate viewDate, Set<String> originallyPinnedIds) {
         List<Task> tasksForToday = new ArrayList<>();
 
@@ -635,82 +585,22 @@ public class IMTPSController {
         return tasksForToday;
     }
 
+
+    // --------------------------------------------------------------------------------------
     // CALENDAR TIMELINE RENDERING
-
-    // This method creates a visual representation of a task as an HBox card to put into the vbox container, including its details and styling 
-    // based on its category and type.
-    private HBox createTaskCard(Task t, Set<String> originallyPinnedIds, DateTimeFormatter dateFormatter, double setHeight) {
-        HBox taskCard = new HBox(15);
-        taskCard.setAlignment(Pos.TOP_LEFT); 
-
-        String baseStyle = "-fx-padding: 10; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-width: 0 0 0 6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2); ";
-        String catString;
-        if (t.category == 1) {
-            catString = "Work";
-            taskCard.setStyle(baseStyle + "-fx-background-color: #E3F2FD; -fx-border-color: #2196F3;");
-        } else if (t.category == 2) {
-            catString = "Health";
-            taskCard.setStyle(baseStyle + "-fx-background-color: #E8F5E9; -fx-border-color: #4CAF50;");
-        } else {
-            catString = "Personal";
-            taskCard.setStyle(baseStyle + "-fx-background-color: #FFF3E0; -fx-border-color: #FF9800;");
-        }
-
-        CheckBox taskCheckbox = new CheckBox();
-        taskCheckbox.setUserData(t.taskId);
-        taskCheckbox.setTranslateY(3); 
-
-        String taskType = originallyPinnedIds.contains(t.taskId) ? "📌 Pinned" : (t.startTime != null ? "📋 Floating (Scheduled)" : "📋 Floating");
-
-        VBox textBox = new VBox(5);
-        Label nameLabel = new Label(t.taskName);
-        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
-        nameLabel.setWrapText(true);
-
-        String detailsText = String.format("%s  |  %s  |  Importance: %d", catString, taskType, t.importance);
-        
-        if (t.startTime == null) {
-            if (t.originalStartDate != null && t.originalDueDate != null) {
-                detailsText += "\nStarts: " + t.originalStartDate.format(dateFormatter) + " - Due: " + t.originalDueDate.format(dateFormatter);
-            } else if (t.startDate != null && t.dueDate != null) {
-                detailsText += "\nStarts: " + t.startDate.format(dateFormatter) + " - Due: " + t.dueDate.format(dateFormatter);
-            } else if (t.startDate != null) {
-                detailsText += "\nStarts: " + t.startDate.format(dateFormatter);
-            } else if (t.dueDate != null) {
-                detailsText += "\nDue: " + t.dueDate.format(dateFormatter);
-            }
-        }
-
-        Label detailsLabel = new Label(detailsText);
-        detailsLabel.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
-        detailsLabel.setWrapText(true);
-
-        textBox.getChildren().addAll(nameLabel, detailsLabel);
-        taskCard.getChildren().addAll(taskCheckbox, textBox);
-
-        if (setHeight > 0) {
-            taskCard.setMinHeight(setHeight);
-            taskCard.setMaxHeight(setHeight);
-        }
-
-        return taskCard;
-    }
-
-    // This method renders the tasks for the selected date, separating them into "All Day" tasks and timed tasks, 
-    // and displaying them in a structured layout.
+    // --------------------------------------------------------------------------------------
 
     private void renderTasks(List<Task> tasksForToday, Set<String> originallyPinnedIds) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");
 
         Questionnaire prefs = buildPreferences();
-        // Determine the start and end hours window for the day based on user preferences
         int startDayHour = prefs.getDayStartTime().getHour();
         int endDayHour = prefs.getDayEndTime().getHour();
         int loopEnd = endDayHour;
         if (endDayHour < startDayHour) {
             loopEnd += 24; 
         }
-        // Split tasks into timed and all-day tasks for rendering
+
         List<Task> timedTasks = new ArrayList<>();
         List<Task> allDayTasks = new ArrayList<>();
 
@@ -828,12 +718,100 @@ public class IMTPSController {
         taskContainer.getChildren().add(timeline);
     }
 
+    private HBox createTaskCard(Task t, Set<String> originallyPinnedIds, DateTimeFormatter dateFormatter, double setHeight) {
+        HBox taskCard = new HBox(15);
+        taskCard.setAlignment(Pos.TOP_LEFT); 
 
+        String baseStyle = "-fx-padding: 10; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-width: 0 0 0 6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2); ";
+        String catString;
+        if (t.category == 1) {
+            catString = "Work";
+            taskCard.setStyle(baseStyle + "-fx-background-color: #E3F2FD; -fx-border-color: #2196F3;");
+        } else if (t.category == 2) {
+            catString = "Health";
+            taskCard.setStyle(baseStyle + "-fx-background-color: #E8F5E9; -fx-border-color: #4CAF50;");
+        } else {
+            catString = "Personal";
+            taskCard.setStyle(baseStyle + "-fx-background-color: #FFF3E0; -fx-border-color: #FF9800;");
+        }
+
+        String taskType = originallyPinnedIds.contains(t.taskId) ? "📌 Pinned" : (t.startTime != null ? "📋 Scheduled" : "📋 Floating");
+
+        // 1. Text Container (Pushes the complete button to the far right)
+        VBox textBox = new VBox(5);
+        HBox.setHgrow(textBox, Priority.ALWAYS);
+        
+        Label nameLabel = new Label(t.taskName);
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
+        nameLabel.setWrapText(true);
+
+        // 2. Dynamic Importance Color Label
+        String impColor;
+        switch (t.importance) {
+            case 5: impColor = "#ef4444"; break; // Red
+            case 4: impColor = "#f97316"; break; // Orange
+            case 3: impColor = "#eab308"; break; // Yellow
+            case 2: impColor = "#3b82f6"; break; // Blue
+            default: impColor = "#10b981"; break; // Green
+        }
+        
+        Label detailsStart = new Label(catString + "  |  " + taskType + "  |  ");
+        detailsStart.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
+        
+        Label impLabel = new Label(" Importance lvl " + t.importance + " ");
+        impLabel.setStyle("-fx-background-color: " + impColor + "; -fx-text-fill: white; -fx-background-radius: 4; -fx-font-weight: bold; -fx-font-size: 10px;");
+
+        HBox topDetails = new HBox(3, detailsStart, impLabel);
+        topDetails.setAlignment(Pos.CENTER_LEFT);
+
+        textBox.getChildren().addAll(nameLabel, topDetails);
+
+        // 3. Append time info for floating tasks only
+        if (t.startTime == null) {
+            String timeStr = "";
+            if (t.originalStartDate != null && t.originalDueDate != null) {
+                timeStr = "Starts: " + t.originalStartDate.format(dateFormatter) + " - Due: " + t.originalDueDate.format(dateFormatter);
+            } else if (t.startDate != null && t.dueDate != null) {
+                timeStr = "Starts: " + t.startDate.format(dateFormatter) + " - Due: " + t.dueDate.format(dateFormatter);
+            } else if (t.startDate != null) {
+                timeStr = "Starts: " + t.startDate.format(dateFormatter);
+            } else if (t.dueDate != null) {
+                timeStr = "Due: " + t.dueDate.format(dateFormatter);
+            }
+            if (!timeStr.isEmpty()) {
+                Label timeDetailsLabel = new Label(timeStr);
+                timeDetailsLabel.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
+                timeDetailsLabel.setWrapText(true);
+                textBox.getChildren().add(timeDetailsLabel);
+            }
+        }
+
+        // 4. One-Click Completion Bin Button
+        Button btnComplete = new Button("🗑");
+        btnComplete.setStyle("-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-size: 20px; -fx-cursor: hand; -fx-padding: 0 5 0 5;");
+        
+        // Hover effects for the bin
+        btnComplete.setOnMouseEntered(e -> btnComplete.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 20px; -fx-cursor: hand; -fx-padding: 0 5 0 5;"));
+        btnComplete.setOnMouseExited(e -> btnComplete.setStyle("-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-size: 20px; -fx-cursor: hand; -fx-padding: 0 5 0 5;"));
+        
+        // Instantly mark task as complete and refresh the view
+        btnComplete.setOnAction(e -> {
+            DatabaseHelper.markTaskCompleted(t.taskId);
+            onClickRefreshTasks(null);
+        });
+
+        taskCard.getChildren().addAll(textBox, btnComplete);
+
+        if (setHeight > 0) {
+            taskCard.setMinHeight(setHeight);
+            taskCard.setMaxHeight(setHeight);
+        }
+
+        return taskCard;
+    }
     
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
-        //First mark any tasks that have been checked as completed, then clear the task container to prepare for re-rendering.
-        markCheckedTasksCompleted();
         taskContainer.getChildren().clear();
         //Next, fetch all tasks from the database. If there are no tasks, simply return without further processing.
         List<Task> allTasks = fetchAllTasksFromDB();
