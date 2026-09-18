@@ -20,7 +20,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="833.0" prefWidth="1280.0" style="-fx-background-color: #f1f5f9;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.IMTPSController">
+<AnchorPane prefHeight="833.0" prefWidth="1280.0" style="-fx-background-color: #f1f5f9;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.IMTPSController">
    <children>
       
       <!-- Top Header -->
@@ -54,15 +54,10 @@
          </children>
       </AnchorPane>
 
-            <!-- Navigation Bar -->
+      <!-- Navigation Bar -->
       <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="20.0" style="-fx-background-color: navy; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5); -fx-padding: 0 40 0 40;" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="130.0">
          <children>
             <Button mnemonicParsing="false" onAction="#onClickBtnNavViewTasks" style="-fx-background-color: transparent; -fx-cursor: hand;" text="View tasks" textFill="WHITE">
-               <font>
-                  <Font name="System Bold" size="16.0" />
-               </font>
-            </Button>
-            <Button mnemonicParsing="false" onAction="#onClickBtnNavCompletedTasks" style="-fx-background-color: transparent; -fx-cursor: hand;" text="Completed tasks" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="16.0" />
                </font>
@@ -89,30 +84,30 @@
       </HBox>
 
       <!-- Main Content TabPane -->
-      <TabPane fx:id="mainTabPane" layoutY="191.2" prefHeight="642.0" prefWidth="1280.0" style="-fx-tab-max-height: 0; -fx-tab-min-height: 0; -fx-padding: -1 -1 -1 -1; -fx-background-color: transparent;" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="191.0">
+      <TabPane fx:id="mainTabPane" layoutY="191.0" prefHeight="642.0" prefWidth="1280.0" style="-fx-tab-max-height: 0; -fx-tab-min-height: 0; -fx-padding: -1 -1 -1 -1; -fx-background-color: transparent;" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="191.0">
         <tabs>
           
-          <!-- View Tasks Tab -->
+          <!-- View Tasks Tab (Now Contains Everything Scrollable) -->
           <Tab fx:id="tabView" text="View Tasks">
             <content>
-              <AnchorPane prefHeight="558.0" prefWidth="1282.0">
+              <AnchorPane>
                      <children>
                         <HBox spacing="30.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="30.0">
                            <children>
                               <!-- Sidebar Filter -->
-                              <VBox minWidth="320.0" prefWidth="320.0" spacing="20.0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 30;">
+                              <VBox minWidth="280.0" prefWidth="280.0" spacing="20.0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 30;">
                                  <children>
                                     <Label text="Filters" textFill="#1e293b"><font><Font name="System Bold" size="22.0" /></font></Label>
                                     <VBox spacing="10.0">
                                        <children>
                                           <Label text="Select Date to View" textFill="#64748b"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                          <DatePicker fx:id="dpViewDate" prefHeight="45.0" prefWidth="300.0" style="-fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" />
+                                          <DatePicker fx:id="dpViewDate" prefHeight="45.0" prefWidth="240.0" style="-fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" />
                                        </children>
                                     </VBox>
                                     <VBox spacing="10.0">
                                        <children>
                                           <Label text="Scheduler Algorithm" textFill="#64748b"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                          <ComboBox fx:id="cmbSchedulerType" prefHeight="45.0" prefWidth="300.0" style="-fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" />
+                                          <ComboBox fx:id="cmbSchedulerType" prefHeight="45.0" prefWidth="240.0" style="-fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8;" />
                                        </children>
                                     </VBox>
                                     <VBox spacing="15.0">
@@ -123,22 +118,62 @@
                                           <RadioButton fx:id="rdbtnHealth" mnemonicParsing="false" text="Health" textFill="#334155"><font><Font size="16.0" /></font></RadioButton>
                                        </children>
                                     </VBox>
-                                    <Button mnemonicParsing="false" onAction="#onClickRefreshTasks" prefHeight="50.0" prefWidth="300.0" style="-fx-background-color: #10b981; -fx-background-radius: 8; -fx-cursor: hand;" text="Refresh Timeline" textFill="WHITE">
+                                    <Button mnemonicParsing="false" onAction="#onClickRefreshTasks" prefHeight="50.0" prefWidth="240.0" style="-fx-background-color: #10b981; -fx-background-radius: 8; -fx-cursor: hand;" text="Refresh View" textFill="WHITE">
                                        <font><Font name="System Bold" size="16.0" /></font>
                                     </Button>
                                     <Pane VBox.vgrow="ALWAYS" />
                                  </children>
                               </VBox>
                               
-                              <!-- Timeline ScrollPane -->
-                              <ScrollPane fitToWidth="true" prefHeight="553.0" prefWidth="795.0" style="-fx-background: white; -fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 20;" HBox.hgrow="ALWAYS">
+                              <!-- Single Continuous ScrollPane for Timeline & Completed -->
+                              <ScrollPane fitToWidth="true" style="-fx-background: #f1f5f9; -fx-background-color: #f1f5f9; -fx-border-color: transparent;" HBox.hgrow="ALWAYS">
                                  <content>
-                                    <VBox fx:id="taskContainer" spacing="10.0" style="-fx-padding: 10;" />
+                                    <VBox spacing="40.0" style="-fx-background-color: #f1f5f9;">
+                                       <children>
+                                          
+                                          <!-- Timeline Section -->
+                                          <VBox spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 30;">
+                                             <children>
+                                                <Label text="Today's Timeline" textFill="#1e293b">
+                                                   <font><Font name="System Bold" size="24.0" /></font>
+                                                </Label>
+                                                <VBox fx:id="taskContainer" spacing="10.0" />
+                                             </children>
+                                          </VBox>
+
+                                          <!-- Completed Tasks Section -->
+                                          <VBox spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 30;">
+                                             <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="15.0">
+                                                   <children>
+                                                      <Label text="Completed Tasks" textFill="#1e293b">
+                                                         <font><Font name="System Bold" size="24.0" /></font>
+                                                      </Label>
+                                                      <Label fx:id="lblCompletedStatus" textFill="#10b981">
+                                                         <font><Font size="14.0" /></font>
+                                                      </Label>
+                                                      <Pane HBox.hgrow="ALWAYS" />
+                                                      <Button mnemonicParsing="false" onAction="#onClickClearCompleted" prefHeight="35.0" prefWidth="120.0" style="-fx-background-color: #ef4444; -fx-background-radius: 8; -fx-cursor: hand;" text="Clear All" textFill="WHITE">
+                                                         <font><Font name="System Bold" size="14.0" /></font>
+                                                      </Button>
+                                                   </children>
+                                                </HBox>
+                                                <VBox fx:id="completedTaskContainer" spacing="15.0" />
+                                             </children>
+                                          </VBox>
+                                          
+                                       </children>
+                                       <padding>
+                                          <Insets bottom="20.0" right="10.0" />
+                                       </padding>
+                                    </VBox>
                                  </content>
                               </ScrollPane>
+                              
                            </children>
                         </HBox>
-                        <Button layoutX="362.0" mnemonicParsing="false" onAction="#onClickBtnNavAddTask" prefHeight="35.0" prefWidth="170.0" style="-fx-background-color: none; -fx-cursor: hand;" text="Add task +" textFill="RED">
+                        <!-- Floating Add Task Button on View Screen -->
+                        <Button layoutX="40.0" mnemonicParsing="false" onAction="#onClickBtnNavAddTask" prefHeight="40.0" prefWidth="280.0" style="-fx-background-color: white; -fx-cursor: hand; -fx-border-color: #3b82f6; -fx-border-radius: 8; -fx-border-width: 2;" text="+ Add New Task" textFill="#3b82f6" AnchorPane.bottomAnchor="40.0">
                            <font>
                               <Font name="System Bold" size="16.0" />
                            </font>
@@ -225,38 +260,6 @@
                         </StackPane>
                      </children>
               </AnchorPane>
-            </content>
-          </Tab>
-          
-            <!-- Completed Tasks Tab -->
-            <Tab fx:id="tabCompleted" text="Completed tasks">
-              <content>
-                <AnchorPane>
-                     <children>
-                        <VBox spacing="20.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="40.0" AnchorPane.rightAnchor="40.0" AnchorPane.topAnchor="30.0">
-                           <children>
-                              <AnchorPane prefHeight="70.0" style="-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 5); -fx-padding: 15;">
-                                 <children>
-                                    <Button mnemonicParsing="false" onAction="#onClickRefreshCompletedTasks" prefHeight="40.0" prefWidth="136.0" style="-fx-background-color: #f1f5f9; -fx-background-radius: 8; -fx-border-color: #cbd5e1; -fx-border-radius: 8; -fx-cursor: hand;" text="Refresh List" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <font><Font name="System Bold" size="14.0" /></font>
-                                    </Button>
-                                    <Label fx:id="lblCompletedStatus" textFill="#10b981" AnchorPane.leftAnchor="160.0" AnchorPane.topAnchor="8.0">
-                                       <font><Font size="16.0" /></font>
-                                    </Label>
-                                    <Button mnemonicParsing="false" onAction="#onClickClearCompleted" prefHeight="40.0" prefWidth="140.0" style="-fx-background-color: #ef4444; -fx-background-radius: 8; -fx-cursor: hand;" text="Clear Completed" textFill="WHITE" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                       <font><Font name="System Bold" size="14.0" /></font>
-                                    </Button>
-                                 </children>
-                              </AnchorPane>
-                              <ScrollPane fitToWidth="true" style="-fx-background: white; -fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 20;" VBox.vgrow="ALWAYS">
-                                 <content>
-                                    <VBox fx:id="completedTaskContainer" spacing="15.0" style="-fx-padding: 10;" />
-                                 </content>
-                              </ScrollPane>
-                           </children>
-                        </VBox>
-                     </children>
-                  </AnchorPane>
             </content>
           </Tab>
           

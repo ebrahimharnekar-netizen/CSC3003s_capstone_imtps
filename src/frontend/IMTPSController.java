@@ -53,7 +53,6 @@ public class IMTPSController {
     @FXML private TabPane mainTabPane;
     @FXML private Tab tabView;
     @FXML private Tab tabAdd;
-    @FXML private Tab tabCompleted;
     @FXML private Tab tabEdit;
 
     // Add Task Tab Elements
@@ -79,7 +78,7 @@ public class IMTPSController {
     @FXML private VBox editTaskContainer;
     @FXML private Label lblEditStatus;
 
-    // Completed Tasks Tab Elements
+    // Completed Tasks Container (Now attached under Timeline)
     @FXML private VBox completedTaskContainer;
     @FXML private Label lblCompletedStatus;
 
@@ -130,7 +129,6 @@ public class IMTPSController {
             
             // Force the initial data loads so the screens aren't blank upon launch
             onClickRefreshTasks(null);
-            onClickRefreshCompletedTasks(null);
             onClickSearchTasks(null);
         });
 
@@ -138,8 +136,6 @@ public class IMTPSController {
         mainTabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
             if (newTab == tabView) {
                 onClickRefreshTasks(null);
-            } else if (newTab == tabCompleted) {
-                onClickRefreshCompletedTasks(null);
             } else if (newTab == tabEdit) {
                 onClickSearchTasks(null);
             }
@@ -226,7 +222,7 @@ public class IMTPSController {
         String taskType = (startTime != null && !startTime.toLocalTime().equals(START_OF_DAY))
                 ? "pinned" : "floating";
         lblAddStatus.setText("Success: '" + addName + "' added as " + taskType + " task!");
-        lblAddStatus.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+        lblAddStatus.setStyle("-fx-text-fill: #10b981; -fx-font-weight: bold;");
 
         btnAddName.clear();
         txtStartTime.clear();
@@ -401,6 +397,7 @@ public class IMTPSController {
 
                             lblEditStatus.setText("Task Updated Successfully!");
                             lblEditStatus.setStyle("-fx-text-fill: #10b981;");
+                            onClickRefreshTasks(null); // Keep timeline synced
                         } catch (Exception ex) {
                             lblEditStatus.setText("Error: " + ex.getMessage());
                             lblEditStatus.setStyle("-fx-text-fill: #ef4444;");
@@ -420,7 +417,6 @@ public class IMTPSController {
     // region Navigation
     @FXML public void onClickBtnNavAddTask(ActionEvent event) { mainTabPane.getSelectionModel().select(tabAdd); }
     @FXML public void onClickBtnNavViewTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(tabView); }
-    @FXML public void onClickBtnNavCompletedTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(tabCompleted); }
     @FXML public void onClickBtnNavEditTasks(ActionEvent event) { mainTabPane.getSelectionModel().select(tabEdit); }
 
     public void onClickbtnPref(ActionEvent event) { switchScene(event, "Questions.fxml"); }
@@ -441,7 +437,7 @@ public class IMTPSController {
     }
     // endregion
 
-    // region Refresh Tasks logic
+    // region Core Data Fetching
 
     private List<Task> fetchAllTasksFromDB() {
         List<Task> allTasks = new ArrayList<>();
@@ -702,12 +698,11 @@ public class IMTPSController {
 
             HBox card = createTaskCard(t, originallyPinnedIds, dateFormatter, height);
             
-            // Allow card to stagger dynamically left based on overlap, but ALWAYS stretch to the far right!
             double startX = TIME_COL_WIDTH + 30 + (col * 40.0); 
 
             AnchorPane.setTopAnchor(card, startY);
             AnchorPane.setLeftAnchor(card, startX);
-            AnchorPane.setRightAnchor(card, 20.0); // Binds perfectly to right edge of container
+            AnchorPane.setRightAnchor(card, 20.0); 
             
             card.setMinHeight(height);
             card.setMaxHeight(height);
@@ -737,12 +732,12 @@ public class IMTPSController {
 
         String taskType = originallyPinnedIds.contains(t.taskId) ? "📌 Pinned" : (t.startTime != null ? "📋 Scheduled" : "📋 Floating");
 
-        // 1. Text Container (Pushes the complete button to the far right)
+        // 1. Text Container
         VBox textBox = new VBox(5);
         HBox.setHgrow(textBox, Priority.ALWAYS);
         
         Label nameLabel = new Label(t.taskName);
-        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
+        nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #1e293b;");
         nameLabel.setWrapText(true);
 
         // 2. Dynamic Importance Color Label
@@ -758,7 +753,7 @@ public class IMTPSController {
         Label detailsStart = new Label(catString + "  |  " + taskType + "  |  ");
         detailsStart.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
         
-        Label impLabel = new Label(" Importance lvl " + t.importance + " ");
+        Label impLabel = new Label(" Lvl " + t.importance + " ");
         impLabel.setStyle("-fx-background-color: " + impColor + "; -fx-text-fill: white; -fx-background-radius: 4; -fx-font-weight: bold; -fx-font-size: 10px;");
 
         HBox topDetails = new HBox(3, detailsStart, impLabel);
@@ -794,7 +789,7 @@ public class IMTPSController {
         btnComplete.setOnMouseEntered(e -> btnComplete.setStyle("-fx-background-color: transparent; -fx-text-fill: #ef4444; -fx-font-size: 20px; -fx-cursor: hand; -fx-padding: 0 5 0 5;"));
         btnComplete.setOnMouseExited(e -> btnComplete.setStyle("-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-font-size: 20px; -fx-cursor: hand; -fx-padding: 0 5 0 5;"));
         
-        // Instantly mark task as complete and refresh the view
+        // Instantly mark task as complete and refresh BOTH lists
         btnComplete.setOnAction(e -> {
             DatabaseHelper.markTaskCompleted(t.taskId);
             onClickRefreshTasks(null);
@@ -813,34 +808,37 @@ public class IMTPSController {
     @FXML
     public void onClickRefreshTasks(ActionEvent event) {
         taskContainer.getChildren().clear();
-        //Next, fetch all tasks from the database. If there are no tasks, simply return without further processing.
+        
         List<Task> allTasks = fetchAllTasksFromDB();
-        if (allTasks.isEmpty()) return;
-        //Split the fetched tasks into pinned and floating tasks, while also keeping track of the IDs of originally pinned tasks.
-        List<Task> pinnedTasks = new ArrayList<>();
-        List<Task> floatingTasks = new ArrayList<>();
-        Set<String> originallyPinnedIds = new HashSet<>();
+        if (!allTasks.isEmpty()) {
+            List<Task> pinnedTasks = new ArrayList<>();
+            List<Task> floatingTasks = new ArrayList<>();
+            Set<String> originallyPinnedIds = new HashSet<>();
 
-        splitTasks(allTasks, pinnedTasks, floatingTasks, originallyPinnedIds);
-        //Create clones of the floating tasks to ensure that the original task objects remain unchanged during scheduling.
-        List<Task> allClones = new ArrayList<>();
-        allClones.addAll(pinnedTasks);
-        allClones.addAll(cloneFloatingTasks(floatingTasks));
-        //Build a Questionnaire object based on the user's selected preferences in the UI, and retrieve the selected scheduling algorithm.
-        Questionnaire prefs = buildPreferences();
-        SchedulingAlg scheduler = getSelectedScheduler();
-        //Generate a schedule for the floating tasks using the selected scheduling algorithm and user preferences.
-        List<Task> scheduledFloating = scheduler.genSchedule(allClones, prefs);
-        //Combine the pinned tasks and the newly scheduled floating tasks into a single list for display.
-        List<Task> displayTasks = new ArrayList<>();
-        displayTasks.addAll(pinnedTasks);
-        displayTasks.addAll(scheduledFloating);
-        //Filter the combined list of tasks to include only those that are relevant for the selected view date, and render them in the UI.
-        LocalDate viewDate = dpViewDate.getValue();
-        if (viewDate == null) viewDate = LocalDate.now();
-        //Filter the combined list of tasks to include only those that are relevant for the selected view date, and render them in the UI.
-        List<Task> tasksForToday = filterTasksForDate(displayTasks, viewDate, originallyPinnedIds);
-        renderTasks(tasksForToday, originallyPinnedIds);
+            splitTasks(allTasks, pinnedTasks, floatingTasks, originallyPinnedIds);
+            
+            List<Task> allClones = new ArrayList<>();
+            allClones.addAll(pinnedTasks);
+            allClones.addAll(cloneFloatingTasks(floatingTasks));
+            
+            Questionnaire prefs = buildPreferences();
+            SchedulingAlg scheduler = getSelectedScheduler();
+            
+            List<Task> scheduledFloating = scheduler.genSchedule(allClones, prefs);
+            
+            List<Task> displayTasks = new ArrayList<>();
+            displayTasks.addAll(pinnedTasks);
+            displayTasks.addAll(scheduledFloating);
+            
+            LocalDate viewDate = dpViewDate.getValue();
+            if (viewDate == null) viewDate = LocalDate.now();
+            
+            List<Task> tasksForToday = filterTasksForDate(displayTasks, viewDate, originallyPinnedIds);
+            renderTasks(tasksForToday, originallyPinnedIds);
+        }
+
+        // Also force an update to the completed container so both lists remain synced.
+        onClickRefreshCompletedTasks(null);
     }
     // endregion
 
@@ -877,19 +875,19 @@ public class IMTPSController {
 
                 HBox card = new HBox(15);
                 card.setAlignment(Pos.CENTER_LEFT);
-                card.setStyle("-fx-padding: 10; -fx-border-color: lightgray; -fx-border-radius: 5; " +
-                              "-fx-background-radius: 5; -fx-background-color: #F0F0F0;");
+                card.setStyle("-fx-padding: 10; -fx-border-color: #cbd5e1; -fx-border-radius: 8; " +
+                              "-fx-background-radius: 8; -fx-background-color: #f8f9fa;");
 
                 VBox textBox = new VBox(4);
                 Label nameLabel = new Label(name);
-                nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px;");
+                nameLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #94a3b8;"); 
                 Label detailsLabel = new Label(catString + "  |  " + dueString);
-                detailsLabel.setStyle("-fx-text-fill: dimgray; -fx-font-size: 12px;");
+                detailsLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 12px;");
                 textBox.getChildren().addAll(nameLabel, detailsLabel);
                 HBox.setHgrow(textBox, Priority.ALWAYS);
 
                 Button btnRestore = new Button("Restore");
-                btnRestore.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+                btnRestore.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 6;");
                 LocalDateTime dueForClosure = due;
                 btnRestore.setOnAction(e -> restoreCompletedTask(id, dueForClosure));
 
@@ -902,8 +900,6 @@ public class IMTPSController {
         }
     }
 
-    // Restores a completed task. If its due date has already passed, the user
-    // is asked to pick a new one first so it doesn't come back already overdue.
     private void restoreCompletedTask(String taskId, LocalDateTime dueDate) {
         boolean overdue = dueDate != null && dueDate.isBefore(LocalDateTime.now());
 
@@ -922,22 +918,21 @@ public class IMTPSController {
                     LocalDate newDue = newDueDatePicker.getValue();
                     if (newDue == null) {
                         lblCompletedStatus.setText("Error: Please choose a due date.");
-                        lblCompletedStatus.setStyle("-fx-text-fill: red;");
+                        lblCompletedStatus.setStyle("-fx-text-fill: #ef4444;");
                         return;
                     }
                     DatabaseHelper.updateTaskDueDate(taskId, newDue.atTime(23, 59));
                     DatabaseHelper.restoreTask(taskId);
-                    onClickRefreshCompletedTasks(null);
+                    onClickRefreshTasks(null); // Refreshes both seamlessly
                 }
             });
         } else {
             DatabaseHelper.restoreTask(taskId);
-            onClickRefreshCompletedTasks(null);
+            onClickRefreshTasks(null); // Refreshes both seamlessly
         }
     }
 
-    // Permanently deletes every completed task, after an explicit confirmation
-    // (this cannot be undone, so it's gated to help prevent accidental clicks).
+    @FXML
     public void onClickClearCompleted(ActionEvent event) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Clear Completed Tasks");
@@ -949,7 +944,7 @@ public class IMTPSController {
                 DatabaseHelper.clearCompletedTasks(Session.currentUserId);
                 onClickRefreshCompletedTasks(event);
                 lblCompletedStatus.setText("Completed tasks cleared.");
-                lblCompletedStatus.setStyle("-fx-text-fill: green;");
+                lblCompletedStatus.setStyle("-fx-text-fill: #10b981;");
             }
         });
     }
