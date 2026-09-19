@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1280.0" style="-fx-background-color: #f1f5f9;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.HelpController">
+<AnchorPane prefHeight="900.0" prefWidth="1280.0" style="-fx-background-color: #f1f5f9;" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="frontend.HelpController">
    <children>
 
       <AnchorPane prefHeight="130.0" style="-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 15, 0, 0, 5);" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -66,7 +66,7 @@
                                     <Label style="-fx-font-weight: bold; -fx-text-fill: #1d4ed8;" text="🎯 Focus Modes">
                                        <font><Font size="18.0" /></font>
                                     </Label>
-                                    <Label style="-fx-text-fill: #1e40af; -fx-line-spacing: 5px;" text="Choose Work, Health, or Personal in the View tab. Tasks from the selected category get priority and are scheduled earlier in the day." wrapText="true">
+                                    <Label style="-fx-text-fill: #1e40af; -fx-line-spacing: 5px;" text="Choose Work, Health, or Personal in the View tab. Tasks from the selected category gain a higher overall priority. However, priority is based on multiple factors so it wont always schedule tasks in the category of the selected focus mode first. " wrapText="true">
                                        <font><Font size="15.0" /></font>
                                     </Label>
                                  </children>
@@ -88,7 +88,7 @@
                                     <Label style="-fx-font-weight: bold; -fx-text-fill: #b45309;" text="📋 Quick Guide">
                                        <font><Font size="18.0" /></font>
                                     </Label>
-                                    <Label style="-fx-text-fill: #92400e; -fx-line-spacing: 5px;" text="• Add – fill in task details; leave Start Time blank to make it floating.&#10;• View – select a date, choose a focus mode, then click Refresh to schedule/update.&#10;• Edit – search for a task, change any field, and save.&#10;• To delete – click the bin icon." wrapText="true">
+                                    <Label style="-fx-text-fill: #92400e; -fx-line-spacing: 5px;" text="• Add – fill in task details; leave Start Time blank to make it floating.&#10;• View – select a date, choose a focus mode, then click Refresh to schedule/update.&#10;• Edit – search for a task, change any field, and save.&#10;• To delete a task, mark it as completed by clicking the bin icon, then clear all under completed tasks." wrapText="true">
                                        <font><Font size="15.0" /></font>
                                     </Label>
                                  </children>
