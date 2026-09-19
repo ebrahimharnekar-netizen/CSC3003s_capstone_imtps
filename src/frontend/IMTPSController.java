@@ -111,6 +111,21 @@ public class IMTPSController {
         cmbSchedulerType.getItems().addAll("Priority Scheduler", "Deadline Scheduler", "Knapsack Scheduler");
         cmbSchedulerType.getSelectionModel().selectFirst();
 
+        // Add a listener to the ComboBox to enable/disable radio buttons based on the selected scheduler type
+        cmbSchedulerType.valueProperty().addListener((obs, oldVal, newVal) -> {
+            boolean isPriority = "Priority Scheduler".equals(newVal);
+            rdbtnWork.setDisable(!isPriority);
+            rdbtnHealth.setDisable(!isPriority);
+            rdbtnPersonal.setDisable(!isPriority);
+        });
+
+        // Set the initial disabled/enabled state upon initialization
+        boolean isInitiallyPriority = "Priority Scheduler".equals(cmbSchedulerType.getValue());
+        rdbtnWork.setDisable(!isInitiallyPriority);
+        rdbtnHealth.setDisable(!isInitiallyPriority);
+        rdbtnPersonal.setDisable(!isInitiallyPriority);
+       
+
         Platform.runLater(() -> {
             Stage stage = (Stage) lblUsernameIMTPS.getScene().getWindow();
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();

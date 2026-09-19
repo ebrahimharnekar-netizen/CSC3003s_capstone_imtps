@@ -63,7 +63,7 @@
                               
                               <VBox prefWidth="430.0" spacing="10.0" style="-fx-background-color: #eff6ff; -fx-padding: 25; -fx-border-color: #bfdbfe; -fx-border-radius: 12; -fx-background-radius: 12;">
                                  <children>
-                                    <Label style="-fx-font-weight: bold; -fx-text-fill: #1d4ed8;" text="🎯 Focus Modes">
+                                    <Label style="-fx-font-weight: bold; -fx-text-fill: #1d4ed8;" text="🎯 Focus Modes (Priority Scheduler)">
                                        <font><Font size="18.0" /></font>
                                     </Label>
                                     <Label style="-fx-text-fill: #1e40af; -fx-line-spacing: 5px;" text="Choose Work, Health, or Personal in the View tab. Tasks from the selected category gain a higher overall priority. However, priority is based on multiple factors so it wont always schedule tasks in the category of the selected focus mode first. " wrapText="true">
@@ -74,7 +74,7 @@
                               
                               <VBox prefWidth="880.0" spacing="10.0" style="-fx-background-color: #f0fdf4; -fx-padding: 25; -fx-border-color: #bbf7d0; -fx-border-radius: 12; -fx-background-radius: 12;">
                                  <children>
-                                    <Label style="-fx-font-weight: bold; -fx-text-fill: #15803d;" text="⚙️ How Scheduling Works">
+                                    <Label style="-fx-font-weight: bold; -fx-text-fill: #15803d;" text="⚙ How Scheduling Works">
                                        <font><Font size="18.0" /></font>
                                     </Label>
                                     <Label style="-fx-text-fill: #166534; -fx-line-spacing: 5px;" text="• Priority Scheduler – Uses a custom algorithm prioritizing your toggled focus mode, duration preferences, task importance, and urgency (time until due).&#10;• Deadline Scheduler – Prioritizes tasks with the earliest deadlines first. This ignores user preferences to ensure critical tasks are scheduled immediately.&#10;• Knapsack Scheduler – Finds the optimal subset of tasks to fit perfectly into 'today's' capacity. Whatever doesn't fit optimally is pushed to tomorrow's schedule." wrapText="true">
@@ -96,7 +96,7 @@
                               
                               <VBox prefWidth="430.0" spacing="10.0" style="-fx-background-color: #fef2f2; -fx-padding: 25; -fx-border-color: #fecaca; -fx-border-radius: 12; -fx-background-radius: 12;">
                                  <children>
-                                    <Label style="-fx-font-weight: bold; -fx-text-fill: #b91c1c;" text="⚠️ Important">
+                                    <Label style="-fx-font-weight: bold; -fx-text-fill: #b91c1c;" text="⚠ Important">
                                        <font><Font size="18.0" /></font>
                                     </Label>
                                     <Label style="-fx-text-fill: #991b1b; -fx-line-spacing: 5px;" text="Floating tasks are never saved with a start time. Each Refresh recomputes the schedule, so you always get the best possible arrangement based on your current focus mode." wrapText="true">
