@@ -1,5 +1,4 @@
 package algorithm;
-import java.lang.invoke.StringConcatException;
 import java.time.*;
 
 public class Task {
@@ -20,7 +19,7 @@ public class Task {
     // Original start time (used to distinguish user‑pinned tasks)
     public LocalDateTime originalStartTime;
 
-        public Task(String taskId, String taskName, int category, int importance, double duration, 
+    public Task(String taskId, String taskName, int category, int importance, double duration, 
                 LocalDateTime dueDate, LocalDateTime startTime, LocalDate startDate) { // main constructor
         this.taskId = taskId;
         this.category = category;
@@ -66,8 +65,6 @@ public class Task {
         }
     }
 
-
-
     public Task(String taskName, int category, int importance, double duration, 
                 LocalDateTime startTime, LocalDateTime dueDate) { // Constructor for tasks without taskId (used in testing)
         this.taskId = "0";
@@ -92,13 +89,12 @@ public class Task {
     }
 
     public boolean isPinned() {
-        // A task is considered pinned if it originally had a non‑midnight start time
-        return this.originalStartTime != null && !this.originalStartTime.toLocalTime().equals(LocalTime.of(0, 0));
+        // A task is considered pinned simply if it originally had a non-null start time
+        return this.originalStartTime != null;
     }
 
     public boolean isFloatingWithStartDate() {
-        return this.startDate != null || 
-               (this.startTime != null && this.startTime.toLocalTime().equals(LocalTime.of(0, 0)));
+        return this.startDate != null;
     }
 
     public int getCategoryID() {
