@@ -628,17 +628,17 @@ public class IMTPSController {
 
         textBox.getChildren().addAll(nameLabel, topDetails);
 
-        //Append time info for floating tasks only
+        //Append time info for floating tasks that are unscheduled, i.e floating tasks that arent scheduled.
         if (t.startTime == null) {
-            String timeStr = "";
+            String timeStr = "Duration: " + t.duration + " hrs";
             if (t.originalStartDate != null && t.originalDueDate != null) {
-                timeStr = "Starts: " + t.originalStartDate.format(dateFormatter) + " - Due: " + t.originalDueDate.format(dateFormatter);
+                timeStr += "  |  Starts: " + t.originalStartDate.format(dateFormatter) + " - Due: " + t.originalDueDate.format(dateFormatter);
             } else if (t.startDate != null && t.dueDate != null) {
-                timeStr = "Starts: " + t.startDate.format(dateFormatter) + " - Due: " + t.dueDate.format(dateFormatter);
+                timeStr += "  |  Starts: " + t.startDate.format(dateFormatter) + " - Due: " + t.dueDate.format(dateFormatter);
             } else if (t.startDate != null) {
-                timeStr = "Starts: " + t.startDate.format(dateFormatter);
+                timeStr += "  |  Starts: " + t.startDate.format(dateFormatter);
             } else if (t.dueDate != null) {
-                timeStr = "Due: " + t.dueDate.format(dateFormatter);
+                timeStr += "  |  Due: " + t.dueDate.format(dateFormatter);
             }
             if (!timeStr.isEmpty()) {
                 Label timeDetailsLabel = new Label(timeStr);
@@ -670,7 +670,7 @@ public class IMTPSController {
         return taskCard;
     }
 
-        // Render the tasks for the selected date in a timeline view, handling both pinned and floating tasks, 
+    // Render the tasks for the selected date in a timeline view, handling both pinned, scheduled floating tasks, and "All day tasks"
     // and ensuring proper placement and collision management
     private void renderTasks(List<Task> tasksForToday, Set<String> originallyPinnedIds) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM dd");

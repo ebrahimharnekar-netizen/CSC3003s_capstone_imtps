@@ -55,7 +55,7 @@
                                     <Label style="-fx-font-weight: bold; -fx-text-fill: #334155;" text="📌 Pinned vs Floating Tasks">
                                        <font><Font size="18.0" /></font>
                                     </Label>
-                                    <Label style="-fx-text-fill: #475569; -fx-line-spacing: 5px;" text="• Pinned – have a start date AND start time. They are fixed and never moved.&#10;• Floating – have no start time. They are automatically scheduled when you click Refresh." wrapText="true">
+                                    <Label style="-fx-text-fill: #475569; -fx-line-spacing: 5px;" text="• Pinned – have a start date AND start time. They are fixed and never moved.&#10;• Floating – have no start time. They are automatically scheduled when you click Refresh.&#10;NOTE: Tasks that could not be scheduled go to the all day tasks. So you are still reminded about it but it could not be scheduled." wrapText="true">
                                        <font><Font size="15.0" /></font>
                                     </Label>
                                  </children>
