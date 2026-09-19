@@ -136,6 +136,33 @@
                                  <content>
                                     <VBox spacing="40.0" style="-fx-background-color: #f1f5f9;">
                                        <children>
+
+                                                <!-- Completed Tasks Section -->
+                                          <VBox spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 30;">
+                                             <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="15.0">
+                                                   <children>
+                                                      <Label text="Completed Tasks" textFill="#1e293b">
+                                                         <font>
+                                                            <Font name="System Bold" size="24.0" />
+                                                         </font>
+                                                      </Label>
+                                                      <Label fx:id="lblCompletedStatus" textFill="#10b981">
+                                                         <font>
+                                                            <Font size="14.0" />
+                                                         </font>
+                                                      </Label>
+                                                      <Pane HBox.hgrow="ALWAYS" />
+                                                      <Button mnemonicParsing="false" onAction="#onClickClearCompleted" prefHeight="35.0" prefWidth="120.0" style="-fx-background-color: #ef4444; -fx-background-radius: 8; -fx-cursor: hand;" text="Clear All" textFill="WHITE">
+                                                         <font>
+                                                            <Font name="System Bold" size="14.0" />
+                                                         </font>
+                                                      </Button>
+                                                   </children>
+                                                </HBox>
+                                                <VBox fx:id="completedTaskContainer" spacing="15.0" />
+                                             </children>
+                                          </VBox>
                                           
                                           <!-- Timeline Section -->
                                           <VBox spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 30;">
@@ -144,27 +171,6 @@
                                                    <font><Font name="System Bold" size="24.0" /></font>
                                                 </Label>
                                                 <VBox fx:id="taskContainer" spacing="10.0" />
-                                             </children>
-                                          </VBox>
-
-                                          <!-- Completed Tasks Section -->
-                                          <VBox spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 16; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 20, 0, 0, 10); -fx-padding: 30;">
-                                             <children>
-                                                <HBox alignment="CENTER_LEFT" spacing="15.0">
-                                                   <children>
-                                                      <Label text="Completed Tasks" textFill="#1e293b">
-                                                         <font><Font name="System Bold" size="24.0" /></font>
-                                                      </Label>
-                                                      <Label fx:id="lblCompletedStatus" textFill="#10b981">
-                                                         <font><Font size="14.0" /></font>
-                                                      </Label>
-                                                      <Pane HBox.hgrow="ALWAYS" />
-                                                      <Button mnemonicParsing="false" onAction="#onClickClearCompleted" prefHeight="35.0" prefWidth="120.0" style="-fx-background-color: #ef4444; -fx-background-radius: 8; -fx-cursor: hand;" text="Clear All" textFill="WHITE">
-                                                         <font><Font name="System Bold" size="14.0" /></font>
-                                                      </Button>
-                                                   </children>
-                                                </HBox>
-                                                <VBox fx:id="completedTaskContainer" spacing="15.0" />
                                              </children>
                                           </VBox>
                                           

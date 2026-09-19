@@ -112,7 +112,7 @@
                         </VBox>
                      </children>
                   </StackPane>
-                  <Button fx:id="btnBack" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="122.0" text="Exit -&gt;" AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="20.0" />
+                  <Button fx:id="btnBack" mnemonicParsing="false" onAction="#onClickbtnBack" prefHeight="36.0" prefWidth="122.0" text="Exit ➜]" AnchorPane.bottomAnchor="20.0" AnchorPane.rightAnchor="20.0" />
                </children>
             </AnchorPane>
          </children>
